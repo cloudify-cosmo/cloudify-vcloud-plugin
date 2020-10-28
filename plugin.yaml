@@ -1,0 +1,406 @@
+plugins:
+  vcd:
+    executor: central_deployment_agent
+    package_name: cloudify-vcd-plugin
+    package_version: '2.0.0.dev1'
+
+data_types:
+
+  cloudify.datatypes.vcd.client_configuration_options:
+    properties:
+      uri:
+        type: string
+        required: false
+        description: The hostname or IP of the VCD.
+      api_version:
+        type: string
+        default: '32.0'
+        description: The VCD API version
+      verify_ssl_certs:
+        type: boolean
+        default: true
+        description: Whether to verify SSL certificates.
+      log_file:
+        type: string
+        required: false
+        description: Where to store pyvcloud logs.
+      log_requests:
+        type: boolean
+        default: true
+        description: Whether to log the requests.
+      log_headers:
+        type: boolean
+        default: true
+        description: Whether to log the requests headers.
+      log_bodies:
+        type: boolean
+        default: true
+        description: Whether to log the request bodies.
+      configuration_kwargs:
+        type: dict
+        default: {}
+        description: Additional client configuration options not exposed in cloudify.datatypes.vcd.client_configuration_options.
+
+  cloudify.datatypes.vcd.credentials:
+    properties:
+      user:
+        type: string
+        required: false
+        description: a VCD user name.
+      password:
+        type: string
+        required: false
+        description: the password for the VCD user name provided.
+      org:
+        type: string
+        required: false
+        description: a VCD org.
+      credentials_kwargs:
+        type: dict
+        default: {}
+        description: Additional client configuration options not exposed in cloudify.datatypes.vcd.credentials.
+
+  cloudify.datatypes.vcd.client_config:
+    properties:
+      <<: cloudify.datatypes.vcd.client_configuration_options
+      <<: cloudify.datatypes.vcd.credentials
+
+  cloudify.datatypes.vcloud.BaseProperties:
+    properties:
+      use_external_resource:
+        type: boolean
+        description: If the resource has already been created, this should be true, if you wish Cloudify to create the resource, this should be false.
+        default: false
+      client_config:
+        type: cloudify.datatypes.vcd.client_config
+        description: Configuration options for pyvcloud.vcd.client.Client and pyvcloud.vcd.client.BasicLoginCredentials
+        required: false
+
+  cloudify.datatypes.vcd.VAppCreate:
+    properties:
+      # Arguments supported by pyvcloud.vdc.VDC.create_vapp
+      name:
+        type: string
+        description: The vApp name.
+      description:
+        type: string
+        description: The vApp description.
+      network:
+        type: string
+        description: A network in VCD that the vApp will connect to. You may also provide a relationship of type cloudify.relationships.vcloud.vapp_connected_to_network to a node type cloudify.types.vcloud.Network.
+        required: false
+      fence_mode:
+        type: string
+        required: false
+        constraints:
+        - valid_values: ['natRouted', 'bridged', 'direct', 'isolated']
+      accept_all_eulas:
+        type: boolean
+        description: Acceptance of all EULAs for the vApp template.
+        required: false
+
+  cloudify.datatypes.vcd.VAPPInstantiation:
+    properties:
+      # Arguments supported by pyvcloud.vdc.VDC.instantiate_vapp
+      catalog:
+        type: string
+        description: The name of the vapp catalog.
+      template:
+        type: string
+        description: The name of the vapp template.
+      ip_allocation_mode:
+        type: string
+        description: The type of IP allocation to use: Valid values are `pool`, `dhcp` and `manual`.
+      deploy:
+        type: boolean
+        description: The vApp should be deployed at instantiation.
+        default: true
+      power_on:
+        type: boolean
+        description: The vApp should be powered-on at instantiation.
+        default: true
+      all_eulas_accepted:
+        type: boolean
+        description: Accept all eulas in the vApp.
+        default: false
+      memory:
+        type: integer
+        description: The size of memory.
+      cpu:
+        type: integer
+        description: The number of cpus.
+      disk_size:
+        type: integer
+        description: The size of the first disk of the first vm.
+      password:
+        type: string
+        description: The administrator password of the vm.
+      cust_script:
+        type: string
+        description: Script to run on guest customization.
+      hostname:
+        type: string
+        description: Sets the hostname.
+      ip_address:
+        type: string
+        description: Sets the IP of the VM.
+      vm_name:
+        type: string
+        description: Sets the VM name.
+      network_adapter_type:
+        type: string
+        description: One of: VMXNET, VMXNET2, VMXNET3, E1000, E1000E, VLANCE.
+
+  cloudify.datatypes.vcloud.Network:
+    properties:
+      # Parameters accepted by: pyvcloud.vcd.vapp.create_vapp_network, pyvcloud.vcd.vdc.vApp.create_routed_vdc_network, pyvcloud.vcd.vdc.vApp.create_directly_connected_vdc_network, or pyvcloud.vcd.vdc.vApp.create_isolated_vdc_network.
+      network_name:
+        type: string
+        description: The name of the network.
+        required: false
+      description:
+        type: string
+        description: A description of the network.
+      is_shared:
+        type: boolean
+        description: If the network is shared with other VDCs.
+      network_cidr:
+        type: string
+        description: The Network CIDR, such as 192.168.0.1/22. Only valid for create_vapp_network, and routed_vdc_network and create_isolated_vdc_network.
+      primary_dns_ip:
+        type: string
+        description: The primary DNS IP, such as 8.8.8.8. Only valid for create_vapp_network, and routed_vdc_network and create_isolated_vdc_network.
+      secondary_dns_ip:
+        type: string
+        description:  The secondary DNS IP, such as 8.8.8.4. Only valid for create_vapp_network, and routed_vdc_network and create_isolated_vdc_network.
+      dns_suffix:
+        type: create_vapp_network, and routed_vdc_network and create_isolated_vdc_network.
+      ip_ranges:
+        type: string
+        description: The range of valid IPs for in your network_cidr, such as 192.168.0.2. Only valid for create_vapp_network.
+      ip_range_start:
+        type: string
+        description: The start IP for in your network_cidr, such as 192.168.0.2. Only valid for routed_vdc_network.
+      ip_range_end:
+        type: string
+        description: The final IP for in your network_cidr, such as 192.168.0.254. Only valid for routed_vdc_network.
+      is_guest_vlan_allowed:
+        type: boolean
+        description: Does the network permit vlan tagging. Only valid for create_vapp_network. Not to be confused with guest_vlan_allowed.
+      guest_vlan_allowed:
+        type: boolean
+        description: Does the network permit vlan tagging. Only valid for routed_vdc_network. Not to be confused with is_guest_vlan_allowed.
+      sub_interface:
+        type: boolean
+        description: Is the network connected to an edge subinterface. Only valid for routed_vdc_network.
+      distributed_interface:
+        type: boolean
+        description: Is the network connected to a logical router. Only valid for routed_vdc_network.
+      retain_net_info_across_deployments:
+        type: boolean
+        description: Will network resources, such as IP/MAC address be retained across deployments. Only valid for routed_vdc_network.
+      parent_network_name:
+        type: string
+        description: The name of the external network that the network will be connected to. Only valid for create_directly_connected_vdc_network.
+      is_dhcp_enabled:
+        type: string
+        description: Should DHCP be enabled. Only valid for create_directly_connected_vdc_network and is_dhcp_enabled.
+      default_lease_time:
+        type: int
+        description: Default lease in seconds for DHCP. Only valid for create_directly_connected_vdc_network, and default_lease_time.
+      max_lease_time:
+        type: int
+        description: Max lease in seconds for DHCP. Only valid for create_directly_connected_vdc_network.
+      dhcp_ip_range_start:
+        type: string
+        description: The start IP for in your network_cidr, such as 192.168.0.2. Only valid for routed_vdc_network and isolated_vdc_network.
+      dhcp_ip_range_end:
+        type: string
+        description: The final IP for in your network_cidr, such as 192.168.0.254. Only valid for routed_vdc_network and isolated_vdc_network.
+      gateway_name:
+        type: string
+        description: A name of an existing gateway. You may also provide a relationship of type cloudify.relationships.vcloud.network_connected_to_gateway to a node type cloudify.types.vcloud.Gateway. Only valid for routed_vdc_network.
+
+  cloudify.datatypes.vcloud.Gateway:
+    properties:
+      gateway_name:
+        type: string
+        required: true
+        description: The name of an existing edge gateway.
+
+  cloudify.datatypes.vcloud.VMSpecification:
+    properties:
+      vapp:
+        type: string
+        description: The name of the vapp. You may also provide a relationship of type cloudify.relationships.vcloud.vm_connected_to_vapp to a node type cloudify.types.vcloud.VAPP.
+      source_vm_name:
+        type: string
+        description: Source VM name.
+        required: true
+      target_vm_name:
+        type: string
+        description: Target VM name.
+        required: false
+      hostname:
+        type: string
+        description: Target guest hostname.
+      password:
+        type: string
+        description: The administrator password of the vm.
+      password_auto:
+        type: boolean
+        description: Auto generate administrator password.
+        default: false
+      password_reset:
+        type: boolean
+        description: If the administrator password for this vm must be reset after first use.
+        default: false
+      cust_script:
+        type: string
+        description: Script to run on guest customization.
+      network:
+        type: string
+        description: The vApp network name. You may also provide a relationship of type cloudify.relationships.vcloud.vm_connected_to_network to a node type cloudify.types.vcloud.Network.
+      storage_profile:
+        type: string
+        description: The name of the storage profile to be used for this VM.
+      sizing_policy_href:
+        type: string
+        description: The sizing profile to be used when creating this VM.
+      placement_policy_href:
+        type: string
+        description: The placement policy used when creating this VM.
+
+  cloudify.datatypes.vcloud.VAPPAddVMs:
+    properties:
+      # Parameters accepted by the pyvcloud.vcd.vapp.add_vms method.
+    spec:
+      type: cloudify.datatypes.vcloud.VMSpecification
+      description: A single VM specification.
+    deploy:
+      type: boolean
+      description: The vApp should be deployed at instantiation.
+      default: true
+    power_on:
+      type: boolean
+      description: The vApp should be powered-on at instantiation.
+      default: true
+    all_eulas_accepted:
+      type: boolean
+      description: Accept all eulas in the vApp.
+      default: false
+    delete_source:
+      type: boolean
+      default: false
+
+  cloudify.datatypes.vcloud.VAPP:
+    properties:
+      <<: cloudify.datatypes.vcd.VAppCreate
+      <<: cloudify.datatypes.vcd.VAPPInstantiation
+
+  cloudify.datatypes.vcloud.NAT:
+    properties:
+      adapter_type:
+        type: string
+        description: One of VMXNET|VMXNET2|VMXNET3|E1000|VLANCE.
+        required: true
+      is_primary:
+        type: boolean
+        description: If this is the VM primary NIC.
+        required: true
+      is_connected:
+        type: boolean
+        description: If the NIC needs to be connected to the VM.
+        required: true
+      network_name:
+        type: string
+        required: true
+        description: The name of the network. Can also be provided via a cloudify.relationships.vcloud.nic_connected_to_network relationship.
+      ip_address_mode:
+        type: string
+        required: true
+        description: One of DHCP|POOL|MANUAL|NONE.
+      ip_address:
+        type: string
+        required: true
+        description: The IP if ip_address_mode requires one.
+
+  cloudify.datatypes.vcloud.resource.RuntimeProperties:
+    properties:
+      name:
+        type: string
+        description: The resource name.
+      id:
+        type: string
+        description: The resource ID.
+      href:
+        type: string
+        description: The resource HREF.
+      type:
+        type: string
+        description: The resource type.
+
+
+node_types:
+
+  # Old node types to support:
+  # cloudify.vcloud.nodes.Server
+  # cloudify.vcloud.nodes.Port
+  # cloudify.vcloud.nodes.Network
+  # cloudify.vcloud.nodes.Volume
+
+  # cloudify.nodes.vcloud.PVDC:
+  #   derived_from: cloudify.nodes.Root
+
+  cloudify.nodes.vcloud.VApp:
+    derived_from: cloudify.nodes.Root
+    properties:
+      <<: cloudify.datatypes.vcloud.BaseProperties
+      resource_config:
+        type: cloudify.datatypes.vcd.VApp
+    interfaces:
+      # Scale should cloudify.datatypes.vcloud.VAPPAddVMs
+
+  # cloudify.nodes.vcloud.Firewall:
+  # cloudify.nodes.vcloud.VM
+
+  cloudify.nodes.vcloud.Nat:
+    derived_from: cloudify.nodes.Network
+    properties:
+      <<: cloudify.datatypes.vcloud.BaseProperties
+      resource_config:
+        type: cloudify.datatypes.vcloud.NAT
+
+  cloudify.nodes.vcloud.Network:
+    derived_from: cloudify.nodes.Network
+    properties:
+      <<: cloudify.datatypes.vcloud.BaseProperties
+      resource_config:
+        type: cloudify.datatypes.vcloud.Network
+      network_type:
+        type: string
+        description: >
+          The type of network to create.
+          Valid values are routed_vdc_network, isolated_vdc_network, directly_connected_vdc_network, vapp_network.
+
+  cloudify.nodes.vcloud.Gateway:
+    derived_from: cloudify.nodes.Gateway
+    properties:
+      use_external_resource:
+        default: true
+      <<: cloudify.datatypes.vcd.client_config
+      <<: cloudify.datatypes.vcloud.Gateway
+
+relationships:
+
+  cloudify.relationships.vcloud.nic_connected_to_network:
+    derived_from: cloudify.relationships.connected_to
+
+  cloudify.relationships.vcloud.vapp_connected_to_network:
+    derived_from: cloudify.relationships.connected_to
+
+  cloudify.relationships.vcloud.network_connected_to_gateway:
+    derived_from: cloudify.relationships.connected_to
+
+  cloudify.relationships.vcloud.vm_contained_in_vapp:
+    derived_from: cloudify.relationships.contained_in
