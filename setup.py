@@ -42,12 +42,13 @@ setup(
     version=get_version(),
     packages=[
         'cloudify_vcd',
-        'vcloud_sdk',
+        'vcd_plugin_sdk',
     ],
     license='LICENSE',
     description='Cloudify plugin for vCloud infrastructure.',
     install_requires=[
         'cloudify-common>=5.1.0',
-        'pyvcloud==23.0.0'
+        'pyvcloud==23.0.0',
+        'cloudify-utilities-plugins-sdk'
     ]
 )

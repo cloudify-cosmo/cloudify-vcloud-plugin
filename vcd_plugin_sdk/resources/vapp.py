@@ -147,7 +147,7 @@ class VCloudVM(VCloudResource):
                  kwargs=None,
                  vapp_kwargs=None):
 
-        self.vm_name = vm_name
+        self._vm_name = vm_name
         self.kwargs = kwargs or {}
         super().__init__(connection, vdc_name, vapp_name)
         self.vapp_object = VCloudvApp(vapp_name, vdc_name=vdc_name,kwargs=vapp_kwargs)
@@ -155,9 +155,13 @@ class VCloudVM(VCloudResource):
         self.tasks = {}
 
     @property
+    def name(self):
+        return self._vm_name
+
+    @property
     def vm(self):
         if not self._vm:
-            self._vm = self.get_vm(self.vm_name)
+            self._vm = self.get_vm(self.name)
         else:
             self._vm.reload()
         return self._vm
@@ -193,7 +197,7 @@ class VCloudVM(VCloudResource):
     def delete(self, vm_name=None):
         # TODO: This can be refactored:
         # To support bulk delete of VMs using vapp.delete_vms([names])
-        vm = self.get_vm(vm_name or self.vm_name)
+        vm = self.get_vm(vm_name or self.name)
         task = vm.delete()
         self.tasks['delete'] = [task.items()]
         return self.tasks['delete']
@@ -234,11 +238,11 @@ class VCloudVM(VCloudResource):
             vm.undeploy(action)
 
     def attach_disk_to_vm(self, disk_href, vm_name=None):
-        return self.vapp.attach_disk_to_vm(disk_href, vm_name or self.vm_name)
+        return self.vapp.attach_disk_to_vm(disk_href, vm_name or self.name)
 
     def detach_disk_from_vm(self, disk_href, vm_name=None):
         return self.vapp.detach_disk_from_vm(
-            disk_href, vm_name or self.vm_name)
+            disk_href, vm_name or self.name)
 
     def add_nic(self, **kwargs):
         task = self.vm.add_nic(**kwargs)
@@ -263,3 +267,19 @@ class VCloudVM(VCloudResource):
         else:
             self.tasks['update_nic'] = [task.items()]
         return self.tasks['update_nic']
+
+    def attach_media(self, media_id):
+        task = self.vm.insert_cd_from_catalog(media_id)
+        if 'media' in self.tasks:
+            self.tasks['media'].append(task.items())
+        else:
+            self.tasks['media'] = [task.items()]
+        return self.tasks['media']
+
+    def eject_media(self, media_id):
+        task = self.vm.eject_cd(media_id)
+        if 'media' in self.tasks:
+            self.tasks['media'].append(task.items())
+        else:
+            self.tasks['media'] = [task.items()]
+        return self.tasks['media']

@@ -12,7 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+from tempfile import NamedTemporaryFile
+
 from .base import VCloudResource
+import cloudify_common_sdk.iso9660 as iso9660
 
 
 class VCloudDisk(VCloudResource):
@@ -100,3 +104,115 @@ class VCloudDisk(VCloudResource):
             task = self.vdc.update_disk(disk_name or self.name, **kwargs)
         self.tasks['update'].append(task.items())
         return task
+
+
+class VCloudISO(object):
+
+    def __init__(self, kwargs=None):
+
+        self.kwargs = kwargs or {}
+        self._iso_material = None
+        self._iso_material_size = None
+        self._file = None
+
+    @property
+    def file(self):
+        if not self._file:
+            self._file = self._create_file()
+        return self._file
+
+    @property
+    def iso_material(self):
+        if not self._iso_material:
+            self.create_iso_material()
+        self._iso_material.seek(0, os.SEEK_END)
+        self._iso_material.seek(0, os.SEEK_END)
+        return self._iso_material
+
+    @property
+    def iso_material_size(self):
+        if not self._iso_material_size:
+            if not self._iso_material:
+                self.create_iso_material()
+            self._iso_material.seek(0, os.SEEK_END)
+            self._iso_material_size = self.iso_material.tell()
+            self._iso_material.seek(0, os.SEEK_END)
+        return self._iso_material_size
+
+    @staticmethod
+    def _create_iso_material(vol_ident, sys_ident, files):
+        return iso9660.create_iso(vol_ident=vol_ident,
+                                  sys_ident=sys_ident,
+                                  files=files)
+
+    def create_iso_material(self):
+        self._iso_material = self._create_iso_material(
+            self.kwargs.get('vol_ident'),
+            self.kwargs.get('sys_ident'),
+            self.kwargs.get('files'))
+
+    def _create_file(self):
+        f = NamedTemporaryFile(suffix='.iso', delete=False)
+        f = f.name
+        o = open(f, 'wb')
+        o.write(self.iso_material.getbuffer())
+        o.close()
+        return f
+
+    def delete(self):
+        os.remove(self.file)
+
+
+class VCloudMedia(VCloudResource):
+
+    def __init__(self,
+                 media_name,
+                 connection=None,
+                 vdc_name=None,
+                 kwargs=None):
+
+        self._media_name = media_name
+        self.kwargs = kwargs or {}
+        self._disk = None
+        super().__init__(connection, vdc_name)
+        self._media = None
+
+    @property
+    def name(self):
+        return self._media_name
+
+    @property
+    def id(self):
+        return self.href.split('/')[-1]
+
+    @property
+    def href(self):
+        return self._entity.get('href')
+
+    @property
+    def _entity(self):
+        return dict(self.media.Entity.items())
+
+    @property
+    def catalog_name(self):
+        return self.kwargs.get('catalog_name')
+
+    @property
+    def media(self):
+        if not self._media:
+            self._media = self.connection.org.get_catalog_item(
+            self.catalog_name, self.name)
+        return self._media
+
+    def get_media(self, catalog_name=None, media_name=None):
+        catalog_name = catalog_name or self.catalog_name
+        media_name = media_name or self.name
+        return self.connection.org.get_catalog_item(catalog_name, media_name)
+
+    def upload(self):
+        return self.connection.org.upload_media(**self.kwargs)
+
+    def delete(self, catalog_name=None, media_name=None):
+        catalog_name = catalog_name or self.catalog_name
+        media_name = media_name or self.name
+        self.connection.org.delete_catalog_item(catalog_name, media_name)
