@@ -21,7 +21,6 @@ from pyvcloud.vcd.firewall_rule import FirewallRule
 from pyvcloud.vcd.exceptions import EntityNotFoundException, NotFoundException
 
 from .base import VCloudResource
-from ..utils import underscore_to_camelcase
 from ..exceptions import VCloudSDKException
 
 DESTINATION = 'destination'
@@ -29,18 +28,16 @@ SOURCE = 'source'
 GROUP_OBJECT_LIST = ['securitygroup', 'ipset', 'virtualmachine', 'network']
 VNIC_GROUP_LIST = ['gatewayinterface']
 
-ADD_NAT_RULE_TEST_VALUE = {
-    'action': 'dnat',
-    'original_address': '10.10.4.2',
-    'translated_address': '11.11.4.2',
-    'description': 'nat rule test value',
-}
+
+def underscore_to_camelcase(value):
+    return ''.join(word.title() for word in value.split('_'))
+
 
 class VCloudNetwork(VCloudResource):
 
     def __init__(self,
                  network_name,
-                 network_type,
+                 network_type=None,
                  connection=None,
                  vdc_name=None,
                  vapp_name=None,
@@ -48,7 +45,7 @@ class VCloudNetwork(VCloudResource):
 
         self._network_name = network_name or kwargs.get('network_name')
         self.network_type = network_type
-        self.kwargs = kwargs
+        self.kwargs = kwargs or {}
         if 'network_name' in self.kwargs:
             del self.kwargs['network_name']
         self._network = None
@@ -67,7 +64,7 @@ class VCloudNetwork(VCloudResource):
             except EntityNotFoundException:
                 raise VCloudSDKException(
                     'Network {name} has not been initialized.'.format(
-                        self.name))
+                        name=self.name))
         return self._network
 
     @property
@@ -77,6 +74,13 @@ class VCloudNetwork(VCloudResource):
     @property
     def connected_vapps(self):
         return self.network.list_connected_vapps()
+
+    @property
+    def exposed_data(self):
+        return {
+            'allocated_ips': self.network.list_allocated_ip_address(),
+            'resource': self.network.resource.items()
+        }
 
     def get_network(self, network_name=None, network_type=None):
         if network_name and not network_type:
@@ -112,6 +116,16 @@ class VCloudNetwork(VCloudResource):
         return VdcNetwork(self.client, resource=network_resource)
 
     def create(self):
+        task = self._create()
+        self.tasks['create'].append(task.items())
+        return task
+
+    def delete(self):
+        task = self._delete()
+        self.tasks['delete'].append(task.items())
+        return task
+
+    def _create(self):
         if self.network_type == 'routed_vdc_network':
             return self.vdc.create_routed_vdc_network(
                 network_name=self.name, **self.kwargs)
@@ -136,7 +150,7 @@ class VCloudNetwork(VCloudResource):
                 '\'directly_connected_vdc_network\', '
                 '\'vapp_network\]'.format(network_type=self.network_type))
 
-    def delete(self):
+    def _delete(self):
         if self.network_type == 'routed_vdc_network':
             return self.vdc.delete_routed_orgvdc_network(self.name)
         elif self.network_type == 'isolated_vdc_network':
@@ -215,18 +229,15 @@ class VCloudGateway(VCloudResource):
     def static_routes(self):
         static_routes = {}
         static_route = self.gateway.get_static_routes()
-        try:
+        if hasattr(static_route.staticRoutes, 'route'):
             for route in static_route.staticRoutes.route:
                 static_routes[route.network] = {
-                    'mtu': route.mtu,
+                    #  'mtu': route.mtu,
                     'description': route.description,
                     'type': route.type,
                     'vnic': route.vnic
                 }
-        # Using finally
-        # instead of checking hasattr(route.staticRoutes, 'route')
-        finally:
-            return static_routes
+        return static_routes
 
     @property
     def nat_rules(self):
@@ -243,7 +254,7 @@ class VCloudGateway(VCloudResource):
 
     @property
     def exposed_data(self):
-        return {
+        data = {
             'gateway_address': self.default_gateway,
             'dhcp_pools': self.dhcp_pools,
             'nat_rules': self.nat_rules,
@@ -251,6 +262,7 @@ class VCloudGateway(VCloudResource):
             'firewall_rules': self.firewall_rules,
             'firewall_objects': self.firewall_objects
         }
+        return data
 
     def get_gateway(self, gateway_name=None):
         gateway_name = gateway_name or self.name
@@ -309,7 +321,7 @@ class VCloudGateway(VCloudResource):
 
     # NATS
     def create_nat_rule(self, nat_definition=None):
-        nat_definition = nat_definition or ADD_NAT_RULE_TEST_VALUE
+        nat_definition = nat_definition
         self.gateway.add_nat_rule(**nat_definition)
         return self.get_nat_rule_from_definition(nat_definition)
 
@@ -330,7 +342,7 @@ class VCloudGateway(VCloudResource):
         return nat_rule.delete_nat_rule()
 
     def get_nat_rule_from_definition(self, nat_definition):
-        for rule in self.gateway.list_nat_rules():
+        for rule in self.nat_rules:
             nat_rule = NatRule(
                 self.client, self.name, rule_id=rule['ID'])
             if self.compare_nat_rule(nat_rule.get_nat_rule_info(), nat_definition):

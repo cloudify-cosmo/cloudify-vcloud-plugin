@@ -24,6 +24,7 @@ POWER_STATES = (
     (3, 'suspended')
 )
 
+
 class VCloudvApp(VCloudResource):
 
     def __init__(self,

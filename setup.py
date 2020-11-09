@@ -16,7 +16,6 @@
 
 import os
 from setuptools import setup
-from setuptools import find_packages
 
 
 def read(rel_path):
@@ -43,12 +42,14 @@ setup(
     packages=[
         'cloudify_vcd',
         'vcd_plugin_sdk',
+        'vcd_plugin_sdk.resources',
     ],
     license='LICENSE',
     description='Cloudify plugin for vCloud infrastructure.',
     install_requires=[
         'cloudify-common>=5.1.0',
         'pyvcloud==23.0.0',
-        'cloudify-utilities-plugins-sdk'
+        'cloudify-utilities-plugins-sdk',
+        'lxml'
     ]
 )

@@ -147,16 +147,25 @@ routed_network_create_result = routed_network.create()
 routed_network2_create_result = routed_network2.create()
 isolated_network_create_result = isolated_network.create()
 
-# Test Firewall Rule
-test_rule_name = 'test-rule-{}'.format(rnow.strftime("%Y%m%d%H%M"))
-firewall_rule_info = gateway.create_firewall_rule(test_rule_name, source_values=['VLAN-102' + ':gatewayinterface', routed_network.network.name + ':network', '192.169.1.0:ip'], destination_values=['VLAN-102' + ':gatewayinterface', routed_network.network.name + ':network', '192.169.1.0:ip'], services=[{'tcp': {'any': 'any'}}])
-# Test NAT rule
-new_nat_rule = gateway.create_nat_rule()
-# Test DHCP Pool
-new_dhcp_rule = gateway.add_dhcp_pool(ip_range='192.169.2.2-192.169.2.100')
 # Test Static IPs
 static_route = dict(network='192.169.3.0/24', next_hop='192.168.1.1')
 static_route_create_result = gateway.add_static_route(**static_route)
+gateway.delete_static_route(**static_route)
+
+
+# Test Firewall Rule
+test_rule_name = 'test-rule-{}'.format(rnow.strftime("%Y%m%d%H%M"))
+firewall_rule_info = gateway.create_firewall_rule(test_rule_name, source_values=['VLAN-102' + ':gatewayinterface', routed_network.network.name + ':network', '192.169.1.0:ip'], destination_values=['VLAN-102' + ':gatewayinterface', routed_network.network.name + ':network', '192.169.1.0:ip'], services=[{'tcp': {'any': 'any'}}])
+gateway.delete_firewall_rule(firewall_rule_info['Name'], firewall_rule_info['Id'])
+
+# Test NAT rule
+new_nat_rule = gateway.create_nat_rule(action='dnat', original_address='10.10.4.2', translated_address='11.11.4.2', description='nat rule test value')
+gateway.delete_nat_rule(new_nat_rule['ID'])
+
+# Test DHCP Pool
+new_dhcp_rule = gateway.add_dhcp_pool(ip_range='192.169.2.2-192.169.2.100')
+gateway.delete_dhcp_pool(ip_range='192.169.2.2-192.169.2.100')
+
 # vapp.create()
 
 vm_create_result = vm.instantiate_vapp()
@@ -183,10 +192,6 @@ vm.delete_nic()
 vapp.undeploy()
 vapp.delete()
 
-gateway.delete_firewall_rule(firewall_rule_info['Name'], firewall_rule_info['Id'])
-gateway.delete_nat_rule(new_nat_rule['ID'])
-gateway.delete_dhcp_pool(ip_range='192.169.2.2-192.169.2.100')
-gateway.delete_static_route(**static_route)
 
 isolated_network.delete()
 routed_network2.delete()
