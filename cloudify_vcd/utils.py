@@ -2,12 +2,16 @@ from copy import deepcopy
 
 from pyvcloud.vcd.utils import task_to_dict
 from lxml.objectify import StringElement, IntElement, ObjectifiedElement, BoolElement
+from pyvcloud.vcd.exceptions import (
+    VcdTaskException,
+    EntityNotFoundException,
+)
 
 from cloudify import ctx
 from cloudify.exceptions import NonRecoverableError
 from cloudify.constants import NODE_INSTANCE, RELATIONSHIP_INSTANCE
 
-from .constants import CLIENT_CONFIG_KEYS, CLIENT_CREDENTIALS_KEYS, TYPE_MATRIX
+from .constants import CLIENT_CONFIG_KEYS, CLIENT_CREDENTIALS_KEYS, TYPE_MATRIX, NO_RESOURCE_OK
 from vcd_plugin_sdk.connection import VCloudConnect
 
 
@@ -107,8 +111,15 @@ def get_resource_config(node, instance):
     return instance.get('resource_config', node.get('resource_config'))
 
 
-def is_external_resource(node):
-    return node.get('use_external_resource')
+def is_external_resource(node, instance):
+    external_node = node.get('use_external_resource', False)
+    bad_request_retry = instance.get(
+        '__RETRY_BAD_REQUEST', False)
+    if external_node:
+        return external_node
+    elif not bad_request_retry and ctx.operation.retry_number:
+        return True
+    return False
 
 
 def get_resource_id(node, instance):
@@ -154,6 +165,16 @@ def get_ctxs(_ctx):
         raise Exception('Bad ctx type: {bad_type}.'.format(bad_type=_ctx.type))
 
 
+def get_resource_class(type_hierarchy):
+    for hierarchy_item in type_hierarchy:
+        if hierarchy_item in TYPE_MATRIX:
+            return TYPE_MATRIX.get(hierarchy_item)
+    raise NonRecoverableError(
+        'A resource type matching node hierarchy {h} not found. '
+        'Use one of {t}, or derive type from those types.'.format(
+            h=type_hierarchy, t=TYPE_MATRIX.keys()))
+
+
 def get_resource_data(__ctx):
     """Initialize the ctx, resource id, client config, vdc, resource config
     for the node instance resource or both relationship resources.
@@ -167,12 +188,14 @@ def get_resource_data(__ctx):
     primary, secondary = get_ctxs(__ctx)
     primary_resource_id = get_resource_id(
         primary.node.properties, primary.instance.runtime_properties)
-    primary_external = is_external_resource(primary.node.properties)
+    primary_external = is_external_resource(
+        primary.node.properties,
+        primary.instance.runtime_properties)
     primary_client_config, primary_vdc = get_client_config(
         primary.node.properties)
     primary_resource_config = get_resource_config(
         primary.node.properties, primary.instance.runtime_properties)
-    classes = TYPE_MATRIX.get(primary.node.type, [])
+    classes = get_resource_class(primary.node.type_hierarchy)
 
     base_properties = ResourceData(
         primary,
@@ -185,11 +208,17 @@ def get_resource_data(__ctx):
     if secondary:
         secondary_resource_id = get_resource_id(
             secondary.node.properties, secondary.instance.runtime_properties)
-        secondary_external = is_external_resource(secondary.node.properties)
+        secondary_external = is_external_resource(
+            secondary.node.properties,
+            secondary.instance.runtime_properties)
         secondary_client_config, secondary_vdc = get_client_config(
             secondary.node.properties)
         secondary_resource_config = get_resource_config(
             secondary.node.properties, secondary.instance.runtime_properties)
+        if len(classes) == 1:
+            secondary_class = None
+        else:
+            secondary_class = classes[1]
         base_properties.add(
             secondary,
             secondary_external,
@@ -197,14 +226,14 @@ def get_resource_data(__ctx):
             secondary_client_config,
             secondary_vdc,
             secondary_resource_config,
-            None if len(classes) == 1 else classes[1])
+            secondary_class)
     return base_properties
 
 
 def update_runtime_properties(current_ctx, props):
     props = cleanup_objectify(props)
-    ctx.logger.debug('Updating instance {_id} with props {props}.'.format(
-        _id=current_ctx.instance.id, props=props))
+    ctx.logger.debug('Updating instance with properties {props}.'.format(
+        props=props))
     if is_relationship():
         if current_ctx.instance.id == ctx.source.instance.id:
             ctx.source.instance.runtime_properties.update(props)
@@ -328,24 +357,29 @@ def use_external_resource(external,
                 t=resource_type, r=resource_name))
 
 
-def expose_props(operation_name, resource=None, new_props=None):
+def expose_props(operation_name, resource=None, new_props=None, _ctx=None):
+    _ctx = _ctx or ctx
     new_props = new_props or {}
 
     if 'create' in operation_name:
         new_props.update({'__created': True})
-
-    if 'delete' in operation_name:
-        cleanup_runtime_properties(ctx)
+    elif 'delete' in operation_name:
         new_props.update({'__deleted': True})
-    elif resource:
-        new_props.update({
-            'resource_id': resource.name,
-            'data': resource.exposed_data,
-            'tasks': resource.tasks,
-        })
+        cleanup_runtime_properties(ctx)
 
-    ctx.logger.info('Before Cleanup {}'.format(new_props))
-    update_runtime_properties(ctx, new_props)
+    if operation_name not in NO_RESOURCE_OK:
+        try:
+            new_props.update({
+                'resource_id': resource.name,
+                'data': resource.exposed_data,
+                'tasks': resource.tasks,
+            })
+        except EntityNotFoundException:
+            raise NonRecoverableError(
+                'The resource {n} was not found.'.format(n=resource.name))
+
+    new_props.update({'__RETRY_BAD_REQUEST': False})
+    update_runtime_properties(_ctx, new_props)
 
 
 def get_last_task(task):
@@ -353,3 +387,34 @@ def get_last_task(task):
         return task_to_dict(task.Tasks.Task)
     except AttributeError:
         return task
+
+
+def vcd_busy_exception(exc):
+    if 'is busy, cannot proceed with the operation' in str(exc):
+        return True
+    return False
+
+
+def vcd_unclear_exception(exc):
+    if 'Status code: 400/None, None' in str(exc):
+        return True
+    return False
+
+
+def cannot_deploy(exc):
+    if 'Cannot deploy organization VDC network' in str(exc):
+        return True
+    return False
+
+
+def check_if_task_successful(_resource, task):
+    if task:
+        try:
+            return _resource.task_successful(task)
+        except VcdTaskException as e:
+            if cannot_deploy(e):
+                raise NonRecoverableError(str(e))
+            ctx.logger.error(
+                'Unhandled state validation error: {e}.'.format(e=str(e)))
+            return False
+    return True

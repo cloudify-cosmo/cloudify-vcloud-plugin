@@ -14,9 +14,11 @@
 
 from pyvcloud.vcd.vm import VM
 from pyvcloud.vcd.vapp import VApp
+from pyvcloud.vcd.exceptions import EntityNotFoundException
 
 from .base import VCloudResource
 
+from cloudify import ctx
 
 POWER_STATES = (
     (8, 'powered off'),
@@ -42,6 +44,10 @@ class VCloudvApp(VCloudResource):
         self.tasks = {}
 
     @property
+    def name(self):
+        return self._vapp_name
+
+    @property
     def vapp(self):
         if self._vapp:
             self._vapp.reload()
@@ -52,8 +58,26 @@ class VCloudvApp(VCloudResource):
     @property
     def exposed_data(self):
         return {
-            'lease': self.get_lease()
+            'lease': self.get_lease(),
+            'catalog_items': self.get_catalog_items(),
+            'resources': self.vdc.list_resources()
         }
+
+    def get_catalogs(self):
+        return self.connection.org.list_catalogs()
+
+    def get_catalog_items(self):
+        items = {}
+        for catalog in self.get_catalogs():
+            catalog_name = catalog.get('name')
+            if catalog_name not in items:
+                items[catalog_name] = {}
+            c = self.connection.org.get_catalog(catalog_name)
+            if hasattr(c.CatalogItems, 'CatalogItem'):
+                items[catalog_name][
+                    c.CatalogItems.CatalogItem.get('name')] = \
+                    c.CatalogItems.CatalogItem.items()
+        return items
 
     def get_vapp(self, vapp_name):
         vapp_resource = self.vdc.get_vapp(vapp_name)
@@ -135,7 +159,10 @@ class VCloudvApp(VCloudResource):
         self.vapp.set_lease(deployment_lease, storage_lease)
 
     def get_lease(self):
-        return self.vapp.get_lease()
+        try:
+            return self.vapp.get_lease()
+        except EntityNotFoundException:
+            return
 
 
 class VCloudVM(VCloudResource):

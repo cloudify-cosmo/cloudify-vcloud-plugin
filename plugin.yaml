@@ -81,29 +81,29 @@ data_types:
         type: cloudify.datatypes.vcd.client_config
         description: Configuration options for pyvcloud.vcd.client.Client and pyvcloud.vcd.client.BasicLoginCredentials
         required: false
-#
-#  cloudify.datatypes.vcd.VAppCreate:
-#    properties:
-#      # Arguments supported by pyvcloud.vdc.VDC.create_vapp
-#      name:
-#        type: string
-#        description: The vApp name.
-#      description:
-#        type: string
-#        description: The vApp description.
-#      network:
-#        type: string
-#        description: A network in VCD that the vApp will connect to. You may also provide a relationship of type cloudify.relationships.vcloud.vapp_connected_to_network to a node type cloudify.types.vcloud.Network.
-#        required: false
-#      fence_mode:
-#        type: string
-#        required: false
-#        constraints:
-#        - valid_values: ['natRouted', 'bridged', 'direct', 'isolated']
-#      accept_all_eulas:
-#        type: boolean
-#        description: Acceptance of all EULAs for the vApp template.
-#        required: false
+
+  cloudify.datatypes.vcd.VAppCreate:
+    properties:
+      # Arguments supported by pyvcloud.vdc.VDC.create_vapp
+      name:
+        type: string
+        description: The vApp name.
+        required: false
+      description:
+        type: string
+        description: The vApp description.
+        required: false
+      network:
+        type: string
+        description: A network in VCD that the vApp will connect to. You may also provide a relationship of type cloudify.relationships.vcloud.vapp_connected_to_network to a node type cloudify.types.vcloud.Network.
+        required: false
+      fence_mode:
+        type: string
+        required: false
+      accept_all_eulas:
+        type: boolean
+        description: Acceptance of all EULAs for the vApp template.
+        required: false
 #
 #  cloudify.datatypes.vcd.VAPPInstantiation:
 #    properties:
@@ -382,34 +382,22 @@ node_types:
 #      resource_config:
 #        type: dict
 #
-#  cloudify.nodes.vcloud.Firewall:
-#    derived_from: cloudify.nodes.Root
-#    properties:
-#      <<: cloudify.datatypes.vcloud.BaseProperties
-#      resource_config:
-#        type: dict
-#
-#  cloudify.nodes.vcloud.StaticIPPool:
-#    derived_from: cloudify.nodes.Root
-#    properties:
-#      <<: cloudify.datatypes.vcloud.BaseProperties
-#      resource_config:
-#        type: dict
-#
-#  cloudify.nodes.vcloud.DHCPPool:
-#    derived_from: cloudify.nodes.Root
-#    properties:
-#      <<: cloudify.datatypes.vcloud.BaseProperties
-#      resource_config:
-#        type: dict
-#
-#  cloudify.nodes.vcloud.Nat:
-#    derived_from: cloudify.nodes.Root
-#    properties:
-#      <<: cloudify.datatypes.vcloud.BaseProperties
-#      resource_config:
-#        type: dict
-#
+
+  cloudify.nodes.vcloud.VApp:
+    derived_from: cloudify.nodes.Root
+    properties:
+      <<: *BaseProperties
+      resource_config:
+        type: cloudify.datatypes.vcd.VAppCreate
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: vcd.cloudify_vcd.vapp_tasks.create_vapp
+        stop:
+          implementation: vcd.cloudify_vcd.vapp_tasks.stop_vapp
+        delete:
+          implementation: vcd.cloudify_vcd.vapp_tasks.delete_vapp
+      # Scale should cloudify.datatypes.vcloud.VAPPAddVMs
 
   cloudify.nodes.vcloud.RoutedVDCNetwork:
       derived_from: cloudify.nodes.vcloud.NetworkBase
@@ -516,6 +504,9 @@ relationships:
           implementation: vcd.cloudify_vcd.gateway_tasks.create_nat_rules
         unlink:
           implementation: vcd.cloudify_vcd.gateway_tasks.delete_nat_rules
+
+  cloudify.relationships.vcloud.vapp_connected_to_network:
+    derived_from: cloudify.relationships.connected_to
 
 #  cloudify.relationships.vcloud.vm_contained_in_vapp:
 #    derived_from: cloudify.relationships.contained_in

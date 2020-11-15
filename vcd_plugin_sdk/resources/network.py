@@ -293,7 +293,12 @@ class VCloudGateway(VCloudResource):
 
     def delete_firewall_rule(self, rule_name, rule_id):
         firewall_rule = self.infer_rule(rule_name, [rule_id], match=True)
-        firewall_rule.delete()
+        try:
+            firewall_rule.delete()
+        except AttributeError:
+            raise VCloudSDKException(
+                'Unable to find firewall rule {r} for deletion'.format(
+                    r=rule_id))
 
     def get_list_of_rule_ids(self):
         all_rules = []
@@ -318,10 +323,12 @@ class VCloudGateway(VCloudResource):
                 rule._reload()
                 if rule_name == rule.resource.name:
                     return rule
+        raise VCloudSDKException(
+            'IDS {ids} not found in {rules}'.format(
+                ids=rule_ids, rules=self.get_list_of_rule_ids()))
 
     # NATS
-    def create_nat_rule(self, nat_definition=None):
-        nat_definition = nat_definition
+    def create_nat_rule(self, nat_definition):
         self.gateway.add_nat_rule(**nat_definition)
         return self.get_nat_rule_from_definition(nat_definition)
 
@@ -359,16 +366,21 @@ class VCloudGateway(VCloudResource):
         return True
 
     # DHCP POOLS
-    def add_dhcp_pool(self, **pool_definition):
+    def add_dhcp_pool(self, pool_definition):
         self.gateway.add_dhcp_pool(**pool_definition)
         ip_pool = self.get_dhcp_pool_from_ip_range(
             pool_definition.get('ip_range'))
         return ip_pool.get_pool_info()
 
-    def delete_dhcp_pool(self, **pool_definition):
+    def delete_dhcp_pool(self, pool_definition):
         ip_pool = self.get_dhcp_pool_from_ip_range(
             pool_definition.get('ip_range'))
-        return ip_pool.delete_pool()
+        try:
+            ip_pool.delete_pool()
+        except AttributeError:
+            raise VCloudSDKException(
+                'Unable to find dhcp pool {r} for deletion'.format(
+                    r=pool_definition))
 
     def get_dhcp_pool_from_ip_range(self, ip_range):
         for dhcp_pool in self.dhcp_pools:
@@ -392,12 +404,18 @@ class VCloudGateway(VCloudResource):
             if route.resource_id == network:
                 return route
 
-    def add_static_route(self, **route_definition):
+    def add_static_route(self, route_definition):
         self.gateway.add_static_route(**route_definition)
         return self.get_static_route_from_network(
             route_definition.get('network'))
 
-    def delete_static_route(self, **route_definition):
+    def delete_static_route(self, route_definition):
         static_route = self.get_static_route_from_network(
             route_definition.get('network'))
-        static_route.delete_static_route()
+        try:
+            static_route.delete_static_route()
+        except AttributeError:
+            raise VCloudSDKException(
+                'Unable to find static route {r} for deletion'.format(
+                    r=route_definition))
+

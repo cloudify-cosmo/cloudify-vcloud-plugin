@@ -8,12 +8,12 @@ from vcd_plugin_sdk.resources.network import VCloudNetwork, VCloudGateway
 from vcd_plugin_sdk.resources.storage_profile import VCloudStorageProfile
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-gateway = VCloudGateway('vCloud97-Edge', vdc_name='vCloud97')
+gateway = VCloudGateway('vCloud97-Edges', vdc_name='vCloud97')
 
 rnow = datetime.now()
 CREATE_ROUTED = {
     'network_cidr': '192.169.1.1/24',
-    'gateway_name': 'vCloud97-Edge',
+    'gateway_name': 'vCloud97-Edges',
     'description': 'test routed network',
     'primary_dns_ip': '8.8.8.4',
     'secondary_dns_ip': '8.8.8.8',
@@ -33,7 +33,7 @@ routed_network = VCloudNetwork(
 r2now = datetime.now()
 CREATE_ROUTED2 = {
     'network_cidr': '192.169.2.1/24',
-    'gateway_name': 'vCloud97-Edge',
+    'gateway_name': 'vCloud97-Edges',
     'description': 'test routed network',
     'primary_dns_ip': '8.8.8.4',
     'secondary_dns_ip': '8.8.8.8',
@@ -159,12 +159,13 @@ firewall_rule_info = gateway.create_firewall_rule(test_rule_name, source_values=
 gateway.delete_firewall_rule(firewall_rule_info['Name'], firewall_rule_info['Id'])
 
 # Test NAT rule
-new_nat_rule = gateway.create_nat_rule(action='dnat', original_address='10.10.4.2', translated_address='11.11.4.2', description='nat rule test value')
+nat_rule = dict(action='dnat', original_address='10.10.4.2', translated_address='11.11.4.2', description='nat rule test value')
+new_nat_rule = gateway.create_nat_rule(nat_rule)
 gateway.delete_nat_rule(new_nat_rule['ID'])
 
 # Test DHCP Pool
-new_dhcp_rule = gateway.add_dhcp_pool(ip_range='192.169.2.2-192.169.2.100')
-gateway.delete_dhcp_pool(ip_range='192.169.2.2-192.169.2.100')
+new_dhcp_rule = gateway.add_dhcp_pool(dict(ip_range='192.169.2.2-192.169.2.100'))
+gateway.delete_dhcp_pool(dict(ip_range='192.169.2.2-192.169.2.100'))
 
 # vapp.create()
 
