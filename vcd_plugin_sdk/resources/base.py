@@ -29,6 +29,7 @@ class VCloudResource(object):
     def __init__(self, connection, vdc_name, vapp_name=None, tasks=None):
 
         self._connection = connection or VCloudConnect()
+        self.logger = self.connection.logger
 
         try:
             vdc_resource = self._connection.org.get_vdc(vdc_name)
@@ -64,7 +65,8 @@ class VCloudResource(object):
         # task = json.loads(task_string)  # If task contains non-JSON
         # serializable material, we will need to start encoding and decoding.
         # Leaving this commented out for now.
-        result = self.client.get_task_monitor().wait_for_success(task)
+        result = self.client.get_task_monitor().wait_for_success(
+            task, 10)
         # Return True if the API says the task succeeded.
         return result.get('status') == TaskStatus.SUCCESS.value
 

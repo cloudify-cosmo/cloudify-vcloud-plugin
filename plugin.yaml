@@ -366,22 +366,21 @@ node_types:
 #      resource_config:
 #        type: dict
 #
-#  cloudify.nodes.vcloud.VApp:
-#    derived_from: cloudify.nodes.Root
-#    properties:
-#      <<: cloudify.datatypes.vcloud.BaseProperties
-#      resource_config:
-#        type: cloudify.datatypes.vcd.VApp
-#    interfaces:
-#      # Scale should cloudify.datatypes.vcloud.VAPPAddVMs
-#
-#  cloudify.nodes.vcloud.VM:
-#    derived_from: cloudify.nodes.Compute
-#    properties:
-#      <<: cloudify.datatypes.vcloud.BaseProperties
-#      resource_config:
-#        type: dict
-#
+
+  cloudify.nodes.vcloud.VM:
+    derived_from: cloudify.nodes.Compute
+    properties:
+      <<: *BaseProperties
+      resource_config:
+        type: dict
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: vcd.cloudify_vcd.vapp_tasks.create_vm
+        stop:
+          implementation: vcd.cloudify_vcd.vapp_tasks.stop_vm
+        delete:
+          implementation: vcd.cloudify_vcd.vapp_tasks.delete_vm
 
   cloudify.nodes.vcloud.VApp:
     derived_from: cloudify.nodes.Root
@@ -505,8 +504,14 @@ relationships:
         unlink:
           implementation: vcd.cloudify_vcd.gateway_tasks.delete_nat_rules
 
+  cloudify.relationships.vcloud.vm_connected_to_network:
+    derived_from: cloudify.relationships.connected_to
+
   cloudify.relationships.vcloud.vapp_connected_to_network:
     derived_from: cloudify.relationships.connected_to
+
+  cloudify.relationships.vcloud.vm_contained_in_vapp:
+    derived_from: cloudify.relationships.contained_in
 
 #  cloudify.relationships.vcloud.vm_contained_in_vapp:
 #    derived_from: cloudify.relationships.contained_in

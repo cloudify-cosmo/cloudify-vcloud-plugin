@@ -12,13 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from time import sleep
+
 from pyvcloud.vcd.vm import VM
 from pyvcloud.vcd.vapp import VApp
 from pyvcloud.vcd.exceptions import EntityNotFoundException
 
 from .base import VCloudResource
-
-from cloudify import ctx
+from .network import VCloudNetwork
+from ..exceptions import VCloudSDKException
 
 POWER_STATES = (
     (8, 'powered off'),
@@ -41,7 +43,6 @@ class VCloudvApp(VCloudResource):
         super().__init__(connection, vdc_name, vapp_name)
         self.vapp_name = self._vapp_name
         self._vapp = None
-        self.tasks = {}
 
     @property
     def name(self):
@@ -85,24 +86,18 @@ class VCloudvApp(VCloudResource):
 
     def create(self):
         task = self.vdc.create_vapp(self.vapp_name, **self.kwargs)
-        if 'create' in self.tasks:
-            self.tasks['create'].append(task.items())
-        else:
-            self.tasks['create'] = task.items()
-        return self.tasks['create']
+        self.tasks['create'].append(task.items())
+        return task
 
     def instantiate_vapp(self):
-        task = self.vdc.instantiate_vapp(name=self.vapp_name, **self.kwargs)
-        if 'create' in self.tasks:
-            self.tasks['create'].append(task.items())
-        else:
-            self.tasks['create'] = [task.items()]
-        return self.tasks['create']
+        task = self.vdc.instantiate_vapp(name=self.name, **self.kwargs)
+        self.tasks['create'].append(task.items())
+        return task
 
     def delete(self):
         task = self.vdc.delete_vapp(self.vapp_name)
         self.tasks['delete'] = [task.items()]
-        return self.tasks['delete']
+        return task
 
     def power_on(self, vapp_name=None):
         if not vapp_name:
@@ -145,7 +140,7 @@ class VCloudvApp(VCloudResource):
             self.tasks['add_network'].append(task.items())
         else:
             self.tasks['add_network'] = [task.items()]
-        return self.tasks['add_network']
+        return task
 
     def remove_network(self, network_name):
         task = self.vapp.disconnect_org_vdc_network(network_name)
@@ -153,7 +148,7 @@ class VCloudvApp(VCloudResource):
             self.tasks['remove_network'].append(task.items())
         else:
             self.tasks['remove_network'] = [task.items()]
-        return self.tasks['remove_network']
+        return task
 
     def set_lease(self, deployment_lease=0, storage_lease=0):
         self.vapp.set_lease(deployment_lease, storage_lease)
@@ -178,9 +173,8 @@ class VCloudVM(VCloudResource):
         self._vm_name = vm_name
         self.kwargs = kwargs or {}
         super().__init__(connection, vdc_name, vapp_name)
-        self.vapp_object = VCloudvApp(vapp_name, vdc_name=vdc_name,kwargs=vapp_kwargs)
+        self.vapp_object = VCloudvApp(vapp_name, connection, vdc_name=vdc_name, kwargs=vapp_kwargs)
         self._vm = None
-        self.tasks = {}
 
     @property
     def name(self):
@@ -198,6 +192,22 @@ class VCloudVM(VCloudResource):
     def nics(self):
         return self.vm.list_nics()
 
+    def _get_data(self):
+        return {
+            'cpus': self.vm.get_cpus(),
+            'memory': self.vm.get_memory(),
+            'nics': self.nics,
+        }
+
+    @property
+    def exposed_data(self):
+        for n in range(0, 5):
+            try:
+                return self._get_data()
+            except AttributeError:
+                sleep(1)
+        return {}
+
     def get_vm(self, vm_name):
         vm_resource = self.vapp.get_vm(vm_name)
         vm = VM(self.client, resource=vm_resource)
@@ -206,21 +216,13 @@ class VCloudVM(VCloudResource):
     def create(self, kwargs=None):
         kwargs = kwargs or self.kwargs
         task = self.vapp.add_vms(**kwargs)
-        if 'create' in self.tasks:
-            self.tasks['create'].append(task.items())
-        else:
-            self.tasks['create'] = task.items()
-        return self.tasks['create']
+        self.tasks['create'].append(task.items())
+        return task
 
     def instantiate_vapp(self):
         task = self.vapp_object.instantiate_vapp()
-        if 'create' in self.tasks:
-            # Unlike returns from the SDK, this task is the list item returned
-            # by vapp.instantiate_vapp
-            self.tasks['create'].append(task[-1])
-        else:
-            self.tasks['create'] = [task[-1]]
-        return self.tasks['create']
+        self.tasks['create'].append(task[-1])
+        return task
 
     def delete(self, vm_name=None):
         # TODO: This can be refactored:
@@ -228,7 +230,14 @@ class VCloudVM(VCloudResource):
         vm = self.get_vm(vm_name or self.name)
         task = vm.delete()
         self.tasks['delete'] = [task.items()]
-        return self.tasks['delete']
+        return task
+
+    def check_network(self, name, type):
+        network = VCloudNetwork(name, type, self.connection, self.vdc.name)
+        try:
+            return network.get_network()
+        except VCloudSDKException:
+            return
 
     def power_on(self, vm_name=None):
         if not vm_name:
@@ -278,7 +287,7 @@ class VCloudVM(VCloudResource):
             self.tasks['add_nic'].append(task.items())
         else:
             self.tasks['add_nic'] = [task.items()]
-        return self.tasks['add_nic']
+        return task
 
     def delete_nic(self, index):
         task = self.vm.delete_nic(index)
@@ -286,7 +295,7 @@ class VCloudVM(VCloudResource):
             self.tasks['remove_nic'].append(task.items())
         else:
             self.tasks['remove_nic'] = [task.items()]
-        return self.tasks['remove_nic']
+        return task
 
     def update_nic(self, **kwargs):
         task = self.vm.update_nic(**kwargs)
@@ -294,7 +303,7 @@ class VCloudVM(VCloudResource):
             self.tasks['update_nic'].append(task.items())
         else:
             self.tasks['update_nic'] = [task.items()]
-        return self.tasks['update_nic']
+        return task
 
     def attach_media(self, media_id):
         task = self.vm.insert_cd_from_catalog(media_id)
@@ -302,7 +311,7 @@ class VCloudVM(VCloudResource):
             self.tasks['media'].append(task.items())
         else:
             self.tasks['media'] = [task.items()]
-        return self.tasks['media']
+        return task
 
     def eject_media(self, media_id):
         task = self.vm.eject_cd(media_id)
@@ -310,4 +319,4 @@ class VCloudVM(VCloudResource):
             self.tasks['media'].append(task.items())
         else:
             self.tasks['media'] = [task.items()]
-        return self.tasks['media']
+        return task

@@ -5,10 +5,11 @@ from lxml.objectify import StringElement, IntElement, ObjectifiedElement, BoolEl
 from pyvcloud.vcd.exceptions import (
     VcdTaskException,
     EntityNotFoundException,
+    AccessForbiddenException,
 )
 
 from cloudify import ctx
-from cloudify.exceptions import NonRecoverableError
+from cloudify.exceptions import OperationRetry, NonRecoverableError
 from cloudify.constants import NODE_INSTANCE, RELATIONSHIP_INSTANCE
 
 from .constants import CLIENT_CONFIG_KEYS, CLIENT_CREDENTIALS_KEYS, TYPE_MATRIX, NO_RESOURCE_OK
@@ -64,6 +65,10 @@ class ResourceData(object):
     @property
     def primary_external(self):
         return self._resources[0].get('external')
+
+    @property
+    def primary_vdc(self):
+        return self._resources[0].get('vdc')
 
     @property
     def primary_resource(self):
@@ -398,6 +403,20 @@ def vcd_busy_exception(exc):
 def vcd_unclear_exception(exc):
     if 'Status code: 400/None, None' in str(exc):
         return True
+    if isinstance(exc, AccessForbiddenException):
+        return True
+    return False
+
+
+def vcd_already_exists(exc):
+    if '400/DUPLICATE_NAME' in str(exc):
+        return True
+    return False
+
+
+def vcd_unresolved_vm(exc):
+    if 'Unresolved' in str(exc):
+        return True
     return False
 
 
@@ -414,7 +433,5 @@ def check_if_task_successful(_resource, task):
         except VcdTaskException as e:
             if cannot_deploy(e):
                 raise NonRecoverableError(str(e))
-            ctx.logger.error(
-                'Unhandled state validation error: {e}.'.format(e=str(e)))
-            return False
+            raise OperationRetry('Unhandled state validation error: {e}.'.format(e=str(e)))
     return True

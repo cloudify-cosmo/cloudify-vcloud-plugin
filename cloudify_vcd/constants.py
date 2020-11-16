@@ -19,7 +19,7 @@ TYPE_MATRIX = {
     'cloudify.nodes.vcloud.IsolatedVDCNetwork': [VCloudNetwork],
     'cloudify.nodes.vcloud.RoutedVDCNetwork': [VCloudNetwork],
     'cloudify.nodes.vcloud.VApp': [VCloudvApp],
-    'cloudify.nodes.vcloud.VM': [VCloudVM],
+    'cloudify.nodes.vcloud.VM': [VCloudVM, VCloudvApp],
     'cloudify.nodes.vcloud.Disk': [VCloudDisk],
     'cloudify.nodes.vcloud.Media': [VCloudMedia, VCloudISO],
 }

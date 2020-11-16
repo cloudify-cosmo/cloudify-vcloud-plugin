@@ -1,8 +1,10 @@
 
 from pyvcloud.vcd.exceptions import (
+    AccessForbiddenException,
     EntityNotFoundException,
     UnauthorizedException,
     BadRequestException,
+    NotFoundException,
     VcdTaskException)
 
 from functools import wraps
@@ -38,17 +40,35 @@ def resource_operation(func):
 
         if not resource_data.primary_external:
             try:
-                ctx.logger.info('Before')
+                ctx.logger.debug('Executing func {func} '
+                                 'with args {args} '
+                                 'kwargs {kwargs}'.format(
+                                     func=func, args=args, kwargs=kwargs))
                 resource, result = func(*args, **kwargs)
-                ctx.logger.info('After')
-            except (EntityNotFoundException, BadRequestException) as e:
-                if isinstance(e, EntityNotFoundException):
+                ctx.logger.debug('Executed func {func} '
+                                 'result {result}'.format(
+                                     func=func, result=result))
+            except (AccessForbiddenException,
+                    EntityNotFoundException,
+                    BadRequestException,
+                    NotFoundException) as e:
+                ctx.logger.error(
+                    'Failed to execute func {func} '
+                    'with args {args} '
+                    'kwargs {kwargs} '
+                    'Error: {e}'.format(func=func,
+                                        args=args,
+                                        kwargs=kwargs,
+                                        e=str(e)))
+                if isinstance(e, (TypeError,
+                                  NotFoundException,
+                                  EntityNotFoundException)):
                     if operation_name not in NO_RESOURCE_OK:
                         raise NonRecoverableError(
                             'The expected resource {r} does not exist.'.format(
                                 r=resource_data.primary_id))
                     ctx.logger.error('Attempted to perform {op} '
-                                     'operation on {r},'
+                                     'operation on {r}, '
                                      'but the resource was not '
                                      'found.'.format(
                                          op=operation_name,
@@ -57,7 +77,7 @@ def resource_operation(func):
                     resource_data.primary_ctx.instance.runtime_properties[
                         '__RETRY_BAD_REQUEST'] = True
                     resource_data.primary_ctx.instance.update()
-                    raise OperationRetry(str(e))
+                raise OperationRetry(str(e))
             else:
                 last_task = get_last_task(result)
 
@@ -65,7 +85,7 @@ def resource_operation(func):
             args[0] = True  # Tell the function to expect external resource.
             try:
                 resource, _ = func(*args, **kwargs)
-            except EntityNotFoundException:
+            except (TypeError, NotFoundException, EntityNotFoundException):
                 if operation_name not in NO_RESOURCE_OK:
                     raise NonRecoverableError(
                         'The expected resource {r} does not exist.'.format(

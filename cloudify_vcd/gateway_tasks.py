@@ -1,9 +1,9 @@
 
 from cloudify import ctx
 
-from vcd_plugin_sdk.exceptions import VCloudSDKException
-from .decorators import resource_operation
 from .utils import expose_props
+from .decorators import resource_operation
+from vcd_plugin_sdk.exceptions import VCloudSDKException
 
 
 @resource_operation
@@ -252,8 +252,8 @@ def delete_nat_rules(_,
                      ____,
                      _____,
                      ______,
-                     _______,
                      nat_rule_ctx,
+                     _______,
                      gateway_id,
                      gateway_client,
                      gateway_vdc,
@@ -264,7 +264,7 @@ def delete_nat_rules(_,
     gateway = gateway_class(
         gateway_id, gateway_client, gateway_vdc)
     nat_rules = nat_rule_ctx.instance.runtime_properties.get('rules')
-    for nat_rule_id, _ in nat_rules:
+    for nat_rule_id, _ in nat_rules.items():
         try:
             gateway.delete_nat_rule(nat_rule_id)
         except VCloudSDKException:

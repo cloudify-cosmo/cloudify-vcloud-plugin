@@ -1,7 +1,6 @@
 
 from .decorators import resource_operation
-from .utils import (
-    find_resource_id_from_relationship_by_type)
+from .utils import find_resource_id_from_relationship_by_type
 
 REL_NETWORK_GW = 'cloudify.relationships.vcloud.network_connected_to_gateway'
 

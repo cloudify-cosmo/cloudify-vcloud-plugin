@@ -18,7 +18,10 @@ from pyvcloud.vcd.dhcp_pool import DhcpPool
 from pyvcloud.vcd.vdc_network import VdcNetwork
 from pyvcloud.vcd.static_route import StaticRoute
 from pyvcloud.vcd.firewall_rule import FirewallRule
-from pyvcloud.vcd.exceptions import EntityNotFoundException, NotFoundException
+from pyvcloud.vcd.exceptions import (
+    EntityNotFoundException,
+    BadRequestException,
+    NotFoundException)
 
 from .base import VCloudResource
 from ..exceptions import VCloudSDKException
@@ -329,7 +332,12 @@ class VCloudGateway(VCloudResource):
 
     # NATS
     def create_nat_rule(self, nat_definition):
-        self.gateway.add_nat_rule(**nat_definition)
+        try:
+            self.gateway.add_nat_rule(**nat_definition)
+        except BadRequestException:
+            nat_rule = self.get_nat_rule_from_definition(nat_definition)
+            if not nat_rule:
+                raise
         return self.get_nat_rule_from_definition(nat_definition)
 
     def delete_nat_rule(self, nat_id=None, nat_definition=None):
@@ -367,7 +375,13 @@ class VCloudGateway(VCloudResource):
 
     # DHCP POOLS
     def add_dhcp_pool(self, pool_definition):
-        self.gateway.add_dhcp_pool(**pool_definition)
+        try:
+            self.gateway.add_dhcp_pool(**pool_definition)
+        except BadRequestException:
+            ip_pool = self.get_dhcp_pool_from_ip_range(
+                pool_definition.get('ip_range'))
+            if not ip_pool:
+                raise
         ip_pool = self.get_dhcp_pool_from_ip_range(
             pool_definition.get('ip_range'))
         return ip_pool.get_pool_info()
