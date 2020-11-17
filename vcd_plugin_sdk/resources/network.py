@@ -44,7 +44,8 @@ class VCloudNetwork(VCloudResource):
                  connection=None,
                  vdc_name=None,
                  vapp_name=None,
-                 kwargs=None):
+                 kwargs=None,
+                 tasks=None):
 
         self._network_name = network_name or kwargs.get('network_name')
         self.network_type = network_type
@@ -53,7 +54,7 @@ class VCloudNetwork(VCloudResource):
             del self.kwargs['network_name']
         self._network = None
 
-        super().__init__(connection, vdc_name, vapp_name)
+        super().__init__(connection, vdc_name, vapp_name, tasks=tasks)
 
     @property
     def name(self):
@@ -190,13 +191,14 @@ class VCloudGateway(VCloudResource):
                  gateway_name,
                  connection=None,
                  vdc_name=None,
-                 kwargs=None):
+                 kwargs=None,
+                 tasks=None):
 
         self._gateway_name = gateway_name
         self.kwargs = kwargs
         self._gateway = None
 
-        super().__init__(connection, vdc_name)
+        super().__init__(connection, vdc_name, tasks=tasks)
 
     @property
     def name(self):

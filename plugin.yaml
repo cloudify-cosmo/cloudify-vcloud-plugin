@@ -367,6 +367,19 @@ node_types:
 #        type: dict
 #
 
+  cloudify.nodes.vcloud.Disk:
+    derived_from: cloudify.nodes.Volume
+    properties:
+      <<: *BaseProperties
+      resource_config:
+        type: dict
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: vcd.cloudify_vcd.disk_tasks.create_disk
+        delete:
+          implementation: vcd.cloudify_vcd.disk_tasks.delete_disk
+
   cloudify.nodes.vcloud.VM:
     derived_from: cloudify.nodes.Compute
     properties:
@@ -516,6 +529,15 @@ relationships:
 
   cloudify.relationships.vcloud.vm_contained_in_vapp:
     derived_from: cloudify.relationships.contained_in
+
+  cloudify.relationships.vcloud.vm_connected_to_disk:
+    derived_from: cloudify.relationships.connected_to
+    target_interfaces:
+      cloudify.interfaces.relationship_lifecycle:
+        establish:
+          implementation: vcd.cloudify_vcd.disk_tasks.attach_disk
+        unlink:
+          implementation: vcd.cloudify_vcd.disk_tasks.detach_disk
 
 #  cloudify.relationships.vcloud.vm_contained_in_vapp:
 #    derived_from: cloudify.relationships.contained_in

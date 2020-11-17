@@ -4,6 +4,7 @@ from pyvcloud.vcd.utils import task_to_dict
 from lxml.objectify import StringElement, IntElement, ObjectifiedElement, BoolElement
 from pyvcloud.vcd.exceptions import (
     VcdTaskException,
+    NotFoundException,
     EntityNotFoundException,
     AccessForbiddenException,
 )
@@ -163,7 +164,13 @@ def get_ctxs(_ctx):
     _ctx = _ctx or ctx
 
     if is_relationship(_ctx):
-        return _ctx.source, _ctx.target
+        try:
+            target_interface = _ctx._context['related']['is_target']
+        except KeyError:
+            raise NonRecoverableError('The management worker is using a version of Cloudify Common incompatible with this plugin.')
+        if target_interface:
+            return _ctx.source, _ctx.target
+        return _ctx.target, _ctx.source
     elif is_node_instance(_ctx):
         return _ctx, None
     else:
@@ -239,6 +246,7 @@ def update_runtime_properties(current_ctx, props):
     props = cleanup_objectify(props)
     ctx.logger.debug('Updating instance with properties {props}.'.format(
         props=props))
+
     if is_relationship():
         if current_ctx.instance.id == ctx.source.instance.id:
             ctx.source.instance.runtime_properties.update(props)
@@ -441,6 +449,32 @@ def task_on_failure(exc):
        'Contact your cloud administrator' in str(exc):
         return True
     return False
+
+
+def retry_or_raise(e, r, operation_name):
+    """ When we call func in the decorator, we catch some exceptions.
+    This function determines whether to raise or retry.
+
+    :param e: the exception object
+    :param r: the resource_data object from the decorator
+    :param operation_name: ctx.operation.name.split('.')[-1]
+    :return:
+    """
+    if isinstance(e, (TypeError,
+                      NotFoundException,
+                      EntityNotFoundException)):
+        if operation_name not in NO_RESOURCE_OK:
+            raise NonRecoverableError(
+                'The expected resource {r} does not exist.'.format(
+                    r=r.primary_id))
+        ctx.logger.error(
+            'Attempted to perform {op} operation on {r}, '
+            'but the resource was not found.'.format(
+                op=operation_name, r=r.primary_id))
+    elif vcd_busy_exception(e) or vcd_unclear_exception(e):
+        r.primary_ctx.instance.runtime_properties['__RETRY_BAD_REQUEST'] = True
+        r.primary_ctx.instance.update()
+        raise OperationRetry(str(e))
 
 
 def check_if_task_successful(_resource, task):

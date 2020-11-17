@@ -35,12 +35,13 @@ class VCloudvApp(VCloudResource):
                  vapp_name,
                  connection=None,
                  vdc_name=None,
-                 kwargs=None):
+                 kwargs=None,
+                 tasks=None):
 
         self.kwargs = kwargs or {}
         if 'name' in self.kwargs:
             del self.kwargs['name']
-        super().__init__(connection, vdc_name, vapp_name)
+        super().__init__(connection, vdc_name, vapp_name, tasks=tasks)
         self.vapp_name = self._vapp_name
         self._vapp = None
 
@@ -171,12 +172,13 @@ class VCloudVM(VCloudResource):
                  connection=None,
                  vdc_name=None,
                  kwargs=None,
-                 vapp_kwargs=None):
+                 vapp_kwargs=None,
+                 tasks=None):
 
         self._vm_name = vm_name
         self.kwargs = kwargs or {}
         super().__init__(connection, vdc_name, vapp_name)
-        self.vapp_object = VCloudvApp(vapp_name, connection, vdc_name=vdc_name, kwargs=vapp_kwargs)
+        self.vapp_object = VCloudvApp(vapp_name, connection, vdc_name=vdc_name, kwargs=vapp_kwargs, tasks=tasks)
         self._vm = None
 
     @property
@@ -204,12 +206,15 @@ class VCloudVM(VCloudResource):
 
     @property
     def exposed_data(self):
+        data = {
+            'vapp': self.vapp_object.name
+        }
         for n in range(0, 5):
             try:
-                return self._get_data()
+                data.update(self._get_data())
             except AttributeError:
                 sleep(1)
-        return {}
+        return data
 
     def get_vm(self, vm_name):
         vm_resource = self.vapp.get_vm(vm_name)

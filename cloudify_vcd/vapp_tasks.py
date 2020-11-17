@@ -43,7 +43,7 @@ def create_vapp(_,
 
 
 @resource_operation
-def stop_vapp(_,
+def stop_vapp(vapp_ext,
               vapp_id,
               vapp_client,
               vapp_vdc,
@@ -57,16 +57,13 @@ def stop_vapp(_,
         vapp_vdc,
         kwargs=vapp_config
     )
-    # try:
-    #     vapp.undeploy()
-    # except OperationNotSupportedException:
-    #     pass
-    vapp.undeploy()
+    if not vapp_ext:
+        vapp.undeploy()
     return vapp, None
 
 
 @resource_operation
-def delete_vapp(_,
+def delete_vapp(vapp_ext,
                 vapp_id,
                 vapp_client,
                 vapp_vdc,
@@ -80,7 +77,8 @@ def delete_vapp(_,
         vapp_vdc,
         kwargs=vapp_config
     )
-    vapp.delete()
+    if not vapp_ext:
+        vapp.delete()
     return vapp, None
 
 
@@ -109,6 +107,8 @@ def create_vm(vm_external,
         kwargs={},
         vapp_kwargs=vm_config
     )
+    if vm_external:
+        return vm, None
     if network:
         network_type = get_network_type(network.target.node.type_hierarchy)
         if not vm.check_network(vm_config['network'], network_type):
@@ -149,7 +149,7 @@ def configure_vm(_,
 
 
 @resource_operation
-def start_vm(_,
+def start_vm(vm_external,
              vm_id,
              vm_client,
              vm_vdc,
@@ -166,12 +166,14 @@ def start_vm(_,
         kwargs={},
         vapp_kwargs=vm_config
     )
+    if vm_external:
+        return vm, None
     last_task = vm.power_on()
     return vm, last_task
 
 
 @resource_operation
-def stop_vm(_,
+def stop_vm(vm_external,
             vm_id,
             vm_client,
             vm_vdc,
@@ -188,6 +190,8 @@ def stop_vm(_,
         kwargs={},
         vapp_kwargs=vm_config
     )
+    if vm_external:
+        return vm, None
     try:
         last_task = vm.power_off()
     except (MissingLinkException, OperationNotSupportedException) as e:
@@ -198,7 +202,7 @@ def stop_vm(_,
 
 
 @resource_operation
-def delete_vm(_,
+def delete_vm(vm_external,
               vm_id,
               vm_client,
               vm_vdc,
@@ -215,6 +219,8 @@ def delete_vm(_,
         kwargs={},
         vapp_kwargs=vm_config
     )
+    if vm_external:
+        return vm, None
     try:
         last_task = vm.undeploy()
     except (MissingLinkException, OperationNotSupportedException) as e:

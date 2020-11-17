@@ -40,10 +40,9 @@ def create_network(external_network,
         network_client,
         network_vdc,
         kwargs=network_config)
-    if not external_network:
-        last_task = network.create()
-    else:
-        last_task = None
+    if external_network:
+        return network, None
+    last_task = network.create()
     return network, last_task
 
 
@@ -62,8 +61,7 @@ def delete_network(external_network,
         network_client,
         network_vdc,
         kwargs=network_config)
-    if not external_network:
-        last_task = network.delete()
-    else:
-        last_task = None
+    if external_network:
+        return network, None
+    last_task = network.delete()
     return network, last_task

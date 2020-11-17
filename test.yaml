@@ -67,7 +67,7 @@ node_templates:
         password: 'test_password'
         vm_name: { get_property: [ SELF, resource_id ] }
         hostname: { get_property: [ SELF, resource_id ] }
-        ip_address: '192.169.1.2'
+        ip_address: '192.170.1.2'
       agent_config:
         install_method: none
     relationships:
@@ -75,6 +75,17 @@ node_templates:
         target: routed_network
       - type: cloudify.relationships.vcloud.vm_contained_in_vapp
         target: vapp
+      - type: cloudify.relationships.vcloud.vm_connected_to_disk
+        target: disk
+
+  disk:
+    type: cloudify.nodes.vcloud.Disk
+    properties:
+      client_config: *client_config
+      resource_id: { concat: [ 'test-disk', { get_input: resource_suffix } ] }
+      resource_config:
+        size: 2097152
+        description: test disk
 
   vapp:
     type: cloudify.nodes.vcloud.VApp
@@ -136,29 +147,29 @@ node_templates:
 #      - type: cloudify.relationships.depends_on
 #        target: routed_network2
 #
-  firewall_rules:
-    type: cloudify.nodes.vcloud.FirewallRules
-    properties:
-      client_config: *client_config
-      resource_id: firewall_rules
-      resource_config:
-        test_rule1:
-          source_values:
-            - 'VLAN-102:gatewayinterface'
-            - { concat: [ { get_property: [ routed_network, resource_id ] }, ':network']}
-            - '192.170.1.0:ip'
-          destination_values:
-            - 'VLAN-102:gatewayinterface'
-            - { concat: [ { get_property: [ routed_network2, resource_id ] }, ':network']}
-            - '192.170.1.0:ip'
-          services: [{'tcp': {'any': 'any'}}]
-    relationships:
-      - type: cloudify.relationships.vcloud.firewall_rules_contained_in_gateway
-        target: gateway
-      - type: cloudify.relationships.depends_on
-        target: routed_network
-      - type: cloudify.relationships.depends_on
-        target: routed_network2
+#  firewall_rules:
+#    type: cloudify.nodes.vcloud.FirewallRules
+#    properties:
+#      client_config: *client_config
+#      resource_id: firewall_rules
+#      resource_config:
+#        test_rule1:
+#          source_values:
+#            - 'VLAN-102:gatewayinterface'
+#            - { concat: [ { get_property: [ routed_network, resource_id ] }, ':network']}
+#            - '192.170.1.0:ip'
+#          destination_values:
+#            - 'VLAN-102:gatewayinterface'
+#            - { concat: [ { get_property: [ routed_network2, resource_id ] }, ':network']}
+#            - '192.170.1.0:ip'
+#          services: [{'tcp': {'any': 'any'}}]
+#    relationships:
+#      - type: cloudify.relationships.vcloud.firewall_rules_contained_in_gateway
+#        target: gateway
+#      - type: cloudify.relationships.depends_on
+#        target: routed_network
+#      - type: cloudify.relationships.depends_on
+#        target: routed_network2
 
 #  isolated_network:
 #    type: cloudify.nodes.vcloud.IsolatedVDCNetwork
@@ -176,21 +187,21 @@ node_templates:
 #      - type: cloudify.relationships.vcloud.network_connected_to_gateway
 #        target: gateway
 ##
-  routed_network2:
-    type: cloudify.nodes.vcloud.RoutedVDCNetwork
-    properties:
-      client_config: *client_config
-      resource_id: { concat: [ 'routed-network2-', { get_input: resource_suffix } ] }
-      resource_config:
-        gateway_name: { get_property: [ gateway, resource_id ] }
-        network_cidr: 192.170.2.1/24
-        description: test routed network
-        primary_dns_ip: 8.8.8.4
-        secondary_dns_ip: 8.8.8.8
-    relationships:
-      - type: cloudify.relationships.vcloud.network_connected_to_gateway
-        target: gateway
-
+#  routed_network2:
+#    type: cloudify.nodes.vcloud.RoutedVDCNetwork
+#    properties:
+#      client_config: *client_config
+#      resource_id: { concat: [ 'routed-network2-', { get_input: resource_suffix } ] }
+#      resource_config:
+#        gateway_name: { get_property: [ gateway, resource_id ] }
+#        network_cidr: 192.170.2.1/24
+#        description: test routed network
+#        primary_dns_ip: 8.8.8.4
+#        secondary_dns_ip: 8.8.8.8
+#    relationships:
+#      - type: cloudify.relationships.vcloud.network_connected_to_gateway
+#        target: gateway
+#
   routed_network:
     type: cloudify.nodes.vcloud.RoutedVDCNetwork
     properties:
@@ -198,12 +209,12 @@ node_templates:
       resource_id: { concat: [ 'routed-network-', { get_input: resource_suffix } ] }
       resource_config:
         gateway_name: { get_property: [ gateway, resource_id ] }
-        network_cidr: 192.169.1.1/24
+        network_cidr: 192.170.1.1/24
         description: test routed network
         primary_dns_ip: 8.8.8.4
         secondary_dns_ip: 8.8.8.8
-        ip_range_start: 192.169.1.2
-        ip_range_end: 192.169.1.254
+        ip_range_start: 192.170.1.2
+        ip_range_end: 192.170.1.254
     relationships:
       - type: cloudify.relationships.vcloud.network_connected_to_gateway
         target: gateway

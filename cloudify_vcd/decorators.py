@@ -18,9 +18,8 @@ from .constants import NO_RESOURCE_OK
 from .utils import (
     expose_props,
     get_last_task,
+    retry_or_raise,
     get_resource_data,
-    vcd_busy_exception,
-    vcd_unclear_exception,
     check_if_task_successful)
 
 
@@ -60,24 +59,7 @@ def resource_operation(func):
                                         args=args,
                                         kwargs=kwargs,
                                         e=str(e)))
-                if isinstance(e, (TypeError,
-                                  NotFoundException,
-                                  EntityNotFoundException)):
-                    if operation_name not in NO_RESOURCE_OK:
-                        raise NonRecoverableError(
-                            'The expected resource {r} does not exist.'.format(
-                                r=resource_data.primary_id))
-                    ctx.logger.error('Attempted to perform {op} '
-                                     'operation on {r}, '
-                                     'but the resource was not '
-                                     'found.'.format(
-                                         op=operation_name,
-                                         r=resource_data.primary_id))
-                elif vcd_busy_exception(e) or vcd_unclear_exception(e):
-                    resource_data.primary_ctx.instance.runtime_properties[
-                        '__RETRY_BAD_REQUEST'] = True
-                    resource_data.primary_ctx.instance.update()
-                    raise OperationRetry(str(e))
+                retry_or_raise(e, resource_data, operation_name)
             else:
                 last_task = get_last_task(result)
 
@@ -86,16 +68,16 @@ def resource_operation(func):
             try:
                 resource, _ = func(*args, **kwargs)
             except (TypeError, NotFoundException, EntityNotFoundException):
-                if operation_name not in NO_RESOURCE_OK:
-                    raise NonRecoverableError(
-                        'The expected resource {r} does not exist.'.format(
-                            r=resource_data.primary_id))
                 ctx.logger.error('Attempted to perform {op} '
                                  'operation on {r},'
                                  'but the resource was not '
                                  'found.'.format(
                                      op=operation_name,
                                      r=resource_data.primary_id))
+                if operation_name not in NO_RESOURCE_OK:
+                    raise NonRecoverableError(
+                        'The expected resource {r} does not exist.'.format(
+                            r=resource_data.primary_id))
 
         if not check_if_task_successful(resource, last_task):
             resource_data.primary_ctx.instance.runtime_properties[

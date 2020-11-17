@@ -22,13 +22,14 @@ class VCloudStorageProfile(VCloudResource):
                  profile_name,
                  connection=None,
                  vdc_name=None,
-                 kwargs=None):
+                 kwargs=None,
+                 tasks=None):
 
         self._profile_name = profile_name
         self.kwargs = kwargs or {}
         if 'name' in self.kwargs:
             del self.kwargs['name']
-        super().__init__(connection, vdc_name)
+        super().__init__(connection, vdc_name, tasks=tasks)
 
     @property
     def name(self):

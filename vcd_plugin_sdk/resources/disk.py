@@ -25,7 +25,8 @@ class VCloudDisk(VCloudResource):
                  disk_name,
                  connection=None,
                  vdc_name=None,
-                 kwargs=None):
+                 kwargs=None,
+                 tasks=None):
 
         self._disk_name = disk_name
         self.kwargs = kwargs or {}
@@ -33,7 +34,7 @@ class VCloudDisk(VCloudResource):
         if 'name' in self.kwargs:
             del self.kwargs['name']
 
-        super().__init__(connection, vdc_name)
+        super().__init__(connection, vdc_name, tasks=tasks)
         self.vapp_name = self._vapp_name
         self._vapp = None
         self._id = None
@@ -46,16 +47,20 @@ class VCloudDisk(VCloudResource):
     @property
     def href(self):
         if not self._disk_href:
-            if len(self.tasks['create']) > 0:
-                self._id = self.tasks['create'][0].get('href')
+            self._disk_href = self._get_identifier('href')
         return self._disk_href
 
     @property
     def id(self):
         if not self._id:
-            if len(self.tasks['create']) > 0:
-                self._id = self.tasks['create'][0].get('id')
+            self._id = self._get_identifier('id')
         return self._id
+
+    def _get_identifier(self, identifier):
+        if len(self.tasks['create']) > 0:
+            for pair in self.tasks['create'][0]:
+                if pair.get(identifier):
+                    return pair.get(identifier)
 
     @property
     def disk(self):
