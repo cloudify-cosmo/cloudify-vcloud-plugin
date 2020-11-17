@@ -222,5 +222,6 @@ def delete_vm(_,
             raise
         last_task = None
     if vm_ctx.instance.runtime_properties.get('__VM_CREATE_VAPP'):
+        vm.vapp_object.delete_vms(vm_id)
         last_task = vm.vapp_object.delete()
     return vm, last_task

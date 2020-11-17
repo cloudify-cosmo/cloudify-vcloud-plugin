@@ -134,6 +134,9 @@ class VCloudvApp(VCloudResource):
             vapp = self.vapp.get_vm(vapp_name)
             vapp.vapp.undeploy(action)
 
+    def delete_vms(self, vm_names):
+        return self.vapp.delete_vms(vm_names)
+
     def add_network(self, **kwargs):
         task = self.vapp.connect_org_vdc_network(**kwargs)
         if 'add_network' in self.tasks:
