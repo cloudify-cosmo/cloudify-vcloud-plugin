@@ -84,7 +84,7 @@ node_templates:
       resource_config:
         description: test description
         fence_mode: natRouted
-        accept_all_eulas: True
+        accept_all_eulas: true
     relationships:
       - type: cloudify.relationships.vcloud.vapp_connected_to_network
         target: routed_network
@@ -176,21 +176,21 @@ node_templates:
 #      - type: cloudify.relationships.vcloud.network_connected_to_gateway
 #        target: gateway
 ##
-#  routed_network2:
-#    type: cloudify.nodes.vcloud.RoutedVDCNetwork
-#    properties:
-#      client_config: *client_config
-#      resource_id: { concat: [ 'routed-network2-', { get_input: resource_suffix } ] }
-#      resource_config:
-#        gateway_name: { get_property: [ gateway, resource_id ] }
-#        network_cidr: 192.170.2.1/24
-#        description: test routed network
-#        primary_dns_ip: 8.8.8.4
-#        secondary_dns_ip: 8.8.8.8
-#    relationships:
-#      - type: cloudify.relationships.vcloud.network_connected_to_gateway
-#        target: gateway
-#
+  routed_network2:
+    type: cloudify.nodes.vcloud.RoutedVDCNetwork
+    properties:
+      client_config: *client_config
+      resource_id: { concat: [ 'routed-network2-', { get_input: resource_suffix } ] }
+      resource_config:
+        gateway_name: { get_property: [ gateway, resource_id ] }
+        network_cidr: 192.170.2.1/24
+        description: test routed network
+        primary_dns_ip: 8.8.8.4
+        secondary_dns_ip: 8.8.8.8
+    relationships:
+      - type: cloudify.relationships.vcloud.network_connected_to_gateway
+        target: gateway
+
   routed_network:
     type: cloudify.nodes.vcloud.RoutedVDCNetwork
     properties:
@@ -198,12 +198,12 @@ node_templates:
       resource_id: { concat: [ 'routed-network-', { get_input: resource_suffix } ] }
       resource_config:
         gateway_name: { get_property: [ gateway, resource_id ] }
-        network_cidr: 192.170.1.1/24
+        network_cidr: 192.169.1.1/24
         description: test routed network
         primary_dns_ip: 8.8.8.4
         secondary_dns_ip: 8.8.8.8
-        ip_range_start: 192.170.1.2
-        ip_range_end: 192.170.1.254
+        ip_range_start: 192.169.1.2
+        ip_range_end: 192.169.1.254
     relationships:
       - type: cloudify.relationships.vcloud.network_connected_to_gateway
         target: gateway

@@ -389,7 +389,7 @@ def expose_props(operation_name, resource=None, new_props=None, _ctx=None):
 
 def get_last_task(task):
     try:
-        return task_to_dict(task.Tasks.Task)
+        return task_to_dict(task.Tasks.Task[0])
     except AttributeError:
         return task
 
@@ -426,12 +426,29 @@ def cannot_deploy(exc):
     return False
 
 
+def cannot_power_off(exc):
+    if 'Current state of vm: Powered off' in str(exc):
+        return True
+    elif 'RelationType.POWER_OFF' in str(exc):
+        return True
+    return False
+
+
+def task_on_failure(exc):
+    if 'Unable to perform this action. ' \
+       'Contact your cloud administrator' in str(exc):
+        return True
+    return False
+
+
 def check_if_task_successful(_resource, task):
     if task:
+        ctx.logger.info('Task: {task}'.format(task=task.items()))
         try:
             return _resource.task_successful(task)
         except VcdTaskException as e:
-            if cannot_deploy(e):
+            if cannot_deploy(e) or task_on_failure(e):
                 raise NonRecoverableError(str(e))
-            raise OperationRetry('Unhandled state validation error: {e}.'.format(e=str(e)))
+            raise OperationRetry(
+                'Unhandled state validation error: {e}.'.format(e=str(e)))
     return True

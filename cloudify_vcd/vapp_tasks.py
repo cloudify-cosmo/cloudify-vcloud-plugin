@@ -1,6 +1,6 @@
-
 from pyvcloud.vcd.exceptions import (
     BadRequestException,
+    MissingLinkException,
     OperationNotSupportedException)
 
 from cloudify.exceptions import OperationRetry
@@ -8,6 +8,7 @@ from cloudify.exceptions import OperationRetry
 from .decorators import resource_operation
 from .network_tasks import get_network_type
 from .utils import (
+    cannot_power_off,
     find_rel_by_type,
     vcd_unresolved_vm,
     vcd_already_exists,
@@ -33,13 +34,12 @@ def create_vapp(_,
     if network and 'network' not in vapp_config:
         vapp_config['network'] = network
 
-    vapp = vapp_class(
+    return vapp_class(
         vapp_id,
         vapp_client,
         vapp_vdc,
         kwargs=vapp_config
-    )
-    return vapp, None
+    ), None
 
 
 @resource_operation
@@ -129,6 +129,26 @@ def create_vm(vm_external,
 
 
 @resource_operation
+def configure_vm(_,
+                 vm_id,
+                 vm_client,
+                 vm_vdc,
+                 vm_config,
+                 vm_class,
+                 vm_ctx):
+    vapp_name = find_resource_id_from_relationship_by_type(
+        vm_ctx.instance, REL_VM_VAPP)
+    return vm_class(
+        vm_id,
+        vapp_name,
+        vm_client,
+        vdc_name=vm_vdc,
+        kwargs={},
+        vapp_kwargs=vm_config
+    ), None
+
+
+@resource_operation
 def start_vm(_,
              vm_id,
              vm_client,
@@ -170,8 +190,8 @@ def stop_vm(_,
     )
     try:
         last_task = vm.power_off()
-    except OperationNotSupportedException as e:
-        if not vcd_unresolved_vm(e):
+    except (MissingLinkException, OperationNotSupportedException) as e:
+        if not vcd_unresolved_vm(e) and not cannot_power_off(e):
             raise
         last_task = None
     return vm, last_task
@@ -197,8 +217,8 @@ def delete_vm(_,
     )
     try:
         last_task = vm.undeploy()
-    except OperationNotSupportedException as e:
-        if not vcd_unresolved_vm(e):
+    except (MissingLinkException, OperationNotSupportedException) as e:
+        if not vcd_unresolved_vm(e) and not cannot_power_off(e):
             raise
         last_task = None
     if vm_ctx.instance.runtime_properties.get('__VM_CREATE_VAPP'):

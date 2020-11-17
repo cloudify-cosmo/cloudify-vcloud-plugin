@@ -377,6 +377,10 @@ node_types:
       cloudify.interfaces.lifecycle:
         create:
           implementation: vcd.cloudify_vcd.vapp_tasks.create_vm
+        configure:
+          implementation: vcd.cloudify_vcd.vapp_tasks.configure_vm
+        start:
+          implementation: vcd.cloudify_vcd.vapp_tasks.start_vm
         stop:
           implementation: vcd.cloudify_vcd.vapp_tasks.stop_vm
         delete:

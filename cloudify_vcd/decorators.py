@@ -77,7 +77,7 @@ def resource_operation(func):
                     resource_data.primary_ctx.instance.runtime_properties[
                         '__RETRY_BAD_REQUEST'] = True
                     resource_data.primary_ctx.instance.update()
-                raise OperationRetry(str(e))
+                    raise OperationRetry(str(e))
             else:
                 last_task = get_last_task(result)
 
