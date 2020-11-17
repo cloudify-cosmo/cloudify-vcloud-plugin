@@ -397,6 +397,8 @@ def get_last_task(task):
 def vcd_busy_exception(exc):
     if 'is busy, cannot proceed with the operation' in str(exc):
         return True
+    elif 'cannot be deleted, because it is in use' in str(exc):
+        return True
     return False
 
 
