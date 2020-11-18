@@ -21,7 +21,7 @@ TYPE_MATRIX = {
     'cloudify.nodes.vcloud.VApp': [VCloudvApp],
     'cloudify.nodes.vcloud.VM': [VCloudVM, VCloudvApp],
     'cloudify.nodes.vcloud.Disk': [VCloudDisk, VCloudVM],
-    'cloudify.nodes.vcloud.Media': [VCloudMedia, VCloudISO],
+    'cloudify.nodes.vcloud.Media': [VCloudMedia, VCloudVM],
 }
 
 CLIENT_CONFIG_KEYS = ['uri', 'api_version', 'verify_ssl_certs', 'log_file',

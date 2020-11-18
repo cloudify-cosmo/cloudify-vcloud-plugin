@@ -77,6 +77,21 @@ node_templates:
         target: vapp
       - type: cloudify.relationships.vcloud.vm_connected_to_disk
         target: disk
+      - type: cloudify.relationships.vcloud.vm_connected_to_media
+        target: media
+
+  media:
+    type: cloudify.nodes.vcloud.Media
+    properties:
+      client_config: *client_config
+      resource_id: { concat: [ 'test-media', { get_input: resource_suffix } ] }
+      resource_config:
+        catalog_name: { get_input: catalog }
+      iso:
+        vol_ident: cidata
+        sys_ident: ''
+        files:
+          ISO/FOLDER/content.json: test content
 
   disk:
     type: cloudify.nodes.vcloud.Disk
