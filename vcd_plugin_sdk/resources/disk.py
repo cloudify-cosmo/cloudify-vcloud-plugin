@@ -101,15 +101,6 @@ class VCloudDisk(VCloudResource):
         self.tasks['delete'].append(task.items())
         return task
 
-    def update(self, disk_id=None, disk_name=None, **kwargs):
-        disk_id = disk_id or self.id
-        if disk_id:
-            task = self.vdc.update_disk(disk_id=disk_id, **kwargs)
-        else:
-            task = self.vdc.update_disk(disk_name or self.name, **kwargs)
-        self.tasks['update'].append(task.items())
-        return task
-
 
 class VCloudISO(object):
 
@@ -220,7 +211,7 @@ class VCloudMedia(VCloudResource):
     def media(self):
         if not self._media:
             self._media = self.connection.org.get_catalog_item(
-            self.catalog_name, self.name)
+                self.catalog_name, self.name)
         return self._media
 
     def get_media(self, catalog_name=None, media_name=None):
