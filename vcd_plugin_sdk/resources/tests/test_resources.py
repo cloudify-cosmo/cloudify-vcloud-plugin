@@ -313,3 +313,40 @@ def test_vcloud_gateway_dhcp_pool(*_, **__):
         assert isinstance(vcloud_gateway.delete_dhcp_pool(pool_definition),
                           mock.MagicMock)
 
+    vcloud_gateway.get_dhcp_pool_from_ip_range(pool_definition['ip_range'])
+    assert vcloud_gateway.client.get_resource.call_count == 4
+
+
+@mock.patch('pyvcloud.vcd.gateway.Gateway._build_static_routes_href')
+@mock.patch('pyvcloud.vcd.vdc.VDC.get_gateway',
+            return_value={'href': 'foo'})
+@mock.patch('vcd_plugin_sdk.connection.Org', autospec=True)
+@mock.patch('vcd_plugin_sdk.connection.Client', autospec=True)
+def test_vcloud_gateway_static_route(*_, **__):
+    logger = mock.Mock()
+    tasks = {'create': [[{'id': 'bar'}, {'href': 'foo/bar'}]], 'delete': []}
+    vcloud_connect = VCloudConnect(logger, TEST_CONFIG, TEST_CREDENTIALS)
+    config = {}
+    vcloud_gateway = VCloudGateway('foo', vcloud_connect, 'vdc', config, tasks)
+    assert isinstance(vcloud_gateway.get_static_routes(), list)
+    vcloud_gateway.get_static_route_from_network('foo')
+
+    mock_return = mock.Mock()
+    mock_return.resource_id = 'foo'
+    with mock.patch('vcd_plugin_sdk.resources.network.'
+                    'VCloudGateway.get_static_routes',
+                    return_value=[mock_return]):
+        assert vcloud_gateway.get_static_route_from_network('foo') ==\
+               mock_return
+    route_definition = {
+        'network': '192.170.3.0/24',
+        'next_hop': '192.168.1.1',
+        'description': 'Test blueprint example'
+    }
+    vcloud_gateway.add_static_route(route_definition)
+    assert vcloud_gateway.client.put_resource.call_count == 1
+    with mock.patch('vcd_plugin_sdk.resources.network.'
+                    'VCloudGateway.get_static_route_from_network',
+                    return_value=mock_return):
+        vcloud_gateway.delete_static_route(route_definition)
+        assert mock_return.delete_static_route.called
