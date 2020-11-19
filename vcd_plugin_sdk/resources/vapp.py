@@ -85,11 +85,6 @@ class VCloudvApp(VCloudResource):
         vapp_resource = self.vdc.get_vapp(vapp_name)
         return VApp(self.client, resource=vapp_resource)
 
-    def create(self):
-        task = self.vdc.create_vapp(self.vapp_name, **self.kwargs)
-        self.tasks['create'].append(task.items())
-        return task
-
     def instantiate_vapp(self):
         task = self.vdc.instantiate_vapp(name=self.name, **self.kwargs)
         self.tasks['create'].append(task.items())

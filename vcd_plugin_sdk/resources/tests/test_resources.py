@@ -13,6 +13,9 @@ from ..disk import (
     VCloudISO,
     VCloudDisk,
     VCloudMedia)
+from ..vapp import (
+    VCloudVM,
+    VCloudvApp)
 from ..network import (
     VCloudNetwork,
     VCloudGateway)
@@ -350,3 +353,26 @@ def test_vcloud_gateway_static_route(*_, **__):
                     return_value=mock_return):
         vcloud_gateway.delete_static_route(route_definition)
         assert mock_return.delete_static_route.called
+
+
+@mock.patch('pyvcloud.vcd.vdc.VDC.get_vapp')
+@mock.patch('vcd_plugin_sdk.connection.Org', autospec=True)
+@mock.patch('vcd_plugin_sdk.connection.Client', autospec=True)
+def test_vcloud_media(*_, **__):
+    logger = mock.Mock()
+    tasks = mock.Mock()
+    vcloud_connect = VCloudConnect(logger, TEST_CONFIG, TEST_CREDENTIALS)
+    config = {
+        'description': 'foo',
+        'fence_mode': 'bar',
+        'accept_all_eulas': True,
+        'network_name': 'foo'}
+    vcloud_vapp = VCloudvApp('foo', vcloud_connect, 'vdc', config, tasks)
+    assert vcloud_vapp.name == 'foo'
+    assert isinstance(vcloud_vapp.vapp, pyvcloud_vapp)
+    assert 'resources', 'catalog_items' in vcloud_vapp.exposed_data
+    vcloud_vapp.get_catalogs()
+    assert vcloud_vapp.connection.org.list_catalogs.call_count == 1
+    vcloud_vapp.get_catalog_items()
+    assert vcloud_vapp.connection.org.list_catalogs.call_count == 2
+    assert isinstance(vcloud_vapp.get_vapp('foo'), pyvcloud_vapp)

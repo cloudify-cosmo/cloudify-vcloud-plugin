@@ -15,6 +15,8 @@
 from .base import VCloudResource
 
 # CURRENTLY THIS ISNT USED :)
+raise Exception('This section is not tested.')
+
 
 class VCloudStorageProfile(VCloudResource):
 
