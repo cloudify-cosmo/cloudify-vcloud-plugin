@@ -13,7 +13,7 @@ from ..connection import (
 
 @mock.patch('vcd_plugin_sdk.connection.Org', autospec=True)
 @mock.patch('vcd_plugin_sdk.connection.Client', autospec=True)
-def test_vcloud_connect(_, __):
+def test_vcloud_connect(*_, **__):
     logger = mock.Mock()
     vcloud_connect = VCloudConnect(logger, TEST_CONFIG, TEST_CREDENTIALS)
     assert vcloud_connect.client_config.asdict() == TEST_CLIENT_CONFIG

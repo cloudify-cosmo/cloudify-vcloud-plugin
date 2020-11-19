@@ -112,11 +112,11 @@ class VCloudNetwork(VCloudResource):
                 name=network_name)
         else:
             raise VCloudSDKException(
-                'The property network_type {network_type} is not one of '
-                '[\'routed_vdc_network\', '
-                '\'isolated_vdc_network\', '
-                '\'directly_connected_vdc_network\', '
-                '\'vapp_network\]'.format(network_type=self.network_type))
+                "The property network_type {network_type} is not one of "
+                "['routed_vdc_network', "
+                "'isolated_vdc_network', "
+                "'directly_connected_vdc_network', "
+                "'vapp_network]".format(network_type=self.network_type))
         return VdcNetwork(self.client, resource=network_resource)
 
     def create(self):
@@ -148,11 +148,11 @@ class VCloudNetwork(VCloudResource):
                 name=self.name, **self.kwargs)
         else:
             raise VCloudSDKException(
-                'The property network_type {network_type} is not one of '
-                '[\'routed_vdc_network\', '
-                '\'isolated_vdc_network\', '
-                '\'directly_connected_vdc_network\', '
-                '\'vapp_network\]'.format(network_type=self.network_type))
+                "The property network_type {network_type} is not one of "
+                "['routed_vdc_network', "
+                "'isolated_vdc_network', "
+                "'directly_connected_vdc_network', "
+                "'vapp_network]".format(network_type=self.network_type))
 
     def _delete(self):
         if self.network_type == 'routed_vdc_network':
@@ -169,11 +169,11 @@ class VCloudNetwork(VCloudResource):
             return self.vapp.delete_vapp_network(self.name)
         else:
             raise VCloudSDKException(
-                'The property network_type {network_type} is not one of '
-                '[\'routed_vdc_network\', '
-                '\'isolated_vdc_network\', '
-                '\'directly_connected_vdc_network\', '
-                '\'vapp_network\]'.format(network_type=self.network_type))
+                "The property network_type {network_type} is not one of "
+                "['routed_vdc_network', "
+                "'isolated_vdc_network', "
+                "'directly_connected_vdc_network', "
+                "'vapp_network]".format(network_type=self.network_type))
 
     def add_static_ip_pool_and_dns(self, **kwargs):
         return self.network.add_static_ip_pool_and_dns(**kwargs)
@@ -182,7 +182,7 @@ class VCloudNetwork(VCloudResource):
         return self.network.modify_static_ip_pool(**kwargs)
 
     def remove_static_ip_pool(self, **kwargs):
-        return self.remove_static_ip_pool(**kwargs)
+        return self.network.remove_static_ip_pool(**kwargs)
 
 
 class VCloudGateway(VCloudResource):
@@ -293,8 +293,8 @@ class VCloudGateway(VCloudResource):
         self.gateway.add_firewall_rule(
             rule_name, action, _type, enabled, logging_enabled)
         new_rule = self.infer_rule(rule_name, before_rules)
-        new_rule.edit(source_values, destination_values, services)
-        return new_rule.info_firewall_rule()
+        new_rule.edit(source_values, destination_values, services)  # no test
+        return new_rule.info_firewall_rule()  # no test
 
     def delete_firewall_rule(self, rule_name, rule_id):
         firewall_rule = self.infer_rule(rule_name, [rule_id], match=True)
@@ -342,20 +342,8 @@ class VCloudGateway(VCloudResource):
                 raise
         return self.get_nat_rule_from_definition(nat_definition)
 
-    def delete_nat_rule(self, nat_id=None, nat_definition=None):
-        nat_rule = None
-        if nat_definition:
-            nat_rule = self.get_nat_rule_from_definition(nat_definition)
-        elif nat_id:
-            nat_rule = NatRule(self.client, self.name, rule_id=nat_id)
-        elif not nat_rule:
-            raise VCloudSDKException(
-                'Unable to find nat rule for deletion, because neither '
-                'nat_id {nat_id}, nor nat_definition {definition} '
-                'resolved to any known rules for gateway {gateway}.'.format(
-                    nat_id=nat_id,
-                    definition=nat_definition,
-                    gateway=self.name))
+    def delete_nat_rule(self, nat_id):
+        nat_rule = NatRule(self.client, self.name, rule_id=nat_id)
         return nat_rule.delete_nat_rule()
 
     def get_nat_rule_from_definition(self, nat_definition):
@@ -397,6 +385,7 @@ class VCloudGateway(VCloudResource):
             raise VCloudSDKException(
                 'Unable to find dhcp pool {r} for deletion'.format(
                     r=pool_definition))
+        return ip_pool
 
     def get_dhcp_pool_from_ip_range(self, ip_range):
         for dhcp_pool in self.dhcp_pools:
