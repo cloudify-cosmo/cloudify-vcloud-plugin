@@ -136,7 +136,7 @@ node_types:
     properties:
       <<: *BaseProperties
       resource_config:
-        type: data
+        type: dict
     interfaces:
       cloudify.interfaces.lifecycle:
         create:
