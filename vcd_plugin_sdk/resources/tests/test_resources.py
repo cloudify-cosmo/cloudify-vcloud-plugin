@@ -4,21 +4,22 @@ import pytest
 from io import BytesIO
 
 from pyvcloud.vcd.vdc import VDC as pyvcloud_vdc
+from pyvcloud.vcd.vm import VM as pyvcloud_vm
 from pyvcloud.vcd.vapp import VApp as pyvcloud_vapp
 from pyvcloud.vcd.client import Client as pyvcloud_client
 from pyvcloud.vcd.gateway import Gateway as pyvcloud_gateway
 from pyvcloud.vcd.vdc_network import VdcNetwork as pyvcloud_network
 
-from ..disk import (
-    VCloudISO,
-    VCloudDisk,
-    VCloudMedia)
 from ..vapp import (
     VCloudVM,
     VCloudvApp)
 from ..network import (
     VCloudNetwork,
     VCloudGateway)
+from ..disk import (
+    VCloudISO,
+    VCloudDisk,
+    VCloudMedia)
 from ..base import VCloudResource
 
 from ...connection import VCloudConnect
@@ -115,14 +116,14 @@ def test_vcloud_disk(*_, **__):
     vcloud_disk.delete()
 
 
+@mock.patch('vcd_plugin_sdk.connection.Org', autospec=True)
 @mock.patch('pyvcloud.vcd.vdc.VDC.get_routed_orgvdc_network')
 @mock.patch('pyvcloud.vcd.vdc.VDC.get_direct_orgvdc_network')
+@mock.patch('vcd_plugin_sdk.connection.Client', autospec=True)
 @mock.patch('pyvcloud.vcd.vdc.VDC.get_isolated_orgvdc_network')
 @mock.patch('pyvcloud.vcd.vdc.VDC.get_gateway', return_value={'href': 'foo'})
 @mock.patch('pyvcloud.vcd.platform.Platform.get_external_network',
             return_value={'href': 'foo'})
-@mock.patch('vcd_plugin_sdk.connection.Org', autospec=True)
-@mock.patch('vcd_plugin_sdk.connection.Client', autospec=True)
 def test_vcloud_network(*_, **__):
     logger = mock.Mock()
     tasks = {'create': [[{'id': 'bar'}, {'href': 'foo/bar'}]], 'delete': []}
@@ -169,8 +170,10 @@ def test_vcloud_network(*_, **__):
         assert vcloud_network.client.put_linked_resource.called
 
 
+@mock.patch('vcd_plugin_sdk.connection.Org', autospec=True)
 @mock.patch('pyvcloud.vcd.gateway.Gateway._build_dhcp_href')
 @mock.patch('pyvcloud.vcd.gateway.Gateway.get_firewall_rules')
+@mock.patch('vcd_plugin_sdk.connection.Client', autospec=True)
 @mock.patch('pyvcloud.vcd.gateway.Gateway._build_nat_rule_href')
 @mock.patch('pyvcloud.vcd.gateway.Gateway.list_firewall_objects')
 @mock.patch('pyvcloud.vcd.gateway.Gateway._build_static_routes_href')
@@ -178,8 +181,6 @@ def test_vcloud_network(*_, **__):
 @mock.patch('pyvcloud.vcd.vdc.VDC.get_gateway', return_value={'href': 'foo'})
 @mock.patch('pyvcloud.vcd.platform.Platform.get_external_network',
             return_value={'href': 'foo'})
-@mock.patch('vcd_plugin_sdk.connection.Org', autospec=True)
-@mock.patch('vcd_plugin_sdk.connection.Client', autospec=True)
 def test_vcloud_gateway(*_, **__):
     logger = mock.Mock()
     tasks = {'create': [[{'id': 'bar'}, {'href': 'foo/bar'}]], 'delete': []}
@@ -201,8 +202,10 @@ def test_vcloud_gateway(*_, **__):
     assert vcloud_gateway.vdc.get_gateway.called
 
 
+@mock.patch('vcd_plugin_sdk.connection.Org', autospec=True)
 @mock.patch('pyvcloud.vcd.gateway.Gateway._build_dhcp_href')
 @mock.patch('pyvcloud.vcd.gateway.Gateway.get_firewall_rules')
+@mock.patch('vcd_plugin_sdk.connection.Client', autospec=True)
 @mock.patch('pyvcloud.vcd.gateway.Gateway._build_nat_rule_href')
 @mock.patch('pyvcloud.vcd.gateway.Gateway.list_firewall_objects')
 @mock.patch('pyvcloud.vcd.gateway.Gateway._build_static_routes_href')
@@ -212,8 +215,6 @@ def test_vcloud_gateway(*_, **__):
             return_value={'href': 'foo'})
 @mock.patch('pyvcloud.vcd.platform.Platform.get_external_network',
             return_value={'href': 'foo'})
-@mock.patch('vcd_plugin_sdk.connection.Org', autospec=True)
-@mock.patch('vcd_plugin_sdk.connection.Client', autospec=True)
 def test_vcloud_gateway_firewall_rule(*_, **__):
 
     logger = mock.Mock()
@@ -262,11 +263,11 @@ def test_vcloud_gateway_firewall_rule(*_, **__):
                 pytest.fail('Infer rule failed to return a rule.')
 
 
+@mock.patch('vcd_plugin_sdk.connection.Org', autospec=True)
+@mock.patch('vcd_plugin_sdk.connection.Client', autospec=True)
 @mock.patch('pyvcloud.vcd.gateway.Gateway._build_nat_rule_href')
 @mock.patch('pyvcloud.vcd.vdc.VDC.get_gateway',
             return_value={'href': 'foo'})
-@mock.patch('vcd_plugin_sdk.connection.Org', autospec=True)
-@mock.patch('vcd_plugin_sdk.connection.Client', autospec=True)
 def test_vcloud_gateway_nat_rule(*_, **__):
     logger = mock.Mock()
     tasks = {'create': [[{'id': 'bar'}, {'href': 'foo/bar'}]], 'delete': []}
@@ -295,11 +296,11 @@ def test_vcloud_gateway_nat_rule(*_, **__):
     assert vcloud_gateway.compare_nat_rule(info, rule_definition)
 
 
+@mock.patch('vcd_plugin_sdk.connection.Org', autospec=True)
 @mock.patch('pyvcloud.vcd.gateway.Gateway._build_dhcp_href')
+@mock.patch('vcd_plugin_sdk.connection.Client', autospec=True)
 @mock.patch('pyvcloud.vcd.vdc.VDC.get_gateway',
             return_value={'href': 'foo'})
-@mock.patch('vcd_plugin_sdk.connection.Org', autospec=True)
-@mock.patch('vcd_plugin_sdk.connection.Client', autospec=True)
 def test_vcloud_gateway_dhcp_pool(*_, **__):
     logger = mock.Mock()
     tasks = {'create': [[{'id': 'bar'}, {'href': 'foo/bar'}]], 'delete': []}
@@ -320,11 +321,11 @@ def test_vcloud_gateway_dhcp_pool(*_, **__):
     assert vcloud_gateway.client.get_resource.call_count == 4
 
 
+@mock.patch('vcd_plugin_sdk.connection.Org', autospec=True)
+@mock.patch('vcd_plugin_sdk.connection.Client', autospec=True)
 @mock.patch('pyvcloud.vcd.gateway.Gateway._build_static_routes_href')
 @mock.patch('pyvcloud.vcd.vdc.VDC.get_gateway',
             return_value={'href': 'foo'})
-@mock.patch('vcd_plugin_sdk.connection.Org', autospec=True)
-@mock.patch('vcd_plugin_sdk.connection.Client', autospec=True)
 def test_vcloud_gateway_static_route(*_, **__):
     logger = mock.Mock()
     tasks = {'create': [[{'id': 'bar'}, {'href': 'foo/bar'}]], 'delete': []}
@@ -356,11 +357,12 @@ def test_vcloud_gateway_static_route(*_, **__):
 
 
 @mock.patch('pyvcloud.vcd.vdc.VDC.get_vapp')
+@mock.patch('pyvcloud.vcd.vdc.VDC.get_vapp_href')
 @mock.patch('vcd_plugin_sdk.connection.Org', autospec=True)
 @mock.patch('vcd_plugin_sdk.connection.Client', autospec=True)
-def test_vcloud_media(*_, **__):
+def test_vcloud_vapp(*_, **__):
     logger = mock.Mock()
-    tasks = mock.Mock()
+    tasks = {'create': [[{'id': 'bar'}, {'href': 'foo/bar'}]], 'delete': []}
     vcloud_connect = VCloudConnect(logger, TEST_CONFIG, TEST_CREDENTIALS)
     config = {
         'description': 'foo',
@@ -376,3 +378,123 @@ def test_vcloud_media(*_, **__):
     vcloud_vapp.get_catalog_items()
     assert vcloud_vapp.connection.org.list_catalogs.call_count == 2
     assert isinstance(vcloud_vapp.get_vapp('foo'), pyvcloud_vapp)
+
+    vcloud_vapp.delete()
+    assert vcloud_vapp.client.delete_resource.called
+    vcloud_vapp.power_on()
+    assert vcloud_vapp.client.post_linked_resource.call_count == 1
+    vcloud_vapp.power_off()
+    assert vcloud_vapp.client.post_linked_resource.call_count == 2
+    vcloud_vapp.shutdown()
+    assert vcloud_vapp.client.post_linked_resource.call_count == 3
+    vcloud_vapp.deploy()
+    assert vcloud_vapp.client.post_linked_resource.call_count == 4
+    vcloud_vapp.undeploy()
+    assert vcloud_vapp.client.post_linked_resource.call_count == 5
+    with mock.patch('lxml.objectify.deannotate'):
+        with mock.patch('lxml.etree.cleanup_namespaces'):
+            vcloud_vapp.set_lease(1, 1)
+            assert vcloud_vapp.client.put_resource.call_count == 1
+            assert vcloud_vapp.client.get_resource.call_count == 9
+            vcloud_vapp.get_lease()
+            assert vcloud_vapp.client.get_resource.call_count == 10
+
+
+@mock.patch('pyvcloud.vcd.vapp.VApp.get_vm')
+@mock.patch('pyvcloud.vcd.vdc.VDC.get_vapp')
+@mock.patch('pyvcloud.vcd.vdc.VDC.get_vapp_href')
+@mock.patch('pyvcloud.vcd.vdc.VDC.instantiate_vapp')
+@mock.patch('vcd_plugin_sdk.connection.Org', autospec=True)
+@mock.patch('pyvcloud.vcd.vdc.VDC.get_routed_orgvdc_network')
+@mock.patch('pyvcloud.vcd.vdc.VDC.get_direct_orgvdc_network')
+@mock.patch('vcd_plugin_sdk.connection.Client', autospec=True)
+@mock.patch('pyvcloud.vcd.vdc.VDC.get_isolated_orgvdc_network')
+def test_vcloud_vm(*_, **__):
+    logger = mock.Mock()
+    tasks = {'create': [[{'id': 'bar'}, {'href': 'foo/bar'}]], 'delete': []}
+    vcloud_connect = VCloudConnect(logger, TEST_CONFIG, TEST_CREDENTIALS)
+    vapp_config = {
+        'description': 'foo',
+        'fence_mode': 'bar',
+        'accept_all_eulas': True,
+        'network_name': 'foo'}
+    vm_config = {
+        'catalog': {
+            'get_input': 'catalog'
+        },
+        'template': {
+            'get_input': 'template'
+        },
+        'description': 'test description',
+        'fence_mode': 'bridged',
+        'ip_allocation_mode': 'manual',
+        'deploy': False,
+        'power_on': False,
+        'accept_all_eulas': True,
+        'password': 'test_password',
+        'vm_name': {
+            'get_property': [
+                'SELF',
+                'resource_id'
+            ]
+        },
+        'hostname': {
+            'get_property': [
+                'SELF',
+                'resource_id'
+            ]
+        },
+        'ip_address': '192.170.1.2'}
+    vcloud_vm = VCloudVM('foo',
+                         'bar',
+                         vcloud_connect,
+                         'vdc',
+                         vapp_config,
+                         vm_config,
+                         tasks)
+    assert vcloud_vm.name == 'foo'
+    assert vcloud_vm.vapp_object.name == 'bar'
+    assert isinstance(vcloud_vm.vm, pyvcloud_vm)
+    assert isinstance(vcloud_vm.nics, list)
+    assert 'cpu', 'memory' in vcloud_vm._get_data()
+    assert 'vapp', 'nics' in vcloud_vm.exposed_data
+    assert isinstance(vcloud_vm.get_vm('foo'), pyvcloud_vm)
+    vcloud_vm.vdc.client.get_api_version = (lambda: '33')
+    vcloud_vm.instantiate_vapp()
+    assert vcloud_vm.vdc.instantiate_vapp.called
+    vcloud_vm.delete()
+    assert vcloud_vm.client.delete_linked_resource.called
+    vcloud_vm.check_network('foo', 'routed_vdc_network')
+    assert vcloud_vm.vdc.get_routed_orgvdc_network.called
+    vcloud_vm.check_network('foo', 'isolated_vdc_network')
+    assert vcloud_vm.vdc.get_isolated_orgvdc_network.called
+    vcloud_vm.check_network('foo', 'directly_connected_vdc_network')
+    assert vcloud_vm.vdc.get_direct_orgvdc_network.called
+    vcloud_vm.power_on()
+    assert vcloud_vm.client.post_linked_resource.call_count == 1
+    vcloud_vm.power_off()
+    assert vcloud_vm.client.post_linked_resource.call_count == 2
+    vcloud_vm.shutdown()
+    assert vcloud_vm.client.post_linked_resource.call_count == 3
+    vcloud_vm.deploy()
+    assert vcloud_vm.client.post_linked_resource.call_count == 4
+    vcloud_vm.undeploy()
+    assert vcloud_vm.client.post_linked_resource.call_count == 5
+    vcloud_vm.attach_disk_to_vm('foo')
+    assert vcloud_vm.client.post_linked_resource.call_count == 6
+    vcloud_vm.detach_disk_from_vm('foo')
+    assert vcloud_vm.client.post_linked_resource.call_count == 7
+    vcloud_vm.add_nic(adapter_type='VMXNET3',
+                      is_primary=False,
+                      is_connected=False,
+                      network_name='bar',
+                      ip_address_mode='MANUAL',
+                      ip_address='1.1.1.1')
+    assert vcloud_vm.client.post_linked_resource.call_count == 8
+    with mock.patch('pyvcloud.vcd.vm.VM.delete_nic'):
+        vcloud_vm.delete_nic(1)
+        assert vcloud_vm.vm.delete_nic.called
+    vcloud_vm.attach_media('foo')
+    assert vcloud_vm.client.post_linked_resource.call_count == 9
+    vcloud_vm.eject_media('foo')
+    assert vcloud_vm.client.post_linked_resource.call_count == 10

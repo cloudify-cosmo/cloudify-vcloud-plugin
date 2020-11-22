@@ -92,7 +92,7 @@ class VCloudvApp(VCloudResource):
 
     def delete(self):
         task = self.vdc.delete_vapp(self.vapp_name)
-        self.tasks['delete'] = [task.items()]
+        self.tasks['delete'].append(task.items())
         return task
 
     def power_on(self, vapp_name=None):
@@ -130,24 +130,25 @@ class VCloudvApp(VCloudResource):
             vapp = self.vapp.get_vm(vapp_name)
             vapp.vapp.undeploy(action)
 
-    def delete_vms(self, vm_names):
-        return self.vapp.delete_vms(vm_names)
-
-    def add_network(self, **kwargs):
-        task = self.vapp.connect_org_vdc_network(**kwargs)
-        if 'add_network' in self.tasks:
-            self.tasks['add_network'].append(task.items())
-        else:
-            self.tasks['add_network'] = [task.items()]
-        return task
-
-    def remove_network(self, network_name):
-        task = self.vapp.disconnect_org_vdc_network(network_name)
-        if 'remove_network' in self.tasks:
-            self.tasks['remove_network'].append(task.items())
-        else:
-            self.tasks['remove_network'] = [task.items()]
-        return task
+    # TODO: Not Tested/Not Used
+    # def delete_vms(self, vm_names):
+    #     return self.vapp.delete_vms(vm_names)
+    #
+    # def add_network(self, **kwargs):
+    #     task = self.vapp.connect_org_vdc_network(**kwargs)
+    #     if 'add_network' in self.tasks:
+    #         self.tasks['add_network'].append(task.items())
+    #     else:
+    #         self.tasks['add_network'] = [task.items()]
+    #     return task
+    #
+    # def remove_network(self, network_name):
+    #     task = self.vapp.disconnect_org_vdc_network(network_name)
+    #     if 'remove_network' in self.tasks:
+    #         self.tasks['remove_network'].append(task.items())
+    #     else:
+    #         self.tasks['remove_network'] = [task.items()]
+    #     return task
 
     def set_lease(self, deployment_lease=0, storage_lease=0):
         self.vapp.set_lease(deployment_lease, storage_lease)
@@ -216,11 +217,12 @@ class VCloudVM(VCloudResource):
         vm = VM(self.client, resource=vm_resource)
         return vm
 
-    def create(self, kwargs=None):
-        kwargs = kwargs or self.kwargs
-        task = self.vapp.add_vms(**kwargs)
-        self.tasks['create'].append(task.items())
-        return task
+    # TODO: Not tested/not used
+    # def create(self, kwargs=None):
+    #     kwargs = kwargs or self.kwargs
+    #     task = self.vapp.add_vms(**kwargs)
+    #     self.tasks['create'].append(task.items())
+    #     return task
 
     def instantiate_vapp(self):
         task = self.vapp_object.instantiate_vapp()
@@ -232,7 +234,7 @@ class VCloudVM(VCloudResource):
         # To support bulk delete of VMs using vapp.delete_vms([names])
         vm = self.get_vm(vm_name or self.name)
         task = vm.delete()
-        self.tasks['delete'] = [task.items()]
+        self.tasks['delete'].append(task.items())
         return task
 
     def check_network(self, name, type):
@@ -300,13 +302,14 @@ class VCloudVM(VCloudResource):
             self.tasks['remove_nic'] = [task.items()]
         return task
 
-    def update_nic(self, **kwargs):
-        task = self.vm.update_nic(**kwargs)
-        if 'update_nic' in self.tasks:
-            self.tasks['update_nic'].append(task.items())
-        else:
-            self.tasks['update_nic'] = [task.items()]
-        return task
+    # TODO: Untested/Unused.
+    # def update_nic(self, **kwargs):
+    #     task = self.vm.update_nic(**kwargs)
+    #     if 'update_nic' in self.tasks:
+    #         self.tasks['update_nic'].append(task.items())
+    #     else:
+    #         self.tasks['update_nic'] = [task.items()]
+    #     return task
 
     def attach_media(self, media_id):
         task = self.vm.insert_cd_from_catalog(media_id)
