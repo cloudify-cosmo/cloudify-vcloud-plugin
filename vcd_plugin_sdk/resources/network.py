@@ -20,8 +20,7 @@ from pyvcloud.vcd.static_route import StaticRoute
 from pyvcloud.vcd.firewall_rule import FirewallRule
 from pyvcloud.vcd.exceptions import (
     EntityNotFoundException,
-    BadRequestException,
-    NotFoundException)
+    BadRequestException)
 
 from .base import VCloudResource
 from ..exceptions import VCloudSDKException
@@ -350,8 +349,9 @@ class VCloudGateway(VCloudResource):
         for rule in self.nat_rules:
             nat_rule = NatRule(
                 self.client, self.name, rule_id=rule['ID'])
-            if self.compare_nat_rule(nat_rule.get_nat_rule_info(), nat_definition):
-               return nat_rule.get_nat_rule_info()
+            if self.compare_nat_rule(nat_rule.get_nat_rule_info(),
+                                     nat_definition):
+                return nat_rule.get_nat_rule_info()
         return {}
 
     @staticmethod
@@ -423,4 +423,3 @@ class VCloudGateway(VCloudResource):
             raise VCloudSDKException(
                 'Unable to find static route {r} for deletion'.format(
                     r=route_definition))
-

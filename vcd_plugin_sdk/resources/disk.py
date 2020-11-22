@@ -177,7 +177,9 @@ class VCloudMedia(VCloudResource):
         self._disk = None
         super().__init__(connection, vdc_name, tasks=tasks)
         self._media = None
-        self._exposed_data = {'name': self.name, 'catalog_name': self.catalog_name}
+        self._exposed_data = {
+            'name': self.name,
+            'catalog_name': self.catalog_name}
 
     @property
     def name(self):
@@ -220,7 +222,8 @@ class VCloudMedia(VCloudResource):
         return self.connection.org.get_catalog_item(catalog_name, media_name)
 
     def upload(self):
-        self._exposed_data['bytes'] = self.connection.org.upload_media(**self.kwargs)
+        self._exposed_data['bytes'] = \
+            self.connection.org.upload_media(**self.kwargs)
 
     def delete(self, catalog_name=None, media_name=None):
         catalog_name = catalog_name or self.catalog_name

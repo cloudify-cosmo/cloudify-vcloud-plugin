@@ -21,4 +21,3 @@ TEST_CLIENT_CONFIG = {
     'log_headers': False,
     'log_bodies': False
 }
-

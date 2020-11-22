@@ -192,7 +192,7 @@ def test_vcloud_gateway(*_, **__):
     assert isinstance(vcloud_gateway.firewall_rules, list)
     assert isinstance(vcloud_gateway.firewall_objects, dict)
     assert 'source', 'destination' in vcloud_gateway.firewall_objects
-    ___ = vcloud_gateway.default_gateway
+    vcloud_gateway.default_gateway
     assert vcloud_gateway.client.get_resource.called
     assert isinstance(vcloud_gateway.static_routes, dict)
     assert isinstance(vcloud_gateway.nat_rules, list)

@@ -174,7 +174,11 @@ class VCloudVM(VCloudResource):
         self._vm_name = vm_name
         self.kwargs = kwargs or {}
         super().__init__(connection, vdc_name, vapp_name)
-        self.vapp_object = VCloudvApp(vapp_name, connection, vdc_name=vdc_name, kwargs=vapp_kwargs, tasks=tasks)
+        self.vapp_object = VCloudvApp(vapp_name,
+                                      connection,
+                                      vdc_name=vdc_name,
+                                      kwargs=vapp_kwargs,
+                                      tasks=tasks)
         self._vm = None
 
     @property
