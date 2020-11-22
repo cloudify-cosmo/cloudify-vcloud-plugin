@@ -1,7 +1,11 @@
 from copy import deepcopy
 
 from pyvcloud.vcd.utils import task_to_dict
-from lxml.objectify import StringElement, IntElement, ObjectifiedElement, BoolElement
+from lxml.objectify import (
+    IntElement,
+    BoolElement,
+    StringElement,
+    ObjectifiedElement)
 from pyvcloud.vcd.exceptions import (
     VcdTaskException,
     NotFoundException,
@@ -10,11 +14,19 @@ from pyvcloud.vcd.exceptions import (
 )
 
 from cloudify import ctx
-from cloudify.exceptions import OperationRetry, NonRecoverableError
-from cloudify.constants import NODE_INSTANCE, RELATIONSHIP_INSTANCE
+from cloudify.constants import (
+    NODE_INSTANCE,
+    RELATIONSHIP_INSTANCE)
+from cloudify.exceptions import (
+    OperationRetry,
+    NonRecoverableError)
 
-from .constants import CLIENT_CONFIG_KEYS, CLIENT_CREDENTIALS_KEYS, TYPE_MATRIX, NO_RESOURCE_OK
 from vcd_plugin_sdk.connection import VCloudConnect
+from .constants import (
+    CLIENT_CONFIG_KEYS,
+    CLIENT_CREDENTIALS_KEYS,
+    TYPE_MATRIX,
+    NO_RESOURCE_OK)
 
 
 class ResourceData(object):
@@ -140,14 +152,14 @@ def get_client_config(node):
         d = {}
         for key in CLIENT_CONFIG_KEYS:
             d[key] = client_config.get(key)
-        d.update(client_config.get('configuration_kwargs'))
+        d.update(client_config.get('configuration_kwargs', dict()))
         return d
 
     def _get_creds():
         d = {}
         for key in CLIENT_CREDENTIALS_KEYS:
             d[key] = client_config.get(key)
-        d.update(client_config.get('credentials_kwargs'))
+        d.update(client_config.get('credentials_kwargs', dict()))
         return d
 
     return VCloudConnect(ctx.logger, _get_config(), _get_creds()), vdc
@@ -293,20 +305,27 @@ def cleanup_runtime_properties(current_ctx):
 
 def cleanup_objectify(data):
     data = deepcopy(data)
+    if isinstance(data, ObjectifiedElement):
+        new_data = dict()
+        for child in data.iterchildren():
+            if isinstance(child, (BoolElement, StringElement, IntElement)):
+                new_data[child.tag] = child.pyval
+            else:
+                new_data = cleanup_objectify(data)
+        return new_data
+
     if isinstance(data, tuple):
         if len(data) == 2:
             data = {str(data[0]): data[1]}
         else:
             data = list(data)
-    if isinstance(data, dict):
+    elif isinstance(data, dict):
         for k, v in list(data.items()):
             del data[k]
             data[str(k)] = cleanup_objectify(v)
     elif isinstance(data, list):
         for n in range(0, len(data)):
             data[n] = cleanup_objectify(data[n])
-    elif isinstance(data, (BoolElement, StringElement, IntElement, ObjectifiedElement)):
-        data = data.text
     return data
 
 
@@ -391,6 +410,8 @@ def expose_props(operation_name, resource=None, new_props=None, _ctx=None):
             raise NonRecoverableError(
                 'The resource {n} was not found.'.format(n=resource.name))
 
+    # expose props is called after a successful operation,
+    # so we should override this if we reach this point.
     new_props.update({'__RETRY_BAD_REQUEST': False})
     update_runtime_properties(_ctx, new_props)
 
