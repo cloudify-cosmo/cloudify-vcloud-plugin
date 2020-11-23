@@ -86,5 +86,6 @@ def resource_operation(func):
         expose_props(operation_name,
                      resource,
                      _ctx=resource_data.primary_ctx)
+        return resource
 
     return operation(func=wrapper, resumable=True)

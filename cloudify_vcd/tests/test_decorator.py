@@ -2,7 +2,6 @@ import mock
 import pytest
 
 from pyvcloud.vcd.client import E
-from cloudify.manager import DirtyTrackingDict
 from cloudify.exceptions import (OperationRetry, NonRecoverableError)
 from pyvcloud.vcd.exceptions import (
     VcdTaskException,
