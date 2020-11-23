@@ -431,6 +431,7 @@ def vcd_busy_exception(exc):
     return False
 
 
+# Not tested - why should we?
 def vcd_unclear_exception(exc):
     if 'Status code: 400/None, None' in str(exc):
         return True
@@ -439,12 +440,14 @@ def vcd_unclear_exception(exc):
     return False
 
 
+# Not tested - why should we?
 def vcd_already_exists(exc):
     if '400/DUPLICATE_NAME' in str(exc):
         return True
     return False
 
 
+# Not tested - why should we?
 def vcd_unresolved_vm(exc):
     if 'Unresolved' in str(exc):
         return True
@@ -457,6 +460,7 @@ def cannot_deploy(exc):
     return False
 
 
+# Not tested - why should we?
 def cannot_power_off(exc):
     if 'Current state of vm: Powered off' in str(exc):
         return True
@@ -465,6 +469,7 @@ def cannot_power_off(exc):
     return False
 
 
+# Not tested - why should we?
 def task_on_failure(exc):
     if 'Unable to perform this action. ' \
        'Contact your cloud administrator' in str(exc):
@@ -499,8 +504,8 @@ def retry_or_raise(e, r, operation_name):
 
 
 def check_if_task_successful(_resource, task):
-    if task:
-        ctx.logger.info('Task: {task}'.format(task=task.items()))
+    if isinstance(task, ObjectifiedElement):
+        ctx.logger.error('Task: {task}'.format(task=task.items()))
         try:
             return _resource.task_successful(task)
         except VcdTaskException as e:

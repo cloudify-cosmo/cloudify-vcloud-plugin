@@ -2,17 +2,24 @@ import mock
 import pytest
 
 from lxml import objectify
+from pyvcloud.vcd.client import E
 from cloudify.state import current_ctx
 from cloudify.manager import DirtyTrackingDict
-from cloudify.exceptions import NonRecoverableError
-from cloudify.mocks import (MockContext, MockCloudifyContext)
 from vcd_plugin_sdk.connection import VCloudConnect
+from cloudify.mocks import (MockContext, MockCloudifyContext)
 from vcd_plugin_sdk.resources.vapp import VCloudVM, VCloudvApp
+from cloudify.exceptions import (OperationRetry, NonRecoverableError)
+from pyvcloud.vcd.exceptions import (
+    VcdTaskException,
+    BadRequestException,
+    EntityNotFoundException)
 
 from ..utils import (
     get_ctxs,
     ResourceData,
     expose_props,
+    get_last_task,
+    retry_or_raise,
     is_relationship,
     get_resource_id,
     is_node_instance,
@@ -25,6 +32,7 @@ from ..utils import (
     get_resource_config,
     is_external_resource,
     use_external_resource,
+    check_if_task_successful,
     update_runtime_properties,
     cleanup_runtime_properties,
     find_resource_id_from_relationship_by_type)
@@ -387,3 +395,91 @@ def test_expose_runtime_properties():
     assert 'id', 'href' not in \
                  ctx.instance.runtime_properties['tasks']['create']
     assert ctx.instance.runtime_properties['__deleted']
+
+
+def test_get_last_task():
+
+    task = E.Task(
+        status='foo',
+        serviceNamespace='bar',
+        type='baz',
+        operation='taco',
+        operationName='bell',
+        name='task')
+    result = get_last_task(task)
+    assert result.get('status') == 'foo'
+    assert result.get('serviceNamespace') == 'bar'
+    assert result.get('type') == 'baz'
+    assert result.get('operation') == 'taco'
+    assert result.get('operationName') == 'bell'
+    assert result.get('name') == 'task'
+
+
+def test_retry_or_raise():
+    resource = mock.Mock(
+        primary_id='foo',
+        primary_ctx=get_mock_node_instance_context()
+    )
+    with pytest.raises(NonRecoverableError) as e_info:
+        retry_or_raise(EntityNotFoundException(), resource, 'create')
+        assert 'foo' in e_info
+    with pytest.raises(NonRecoverableError) as e_info:
+        retry_or_raise(EntityNotFoundException(), resource, 'configure')
+        assert 'foo' in e_info
+    with pytest.raises(NonRecoverableError) as e_info:
+        retry_or_raise(EntityNotFoundException(), resource, 'start')
+        assert 'foo' in e_info
+    with pytest.raises(NonRecoverableError) as e_info:
+        retry_or_raise(EntityNotFoundException(), resource, 'establish')
+        assert 'foo' in e_info
+    retry_or_raise(EntityNotFoundException(), resource, 'unlink')
+    retry_or_raise(EntityNotFoundException(), resource, 'stop')
+    retry_or_raise(EntityNotFoundException(), resource, 'delete')
+    with pytest.raises(OperationRetry) as e_info:
+        retry_or_raise(
+            BadRequestException(
+                400,
+                'foobar',
+                {
+                    'message': 'is busy, cannot proceed with the operation',
+                    'minorErrorCode': 400
+                }
+            ),
+            resource,
+            'create'
+        )
+        assert resource.primary_ctx.instance.runtime_properties[
+            '__RETRY_BAD_REQUEST']
+        assert 'is busy, cannot proceed with the operation' in e_info
+    del resource.primary_ctx.instance.runtime_properties['__RETRY_BAD_REQUEST']
+
+
+def test_check_if_task_successful():
+    task = E.Task(
+        status='foo',
+        serviceNamespace='bar',
+        type='baz',
+        operation='taco',
+        operationName='bell',
+        name='task')
+    resource = mock.Mock()
+    resource.task_successful.side_effect = VcdTaskException(
+        400,
+        {
+            'message': 'Cannot deploy organization VDC network',
+            'minorErrorCode': 400
+        })
+    with pytest.raises(NonRecoverableError) as e_info:
+        check_if_task_successful(resource, task)
+        assert 'Cannot deploy organization VDC network' in e_info
+
+    resource = mock.Mock()
+    resource.task_successful.side_effect = VcdTaskException(
+        400,
+        {
+            'message': 'is busy, cannot proceed with the operation',
+            'minorErrorCode': 400
+        })
+    with pytest.raises(OperationRetry) as e_info:
+        check_if_task_successful(resource, task)
+        assert 'is busy, cannot proceed with the operation' in e_info
