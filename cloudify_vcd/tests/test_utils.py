@@ -52,6 +52,9 @@ def get_mock_node_instance_context(**kwargs):
     )
     kwargs['runtime_properties'] = DirtyTrackingDict(
         kwargs.get('runtime_properties', {}))
+    kwargs['operation'] = kwargs.get(
+        'operation',
+        {'name': 'foo', 'retry_number': 0})
     _ctx = MockCloudifyContext(**kwargs)
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
                                 'cloudify.nodes.Compute',
@@ -60,7 +63,7 @@ def get_mock_node_instance_context(**kwargs):
     return _ctx
 
 
-def get_relationship_context(**kwargs):
+def get_mock_relationship_context(**kwargs):
     source_node = mock.Mock(
         id='foo',
         type_hierarchy=[
@@ -103,6 +106,9 @@ def get_relationship_context(**kwargs):
     kwargs['source'] = kwargs.get('source', source)
     kwargs['target'] = kwargs.get('target', target)
     kwargs['related'] = kwargs.get('related', {'is_target': False})
+    kwargs['operation'] = kwargs.get(
+        'operation',
+        {'name': 'foo', 'retry_number': 0})
     _ctx = MockCloudifyContext(**kwargs)
     _ctx._context = {'related': kwargs.get('related', {'is_target': False})}
     current_ctx.set(_ctx)
@@ -141,11 +147,11 @@ def test_resource_data_object():
 
 def test_is_relationship():
     assert not is_relationship(get_mock_node_instance_context())
-    assert is_relationship(get_relationship_context())
+    assert is_relationship(get_mock_relationship_context())
 
 
 def test_is_node_instance():
-    assert not is_node_instance(get_relationship_context())
+    assert not is_node_instance(get_mock_relationship_context())
     assert is_node_instance(get_mock_node_instance_context())
 
 
@@ -209,13 +215,13 @@ def test_get_ctxs():
     a, b = get_ctxs(ni_ctx)
     assert a, not b
 
-    rel_ctx = get_relationship_context(related={'is_target': True})
+    rel_ctx = get_mock_relationship_context(related={'is_target': True})
     a, b = get_ctxs(rel_ctx)
     assert a, b
     assert a.node.id == 'foo'
     assert b.node.id == 'bar'
 
-    rel_ctx = get_relationship_context()
+    rel_ctx = get_mock_relationship_context()
     a, b = get_ctxs(rel_ctx)
     assert a, b
     assert a.node.id == 'bar'
@@ -234,7 +240,7 @@ def test_get_resource_class():
 
 def test_get_resource_data():
     ni_ctx = get_mock_node_instance_context()
-    rel_ctx = get_relationship_context()
+    rel_ctx = get_mock_relationship_context()
 
     result = get_resource_data(ni_ctx)
     assert isinstance(result.primary, list)
@@ -262,7 +268,7 @@ def test_update_runtime_properties():
 
 
 def test_update_runtime_properties_relationship():
-    ctx = get_relationship_context()
+    ctx = get_mock_relationship_context()
     update_runtime_properties(ctx.target, {'taco': 'bell'})
     assert ctx.target.instance.runtime_properties['taco'] == 'bell'
 
@@ -275,7 +281,7 @@ def test_cleanup_runtime_properties():
 
 
 def test_cleanup_runtime_properties_relationship():
-    ctx = get_relationship_context()
+    ctx = get_mock_relationship_context()
     ctx.source.instance.runtime_properties['taco'] = 'bell'
     cleanup_runtime_properties(ctx.source)
     assert 'taco' not in ctx.source.instance.runtime_properties

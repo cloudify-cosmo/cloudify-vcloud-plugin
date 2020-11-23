@@ -69,7 +69,7 @@ def resource_operation(func):
                 resource, _ = func(*args, **kwargs)
             except (TypeError, NotFoundException, EntityNotFoundException):
                 ctx.logger.error('Attempted to perform {op} '
-                                 'operation on {r},'
+                                 'operation on {r}, '
                                  'but the resource was not '
                                  'found.'.format(
                                      op=operation_name,
