@@ -14,7 +14,11 @@ def create_media(external_media,
                  **___):
     iso = VCloudISO(media_ctx.node.properties['iso'])
     media_config['file_name'] = iso.file
-    media = media_class(media_id, media_client, media_vdc, media_config, media_ctx.instance.runtime_properties.get('tasks'))
+    media = media_class(media_id,
+                        media_client,
+                        media_vdc,
+                        media_config,
+                        media_ctx.instance.runtime_properties.get('tasks'))
 
     if external_media:
         return media, None
@@ -33,7 +37,11 @@ def delete_media(external_media,
                  media_class,
                  media_ctx,
                  **___):
-    media = media_class(media_id, media_client, media_vdc, media_config, media_ctx.instance.runtime_properties.get('tasks'))
+    media = media_class(media_id,
+                        media_client,
+                        media_vdc,
+                        media_config,
+                        media_ctx.instance.runtime_properties.get('tasks'))
     if external_media:
         return media, None
     last_task = media.delete()
@@ -64,7 +72,11 @@ def attach_media(_,
         kwargs={},
         vapp_kwargs=vm_config
     )
-    media = media_class(media_id, media_client, media_vdc, media_config, media_ctx.instance.runtime_properties.get('tasks'))
+    media = media_class(media_id,
+                        media_client,
+                        media_vdc,
+                        media_config,
+                        media_ctx.instance.runtime_properties.get('tasks'))
     last_task = vm.attach_media(media.href)
     return media, last_task
 
@@ -93,6 +105,10 @@ def detach_media(_,
         kwargs={},
         vapp_kwargs=vm_config
     )
-    media = media_class(media_id, media_client, media_vdc, media_config, media_ctx.instance.runtime_properties.get('tasks'))
-    last_task = vm.eject_media(media.id )
+    media = media_class(media_id,
+                        media_client,
+                        media_vdc,
+                        media_config,
+                        media_ctx.instance.runtime_properties.get('tasks'))
+    last_task = vm.eject_media(media.id)
     return media, last_task

@@ -6,7 +6,7 @@ from pyvcloud.vcd.client import E
 from cloudify.state import current_ctx
 from cloudify.manager import DirtyTrackingDict
 from vcd_plugin_sdk.connection import VCloudConnect
-from cloudify.mocks import (MockContext, MockCloudifyContext)
+from cloudify.mocks import MockCloudifyContext
 from vcd_plugin_sdk.resources.vapp import VCloudVM, VCloudvApp
 from cloudify.exceptions import (OperationRetry, NonRecoverableError)
 from pyvcloud.vcd.exceptions import (

@@ -2,10 +2,8 @@
 from pyvcloud.vcd.exceptions import (
     AccessForbiddenException,
     EntityNotFoundException,
-    UnauthorizedException,
     BadRequestException,
-    NotFoundException,
-    VcdTaskException)
+    NotFoundException)
 
 from functools import wraps
 

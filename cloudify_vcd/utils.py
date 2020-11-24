@@ -390,7 +390,7 @@ def use_external_resource(external,
 
     else:
         raise NonRecoverableError(
-            'The {r} {r} is external, '
+            'The {r} {t} is external, '
             'but does not exist and override is False.'.format(
                 t=resource_type, r=resource_name))
 

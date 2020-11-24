@@ -10,7 +10,11 @@ def create_disk(external_disk,
                 disk_class,
                 disk_ctx,
                 **___):
-    disk = disk_class(disk_id, disk_client, disk_vdc, disk_config, disk_ctx.instance.runtime_properties.get('tasks'))
+    disk = disk_class(disk_id,
+                      disk_client,
+                      disk_vdc,
+                      disk_config,
+                      disk_ctx.instance.runtime_properties.get('tasks'))
     if external_disk:
         return disk, None
     last_task = disk.create()
@@ -26,7 +30,11 @@ def delete_disk(external_disk,
                 disk_class,
                 disk_ctx,
                 **___):
-    disk = disk_class(disk_id, disk_client, disk_vdc, disk_config, disk_ctx.instance.runtime_properties.get('tasks'))
+    disk = disk_class(disk_id,
+                      disk_client,
+                      disk_vdc,
+                      disk_config,
+                      disk_ctx.instance.runtime_properties.get('tasks'))
     if external_disk:
         return disk, None
     last_task = disk.delete()
@@ -57,7 +65,11 @@ def attach_disk(_,
         kwargs={},
         vapp_kwargs=vm_config
     )
-    disk = disk_class(disk_id, disk_client, disk_vdc, disk_config, disk_ctx.instance.runtime_properties.get('tasks'))
+    disk = disk_class(disk_id,
+                      disk_client,
+                      disk_vdc,
+                      disk_config,
+                      disk_ctx.instance.runtime_properties.get('tasks'))
     last_task = vm.attach_disk_to_vm(disk.href)
     return disk, last_task
 
@@ -86,7 +98,10 @@ def detach_disk(_,
         kwargs={},
         vapp_kwargs=vm_config
     )
-    disk = disk_class(disk_id, disk_client, disk_vdc, disk_config, disk_ctx.instance.runtime_properties.get('tasks'))
+    disk = disk_class(disk_id,
+                      disk_client,
+                      disk_vdc,
+                      disk_config,
+                      disk_ctx.instance.runtime_properties.get('tasks'))
     last_task = vm.detach_disk_from_vm(disk.href)
     return disk, last_task
-

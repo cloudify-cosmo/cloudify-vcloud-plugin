@@ -575,7 +575,7 @@ def test_attach_disk(*_, **__):
     source_instance = mock.Mock(
         runtime_properties=DirtyTrackingDict({
             'resource_id': 'foo',
-            'data': {'vapp':' foo'}
+            'data': {'vapp': ' foo'}
         })
     )
     target_node = mock.Mock(
@@ -630,7 +630,7 @@ def test_detach_disk(*_, **__):
     source_instance = mock.Mock(
         runtime_properties=DirtyTrackingDict({
             'resource_id': 'foo',
-            'data': {'vapp':' foo'}
+            'data': {'vapp': ' foo'}
         })
     )
     target_node = mock.Mock(
@@ -732,7 +732,7 @@ def test_attach_media(*_, **__):
     source_instance = mock.Mock(
         runtime_properties=DirtyTrackingDict({
             'resource_id': 'foo',
-            'data': {'vapp':' foo'}
+            'data': {'vapp': ' foo'}
         })
     )
     target_node = mock.Mock(
@@ -788,7 +788,7 @@ def test_detach_media(*_, **__):
     source_instance = mock.Mock(
         runtime_properties=DirtyTrackingDict({
             'resource_id': 'foo',
-            'data': {'vapp':' foo'}
+            'data': {'vapp': ' foo'}
         })
     )
     target_node = mock.Mock(
@@ -833,7 +833,9 @@ def test_create_network(*_, **__):
     _ctx = get_mock_node_instance_context(properties={
             'use_external_resource': False,
             'resource_id': 'foo',
-            'resource_config': {'gateway_name': 'bar', 'network_cidr': '1.1.1.1/1'},
+            'resource_config': {
+                'gateway_name': 'bar',
+                'network_cidr': '1.1.1.1/1'},
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
             operation=operation)
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
@@ -1028,7 +1030,7 @@ def test_create_vm_raises_bad_request(*_, **__):
             return_value=True)
 @mock.patch('cloudify_vcd.vapp_tasks.find_resource_id_from_relationship_'
             'by_type', return_value='foo')
-def test_create_vm_raises_bad_request(*_, **__):
+def test_create_vm_raises_retry(*_, **__):
     operation = {'name': 'create', 'retry_number': 0}
     _ctx = get_mock_node_instance_context(properties={
             'use_external_resource': False,
@@ -1209,7 +1211,7 @@ def test_add_nic(*_, **__):
     source_instance = mock.Mock(
         runtime_properties=DirtyTrackingDict({
             'resource_id': 'foo',
-            'data': {'vapp':' foo'}
+            'data': {'vapp': ' foo'}
         }),
         relationships=relationships
     )
@@ -1281,7 +1283,7 @@ def test_delete_nic(*_, **__):
     source_instance = mock.Mock(
         runtime_properties=DirtyTrackingDict({
             'resource_id': 'foo',
-            'data': {'vapp':' foo'}
+            'data': {'vapp': ' foo'}
         }),
         relationships=relationships
     )

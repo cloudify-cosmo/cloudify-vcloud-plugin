@@ -1,7 +1,7 @@
 
 from vcd_plugin_sdk.resources.vapp import VCloudvApp, VCloudVM
 from vcd_plugin_sdk.resources.network import VCloudGateway, VCloudNetwork
-from vcd_plugin_sdk.resources.disk import VCloudDisk, VCloudMedia, VCloudISO
+from vcd_plugin_sdk.resources.disk import VCloudDisk, VCloudMedia
 
 
 class BsClass(object):

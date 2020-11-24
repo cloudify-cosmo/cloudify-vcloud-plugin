@@ -4,7 +4,6 @@ import pytest
 from pyvcloud.vcd.client import E
 from cloudify.exceptions import (OperationRetry, NonRecoverableError)
 from pyvcloud.vcd.exceptions import (
-    VcdTaskException,
     BadRequestException,
     EntityNotFoundException,
     AccessForbiddenException)
@@ -63,13 +62,6 @@ def test_external_resource_not_exists(*_, **__):
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
         operation=operation
     )
-    _task = E.Task(
-        status='foo',
-        serviceNamespace='bar',
-        type='baz',
-        operation='taco',
-        operationName='bell',
-        name='task')
 
     @resource_operation
     def test_func(*__, **____):
@@ -97,13 +89,6 @@ def test_external_resource_not_exists_create_op(*_, **__):
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
         operation=operation
     )
-    _task = E.Task(
-        status='foo',
-        serviceNamespace='bar',
-        type='baz',
-        operation='taco',
-        operationName='bell',
-        name='task')
 
     @resource_operation
     def test_func(*__, **____):
@@ -134,13 +119,6 @@ def test_implicit_external_resource_bad_request(*_, **__):
         operation=operation
     )
     _ctx.instance.runtime_properties['__RETRY_BAD_REQUEST'] = True
-    _task = E.Task(
-        status='foo',
-        serviceNamespace='bar',
-        type='baz',
-        operation='taco',
-        operationName='bell',
-        name='task')
 
     @resource_operation
     def test_func(*__, **____):
@@ -209,13 +187,6 @@ def test_new_resource_access_forbidden(*_, **__):
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
         operation=operation
     )
-    _task = E.Task(
-        status='foo',
-        serviceNamespace='bar',
-        type='baz',
-        operation='taco',
-        operationName='bell',
-        name='task')
 
     @resource_operation
     def test_func(*__, **____):
@@ -242,13 +213,6 @@ def test_new_resource_bad_request_handled(*_, **__):
             'resource_config': {'foo': 'bar'},
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
     )
-    _task = E.Task(
-        status='foo',
-        serviceNamespace='bar',
-        type='baz',
-        operation='taco',
-        operationName='bell',
-        name='task')
 
     @resource_operation
     def test_func(*__, **____):
@@ -283,13 +247,6 @@ def test_new_resource_not_found(*_, **__):
             'resource_config': {'foo': 'bar'},
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
     )
-    _task = E.Task(
-        status='foo',
-        serviceNamespace='bar',
-        type='baz',
-        operation='taco',
-        operationName='bell',
-        name='task')
 
     @resource_operation
     def test_func(*__, **____):
@@ -329,7 +286,7 @@ def test_new_relationship_resource(*_, **__):
 
     @resource_operation
     def test_func(ext, name, client, vdc, config, obj, __ctx,
-                  ext2, name2, client2, vdc2, config2, obj2, __ctx2):
+                  ext2, name2, client2, vdc2, config2, obj2, __ctx2):  # noqa
         return obj(name, 'bar', client, vdc, {}, config), _task
     test_func(ctx=_ctx)
 
@@ -345,13 +302,6 @@ def test_new_relationship_resource_not_found(*_, **__):
     """
     operation = {'name': 'create', 'retry_number': 1}
     _ctx = get_mock_relationship_context(operation=operation)
-    _task = E.Task(
-        status='foo',
-        serviceNamespace='bar',
-        type='baz',
-        operation='taco',
-        operationName='bell',
-        name='task')
 
     @resource_operation
     def test_func(*__, **____):
