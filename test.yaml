@@ -79,6 +79,22 @@ node_templates:
         target: disk
       - type: cloudify.relationships.vcloud.vm_connected_to_media
         target: media
+      - type: cloudify.relationships.vcloud.vm_connected_to_nic
+        target: nic
+
+  nic:
+    type: cloudify.nodes.vcloud.NIC
+    client_config: *client_config
+    resource_id: { concat: [ 'test-media', { get_input: resource_suffix } ] }
+    resource_config:
+      adapter_type: 'VMXNET3'
+      is_primary: false
+      is_connected: false
+      ip_address_mode: 'MANUAL'
+      ip_address: '192.169.2.2'
+    relationships:
+      - type: cloudify.relationships.vcloud.nic_connected_to_network
+        target: routed_network
 
   media:
     type: cloudify.nodes.vcloud.Media

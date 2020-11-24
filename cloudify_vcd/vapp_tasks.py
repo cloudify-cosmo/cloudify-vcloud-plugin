@@ -3,7 +3,8 @@ from pyvcloud.vcd.exceptions import (
     MissingLinkException,
     OperationNotSupportedException)
 
-from cloudify.exceptions import OperationRetry
+from cloudify import ctx
+from cloudify.exceptions import OperationRetry, NonRecoverableError
 
 from .decorators import resource_operation
 from .network_tasks import get_network_type
@@ -17,6 +18,8 @@ from .utils import (
 REL_VAPP_NETWORK = 'cloudify.relationships.vcloud.vapp_connected_to_network'
 REL_VM_NETWORK = 'cloudify.relationships.vcloud.vm_connected_to_network'
 REL_VM_VAPP = 'cloudify.relationships.vcloud.vm_contained_in_vapp'
+REL_NIC_NETWORK = 'cloudify.relationships.vcloud.nic_connected_to_network'
+REL_VM_NIC = 'cloudify.relationships.vcloud.vm_connected_to_nic'
 
 
 @resource_operation
@@ -231,3 +234,88 @@ def delete_vm(vm_external,
         vm.vapp_object.delete_vms(vm_id)
         last_task = vm.vapp_object.delete()
     return vm, last_task
+
+
+@resource_operation
+def configure_nic(_,
+                  __,
+                  ___,
+                  ____,
+                  nic_config,
+                  _____,
+                  nic_ctx):
+    NIC_NETWORK = find_resource_id_from_relationship_by_type(
+        nic_ctx.instance, REL_NIC_NETWORK)
+    if NIC_NETWORK:
+        nic_ctx.instance.runtime_properties['network'] = NIC_NETWORK
+    elif not nic_config['network_name']:
+        raise NonRecoverableError(
+            'No relationship of type {t} was provided and network_name is '
+            'not in the resource config.'.format(t=REL_NIC_NETWORK))
+    return None, None
+
+
+@resource_operation
+def add_nic(_,
+            __,
+            ___,
+            ____,
+            nic_config,
+            _____,
+            ______,
+            _______,
+            vm_id,
+            vm_client,
+            vm_vdc,
+            vm_config,
+            vm_class,
+            vm_ctx,
+            **________):
+    vapp_name = find_resource_id_from_relationship_by_type(
+        vm_ctx.instance, REL_VM_VAPP)
+    vm = vm_class(
+        vm_id,
+        vapp_name,
+        vm_client,
+        vdc_name=vm_vdc,
+        kwargs={},
+        vapp_kwargs=vm_config
+    )
+    last_task = vm.add_nic(**nic_config)
+    return vm, last_task
+
+
+@resource_operation
+def delete_nic(_,
+               __,
+               ___,
+               ____,
+               nic_config,
+               _____,
+               ______,
+               _______,
+               vm_id,
+               vm_client,
+               vm_vdc,
+               vm_config,
+               vm_class,
+               vm_ctx,
+               **________):
+    vapp_name = find_resource_id_from_relationship_by_type(
+        vm_ctx.instance, REL_VM_VAPP)
+    vm = vm_class(
+        vm_id,
+        vapp_name,
+        vm_client,
+        vdc_name=vm_vdc,
+        kwargs={},
+        vapp_kwargs=vm_config
+    )
+    for nic in vm.nics:
+        if nic['ip_address'] == nic_config['ip_address']:
+            last_task = vm.delete_nic(**nic_config)
+            return vm, last_task
+    ctx.logger.error(
+        'The NIC {config} was not found, '
+        'so we cannot remove it from the VM.'.format(config=nic_config))
+    return None, None

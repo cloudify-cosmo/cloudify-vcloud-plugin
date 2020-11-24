@@ -179,7 +179,9 @@ def get_ctxs(_ctx):
         try:
             target_interface = _ctx._context['related']['is_target']
         except KeyError:
-            raise NonRecoverableError('The management worker is using a version of Cloudify Common incompatible with this plugin.')
+            raise NonRecoverableError(
+                'The management worker is using a version of '
+                'Cloudify Common incompatible with this plugin.')
         if target_interface:
             return _ctx.source, _ctx.target
         return _ctx.target, _ctx.source
@@ -399,7 +401,7 @@ def expose_props(operation_name, resource=None, new_props=None, _ctx=None):
         new_props.update({'__deleted': True})
         cleanup_runtime_properties(ctx)
 
-    if operation_name not in NO_RESOURCE_OK:
+    if resource and operation_name not in NO_RESOURCE_OK:
         try:
             new_props.update({
                 'resource_id': resource.name,

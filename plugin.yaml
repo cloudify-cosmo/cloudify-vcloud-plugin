@@ -112,6 +112,17 @@ node_types:
         delete:
           implementation: vcd.cloudify_vcd.disk_tasks.delete_disk
 
+  cloudify.nodes.vcloud.NIC:
+    derived_from: cloudify.nodes.Volume
+    properties:
+      <<: *BaseProperties
+      resource_config:
+        type: dict
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        configure:
+          implementation: vcd.cloudify_vcd.vapp_tasks.configure_nic
+
   cloudify.nodes.vcloud.VM:
     derived_from: cloudify.nodes.Compute
     properties:
@@ -275,3 +286,15 @@ relationships:
           implementation: vcd.cloudify_vcd.media_tasks.attach_media
         unlink:
           implementation: vcd.cloudify_vcd.media_tasks.detach_media
+
+  cloudify.relationships.vcloud.vm_connected_to_nic:
+    derived_from: cloudify.relationships.connected_to
+    target_interfaces:
+      cloudify.interfaces.relationship_lifecycle:
+        establish:
+          implementation: vcd.cloudify_vcd.media_tasks.add_nic
+        unlink:
+          implementation: vcd.cloudify_vcd.media_tasks.delete_nic
+
+  cloudify.relationships.vcloud.nic_connected_to_network:
+    derived_from: cloudify.relationships.connected_to

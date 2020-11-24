@@ -52,7 +52,12 @@ from ..vapp_tasks import (
     configure_vm,
     start_vm,
     stop_vm,
-    delete_vm
+    delete_vm,
+    configure_nic,
+    add_nic,
+    delete_nic,
+    REL_VM_VAPP,
+    REL_NIC_NETWORK
 )
 
 
@@ -1139,3 +1144,178 @@ def test_delete_vm(*_, **__):
         vdc.client.get_api_version = (lambda: '33')
         delete_vm(ctx=_ctx)
     assert '__deleted' in _ctx.instance.runtime_properties
+
+
+def test_configure_nic(*_, **__):
+    operation = {'name': 'configure', 'retry_number': 0}
+    relationships = [mock.Mock(
+        type_hierarchy=[REL_NIC_NETWORK],
+        target=mock.Mock(
+            instance=mock.Mock(
+                runtime_properties={'resource_id': 'foobar'},
+            )
+        )
+    )]
+    _ctx = get_mock_node_instance_context(properties={
+            'use_external_resource': False,
+            'resource_id': 'foo',
+            'resource_config': {
+                'adapter_type': 'bar',
+                'is_primary': False,
+                'is_connected': True,
+                'ip_address_mode': 'MANUAL',
+                'ip_address': '192.169.2.2'
+            },
+            'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
+            operation=operation,
+            relationships=relationships)
+    _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
+                                'cloudify.nodes.vcloud.NIC']
+    configure_nic(ctx=_ctx)
+    # assert 'network' in _ctx.instance.runtime_properties
+    # assert _ctx.instance.runtime_properties['network'] == 'foobar'
+
+
+@mock.patch('cloudify_vcd.decorators.get_last_task')
+@mock.patch('cloudify_vcd.constants.VCloudVM.get_vapp')
+@mock.patch('cloudify_vcd.constants.VCloudVM.exposed_data')
+@mock.patch('cloudify_vcd.utils.VCloudConnect', logger='foo')
+@mock.patch('cloudify_vcd.decorators.check_if_task_successful',
+            return_value=True)
+def test_add_nic(*_, **__):
+    source_node = mock.Mock(
+        id='foo',
+        type_hierarchy=[
+            'cloudify.nodes.Root',
+            'cloudify.nodes.vcloud.VM'
+        ],
+        properties={
+            'use_external_resource': True,
+            'resource_id': 'foo',
+            'client_config': {
+                'foo': 'bar',
+                'vdc': 'vdc'
+            }
+        },
+    )
+    relationships = [mock.Mock(
+        type_hierarchy=[REL_VM_VAPP],
+        target=mock.Mock(
+            instance=mock.Mock(
+                runtime_properties={'resource_id': 'foobar'},
+            )
+        )
+    )]
+    source_instance = mock.Mock(
+        runtime_properties=DirtyTrackingDict({
+            'resource_id': 'foo',
+            'data': {'vapp':' foo'}
+        }),
+        relationships=relationships
+    )
+    target_node = mock.Mock(
+        id='bar',
+        type_hierarchy=[
+            'cloudify.nodes.Root',
+            'cloudify.nodes.vcloud.NIC'
+        ],
+        properties={
+            'use_external_resource': False,
+            'resource_id': 'bar',
+            'client_config': {
+                'foo': 'bar',
+                'vdc': 'vdc'
+            },
+            'resource_config': {
+                'adapter_type': 'bar',
+                'is_primary': False,
+                'is_connected': True,
+                'ip_address_mode': 'MANUAL',
+                'ip_address': '192.169.2.2',
+                'network_name': 'foobar'
+            },
+        },
+    )
+    target_instance = mock.Mock(
+        runtime_properties=DirtyTrackingDict({'resource_id': 'bar'}),
+    )
+    source = mock.Mock(node=source_node, instance=source_instance)
+    target = mock.Mock(node=target_node, instance=target_instance)
+    _ctx = get_mock_relationship_context(
+        source=source, target=target)
+    add_nic(ctx=_ctx)
+    assert 'tasks' in _ctx.target.instance.runtime_properties
+    print(_ctx.target.instance.runtime_properties)
+
+
+@mock.patch('cloudify_vcd.decorators.get_last_task')
+@mock.patch('cloudify_vcd.constants.VCloudVM.get_vapp')
+@mock.patch('cloudify_vcd.constants.VCloudMedia.exposed_data')
+@mock.patch('cloudify_vcd.utils.VCloudConnect', logger='foo')
+@mock.patch('cloudify_vcd.decorators.check_if_task_successful',
+            return_value=True)
+def test_delete_nic(*_, **__):
+    source_node = mock.Mock(
+        id='foo',
+        type_hierarchy=[
+            'cloudify.nodes.Root',
+            'cloudify.nodes.vcloud.VM'
+        ],
+        properties={
+            'use_external_resource': True,
+            'resource_id': 'foo',
+            'client_config': {
+                'foo': 'bar',
+                'vdc': 'vdc'
+            }
+        },
+    )
+    relationships = [mock.Mock(
+        type_hierarchy=[REL_VM_VAPP],
+        target=mock.Mock(
+            instance=mock.Mock(
+                runtime_properties={'resource_id': 'foobar'},
+            )
+        )
+    )]
+    source_instance = mock.Mock(
+        runtime_properties=DirtyTrackingDict({
+            'resource_id': 'foo',
+            'data': {'vapp':' foo'}
+        }),
+        relationships=relationships
+    )
+    target_node = mock.Mock(
+        id='bar',
+        type_hierarchy=[
+            'cloudify.nodes.Root',
+            'cloudify.nodes.vcloud.NIC'
+        ],
+        properties={
+            'use_external_resource': False,
+            'resource_id': 'bar',
+            'client_config': {
+                'foo': 'bar',
+                'vdc': 'vdc'
+            },
+            'resource_config': {
+                'adapter_type': 'bar',
+                'is_primary': False,
+                'is_connected': True,
+                'ip_address_mode': 'MANUAL',
+                'ip_address': '192.169.2.2',
+                'network_name': 'foobar'
+            },
+        },
+    )
+    target_instance = mock.Mock(
+        runtime_properties=DirtyTrackingDict({'resource_id': 'bar'})
+    )
+    operation = {'name': 'unlink', 'retry_number': 0}
+
+    source = mock.Mock(node=source_node, instance=source_instance)
+    target = mock.Mock(node=target_node, instance=target_instance)
+    _ctx = get_mock_relationship_context(
+        source=source, target=target, operation=operation)
+    delete_nic(ctx=_ctx)
+    # TODO: Figure what we can assert here.

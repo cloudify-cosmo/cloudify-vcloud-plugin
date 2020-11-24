@@ -293,17 +293,17 @@ class VCloudVM(VCloudResource):
     def add_nic(self, **kwargs):
         task = self.vm.add_nic(**kwargs)
         if 'add_nic' in self.tasks:
-            self.tasks['add_nic'].append(task.items())
+            self.tasks['add_nic'].append(task)
         else:
-            self.tasks['add_nic'] = [task.items()]
+            self.tasks['add_nic'] = [task]
         return task
 
     def delete_nic(self, index):
         task = self.vm.delete_nic(index)
         if 'remove_nic' in self.tasks:
-            self.tasks['remove_nic'].append(task.items())
+            self.tasks['remove_nic'].append(task)
         else:
-            self.tasks['remove_nic'] = [task.items()]
+            self.tasks['remove_nic'] = [task]
         return task
 
     # TODO: Untested/Unused.
