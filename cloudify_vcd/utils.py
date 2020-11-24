@@ -442,7 +442,7 @@ def vcd_unclear_exception(exc):
 
 # Not tested - why should we?
 def vcd_already_exists(exc):
-    if '400/DUPLICATE_NAME' in str(exc):
+    if 'DUPLICATE_NAME' in str(exc):
         return True
     return False
 

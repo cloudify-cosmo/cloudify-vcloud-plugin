@@ -1,6 +1,14 @@
 import mock
+import pytest
 
 from cloudify.manager import DirtyTrackingDict
+from cloudify.exceptions import (
+    OperationRetry,
+    NonRecoverableError)
+
+from pyvcloud.vcd.exceptions import (
+    BadRequestException,
+    EntityNotFoundException)
 
 from .test_utils import (
     get_mock_relationship_context,
@@ -34,6 +42,17 @@ from ..media_tasks import (
 from ..network_tasks import (
     create_network,
     delete_network
+)
+
+from ..vapp_tasks import (
+    create_vapp,
+    stop_vapp,
+    delete_vapp,
+    create_vm,
+    configure_vm,
+    start_vm,
+    stop_vm,
+    delete_vm
 )
 
 
@@ -834,4 +853,289 @@ def test_delete_network(*_, **__):
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
                                 'cloudify.nodes.vcloud.RoutedVDCNetwork']
     delete_network(ctx=_ctx)
+    assert '__deleted' in _ctx.instance.runtime_properties
+
+
+@mock.patch('cloudify_vcd.decorators.get_last_task')
+@mock.patch('cloudify_vcd.constants.VCloudvApp.exposed_data')
+@mock.patch('cloudify_vcd.utils.VCloudConnect', logger='foo')
+@mock.patch('cloudify_vcd.decorators.check_if_task_successful',
+            return_value=True)
+@mock.patch('cloudify_vcd.vapp_tasks.find_resource_id_from_relationship_'
+            'by_type', return_value='foo')
+def test_create_vapp(*_, **__):
+    operation = {'name': 'create', 'retry_number': 0}
+    _ctx = get_mock_node_instance_context(properties={
+            'use_external_resource': False,
+            'resource_id': 'foo',
+            'resource_config': {'description': 'bar', 'fence_mode': 'baz'},
+            'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
+            operation=operation)
+    _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
+                                'cloudify.nodes.vcloud.VApp']
+    create_vapp(ctx=_ctx)
+    assert _ctx.instance.runtime_properties['resource_id'] == 'foo'
+    assert '__created' in _ctx.instance.runtime_properties
+
+
+@mock.patch('cloudify_vcd.constants.VCloudvApp.exposed_data')
+@mock.patch('cloudify_vcd.utils.VCloudConnect', logger='foo')
+@mock.patch('pyvcloud.vcd.vdc.VDC.get_vapp', return_value={'href': 'foo'})
+@mock.patch('cloudify_vcd.decorators.check_if_task_successful',
+            return_value=True)
+def test_stop_vapp(*_, **__):
+    operation = {'name': 'stop', 'retry_number': 0}
+    _ctx = get_mock_node_instance_context(properties={
+            'use_external_resource': False,
+            'resource_id': 'foo',
+            'resource_config': {'description': 'bar', 'fence_mode': 'baz'},
+            'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
+            operation=operation)
+    _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
+                                'cloudify.nodes.vcloud.VApp']
+    stop_vapp(ctx=_ctx)
+    # TODO: Figure out appropriate assert here.
+
+
+@mock.patch('cloudify_vcd.constants.VCloudvApp.exposed_data')
+@mock.patch('cloudify_vcd.utils.VCloudConnect', logger='foo')
+@mock.patch('pyvcloud.vcd.vdc.VDC.get_vapp_href', return_value={'href': 'foo'})
+@mock.patch('cloudify_vcd.decorators.check_if_task_successful',
+            return_value=True)
+def test_delete_vapp(*_, **__):
+    operation = {'name': 'delete', 'retry_number': 0}
+    _ctx = get_mock_node_instance_context(properties={
+            'use_external_resource': False,
+            'resource_id': 'foo',
+            'resource_config': {'description': 'bar', 'fence_mode': 'baz'},
+            'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
+            operation=operation)
+    _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
+                                'cloudify.nodes.vcloud.VApp']
+    delete_vapp(ctx=_ctx)
+    assert '__deleted' in _ctx.instance.runtime_properties
+
+
+@mock.patch('cloudify_vcd.decorators.get_last_task')
+@mock.patch('cloudify_vcd.constants.VCloudVM.exposed_data')
+@mock.patch('cloudify_vcd.utils.VCloudConnect', logger='foo')
+@mock.patch('cloudify_vcd.decorators.check_if_task_successful',
+            return_value=True)
+@mock.patch('cloudify_vcd.vapp_tasks.find_resource_id_from_relationship_'
+            'by_type', return_value='foo')
+def test_create_vm(*_, **__):
+    operation = {'name': 'create', 'retry_number': 0}
+    _ctx = get_mock_node_instance_context(properties={
+            'use_external_resource': False,
+            'resource_id': 'foo',
+            'resource_config': {'catalog': 'bar', 'template': 'baz'},
+            'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
+            operation=operation)
+    _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
+                                'cloudify.nodes.vcloud.VM']
+    with mock.patch('vcd_plugin_sdk.resources.base.VDC') as vdc:
+        vdc.client.get_api_version = (lambda: '33')
+        create_vm(ctx=_ctx)
+    assert _ctx.instance.runtime_properties['resource_id'] == 'foo'
+    assert '__created' in _ctx.instance.runtime_properties
+
+
+@mock.patch('cloudify_vcd.constants.VCloudVM.exposed_data')
+@mock.patch('cloudify_vcd.utils.VCloudConnect', logger='foo')
+@mock.patch('cloudify_vcd.decorators.check_if_task_successful',
+            return_value=True)
+@mock.patch('cloudify_vcd.vapp_tasks.find_resource_id_from_relationship_'
+            'by_type', return_value='foo')
+def test_create_vm_external(*_, **__):
+    operation = {'name': 'create', 'retry_number': 0}
+    _ctx = get_mock_node_instance_context(properties={
+            'use_external_resource': True,
+            'resource_id': 'foo',
+            'resource_config': {'catalog': 'bar', 'template': 'baz'},
+            'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
+            operation=operation)
+    _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
+                                'cloudify.nodes.vcloud.VM']
+    with mock.patch('vcd_plugin_sdk.resources.base.VDC') as vdc:
+        vdc.client.get_api_version = (lambda: '33')
+        create_vm(ctx=_ctx)
+    assert _ctx.instance.runtime_properties['resource_id'] == 'foo'
+    assert '__created' in _ctx.instance.runtime_properties
+
+
+@mock.patch('cloudify_vcd.decorators.get_last_task')
+@mock.patch('cloudify_vcd.constants.VCloudVM.exposed_data')
+@mock.patch('cloudify_vcd.utils.VCloudConnect', logger='foo')
+@mock.patch('cloudify_vcd.decorators.check_if_task_successful',
+            return_value=True)
+@mock.patch('cloudify_vcd.vapp_tasks.find_resource_id_from_relationship_'
+            'by_type', return_value='foo')
+def test_create_vm_handles_bad_request(*_, **__):
+    operation = {'name': 'create', 'retry_number': 0}
+    _ctx = get_mock_node_instance_context(properties={
+            'use_external_resource': False,
+            'resource_id': 'foo',
+            'resource_config': {'catalog': 'bar', 'template': 'baz'},
+            'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
+            operation=operation)
+    _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
+                                'cloudify.nodes.vcloud.VM']
+    with mock.patch('cloudify_vcd.constants.VCloudVM.instantiate_vapp',
+                    side_effect=BadRequestException(
+                        400,
+                        'foo',
+                        {
+                            'message': 'DUPLICATE_NAME',
+                            'minorCode': 400
+                        })):
+        create_vm(ctx=_ctx)
+    assert _ctx.instance.runtime_properties['resource_id'] == 'foo'
+    assert '__created' in _ctx.instance.runtime_properties
+
+
+@mock.patch('cloudify_vcd.decorators.get_last_task')
+@mock.patch('cloudify_vcd.constants.VCloudVM.exposed_data')
+@mock.patch('cloudify_vcd.utils.VCloudConnect', logger='foo')
+@mock.patch('cloudify_vcd.decorators.check_if_task_successful',
+            return_value=True)
+@mock.patch('cloudify_vcd.vapp_tasks.find_resource_id_from_relationship_'
+            'by_type', return_value='foo')
+def test_create_vm_raises_bad_request(*_, **__):
+    operation = {'name': 'create', 'retry_number': 0}
+    _ctx = get_mock_node_instance_context(properties={
+            'use_external_resource': False,
+            'resource_id': 'foo',
+            'resource_config': {'catalog': 'bar', 'template': 'baz'},
+            'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
+            operation=operation)
+    _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
+                                'cloudify.nodes.vcloud.VM']
+    with mock.patch('cloudify_vcd.constants.VCloudVM.instantiate_vapp',
+                    side_effect=EntityNotFoundException()):
+        with pytest.raises(NonRecoverableError):
+            create_vm(ctx=_ctx)
+
+
+@mock.patch('cloudify_vcd.decorators.get_last_task')
+@mock.patch('cloudify_vcd.constants.VCloudVM.exposed_data')
+@mock.patch('cloudify_vcd.utils.VCloudConnect', logger='foo')
+@mock.patch('cloudify_vcd.decorators.check_if_task_successful',
+            return_value=True)
+@mock.patch('cloudify_vcd.vapp_tasks.find_resource_id_from_relationship_'
+            'by_type', return_value='foo')
+def test_create_vm_raises_bad_request(*_, **__):
+    operation = {'name': 'create', 'retry_number': 0}
+    _ctx = get_mock_node_instance_context(properties={
+            'use_external_resource': False,
+            'resource_id': 'foo',
+            'resource_config': {'catalog': 'bar', 'template': 'baz'},
+            'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
+            operation=operation)
+    _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
+                                'cloudify.nodes.vcloud.VM']
+    with mock.patch('cloudify_vcd.constants.VCloudVM.instantiate_vapp',
+                    side_effect=BadRequestException(
+                        400,
+                        'foo',
+                        {
+                            'message': 'is busy, '
+                                       'cannot proceed with the operation',
+                            'minorCode': 400
+                        })):
+        with pytest.raises(OperationRetry):
+            create_vm(ctx=_ctx)
+
+
+@mock.patch('cloudify_vcd.decorators.get_last_task')
+@mock.patch('cloudify_vcd.constants.VCloudVM.exposed_data')
+@mock.patch('cloudify_vcd.utils.VCloudConnect', logger='foo')
+@mock.patch('cloudify_vcd.decorators.check_if_task_successful',
+            return_value=True)
+@mock.patch('cloudify_vcd.vapp_tasks.find_resource_id_from_relationship_'
+            'by_type', return_value='foo')
+def test_configure_vm(*_, **__):
+    operation = {'name': 'configure', 'retry_number': 0}
+    _ctx = get_mock_node_instance_context(properties={
+            'use_external_resource': False,
+            'resource_id': 'foo',
+            'resource_config': {'catalog': 'bar', 'template': 'baz'},
+            'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
+            operation=operation)
+    _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
+                                'cloudify.nodes.vcloud.VM']
+    with mock.patch('vcd_plugin_sdk.resources.base.VDC') as vdc:
+        vdc.client.get_api_version = (lambda: '33')
+        configure_vm(ctx=_ctx)
+    assert _ctx.instance.runtime_properties['resource_id'] == 'foo'
+
+
+@mock.patch('pyvcloud.vcd.vapp.VApp.get_vm')
+@mock.patch('cloudify_vcd.decorators.get_last_task')
+@mock.patch('cloudify_vcd.constants.VCloudVM.exposed_data')
+@mock.patch('cloudify_vcd.utils.VCloudConnect', logger='foo')
+@mock.patch('cloudify_vcd.decorators.check_if_task_successful',
+            return_value=True)
+@mock.patch('cloudify_vcd.vapp_tasks.find_resource_id_from_relationship_'
+            'by_type', return_value='foo')
+def test_start_vm(*_, **__):
+    operation = {'name': 'start', 'retry_number': 0}
+    _ctx = get_mock_node_instance_context(properties={
+            'use_external_resource': False,
+            'resource_id': 'foo',
+            'resource_config': {'catalog': 'bar', 'template': 'baz'},
+            'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
+            operation=operation)
+    _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
+                                'cloudify.nodes.vcloud.VM']
+    with mock.patch('vcd_plugin_sdk.resources.base.VDC') as vdc:
+        vdc.client.get_api_version = (lambda: '33')
+        start_vm(ctx=_ctx)
+    assert _ctx.instance.runtime_properties['resource_id'] == 'foo'
+
+
+@mock.patch('pyvcloud.vcd.vapp.VApp.get_vm')
+@mock.patch('cloudify_vcd.decorators.get_last_task')
+@mock.patch('cloudify_vcd.constants.VCloudVM.exposed_data')
+@mock.patch('cloudify_vcd.utils.VCloudConnect', logger='foo')
+@mock.patch('cloudify_vcd.decorators.check_if_task_successful',
+            return_value=True)
+@mock.patch('cloudify_vcd.vapp_tasks.find_resource_id_from_relationship_'
+            'by_type', return_value='foo')
+def test_stop_vm(*_, **__):
+    operation = {'name': 'stop', 'retry_number': 0}
+    _ctx = get_mock_node_instance_context(properties={
+            'use_external_resource': False,
+            'resource_id': 'foo',
+            'resource_config': {'catalog': 'bar', 'template': 'baz'},
+            'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
+            operation=operation)
+    _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
+                                'cloudify.nodes.vcloud.VM']
+    with mock.patch('vcd_plugin_sdk.resources.base.VDC') as vdc:
+        vdc.client.get_api_version = (lambda: '33')
+        stop_vm(ctx=_ctx)
+    # TODO: Figure out what to assert here. :(
+
+
+@mock.patch('pyvcloud.vcd.vapp.VApp.get_vm')
+@mock.patch('cloudify_vcd.decorators.get_last_task')
+@mock.patch('cloudify_vcd.constants.VCloudVM.exposed_data')
+@mock.patch('cloudify_vcd.utils.VCloudConnect', logger='foo')
+@mock.patch('cloudify_vcd.decorators.check_if_task_successful',
+            return_value=True)
+@mock.patch('cloudify_vcd.vapp_tasks.find_resource_id_from_relationship_'
+            'by_type', return_value='foo')
+def test_delete_vm(*_, **__):
+    operation = {'name': 'delete', 'retry_number': 0}
+    _ctx = get_mock_node_instance_context(properties={
+            'use_external_resource': False,
+            'resource_id': 'foo',
+            'resource_config': {'catalog': 'bar', 'template': 'baz'},
+            'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
+            operation=operation)
+    _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
+                                'cloudify.nodes.vcloud.VM']
+    with mock.patch('vcd_plugin_sdk.resources.base.VDC') as vdc:
+        vdc.client.get_api_version = (lambda: '33')
+        delete_vm(ctx=_ctx)
     assert '__deleted' in _ctx.instance.runtime_properties
