@@ -140,8 +140,8 @@ def is_external_resource(node, instance):
     return False
 
 
-def get_resource_id(node, instance):
-    return instance.get('resource_id', node.get('resource_id'))
+def get_resource_id(node, instance, instance_id=None):
+    return instance.get('resource_id', node.get('resource_id', instance_id))
 
 
 def get_client_config(node):
@@ -213,7 +213,9 @@ def get_resource_data(__ctx):
     """
     primary, secondary = get_ctxs(__ctx)
     primary_resource_id = get_resource_id(
-        primary.node.properties, primary.instance.runtime_properties)
+        primary.node.properties,
+        primary.instance.runtime_properties,
+        primary.instance.id)
     primary_external = is_external_resource(
         primary.node.properties,
         primary.instance.runtime_properties)
@@ -233,7 +235,9 @@ def get_resource_data(__ctx):
         classes[0])
     if secondary:
         secondary_resource_id = get_resource_id(
-            secondary.node.properties, secondary.instance.runtime_properties)
+            secondary.node.properties,
+            secondary.instance.runtime_properties,
+            secondary.instance.id)
         secondary_external = is_external_resource(
             secondary.node.properties,
             secondary.instance.runtime_properties)

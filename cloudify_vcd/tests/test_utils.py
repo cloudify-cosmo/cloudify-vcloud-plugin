@@ -202,6 +202,9 @@ def test_get_resource_id():
     ctx = get_mock_node_instance_context()
     assert get_resource_id(ctx.node.properties,
                            ctx.instance.runtime_properties) == 'foo'
+    assert get_resource_id(ctx.node.properties,
+                           ctx.instance.runtime_properties,
+                           ctx.instance.id) == 'foo'
 
 
 def test_get_client_config():
