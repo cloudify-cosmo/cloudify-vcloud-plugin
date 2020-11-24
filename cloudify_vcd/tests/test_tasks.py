@@ -31,6 +31,11 @@ from ..media_tasks import (
     detach_media
 )
 
+from ..network_tasks import (
+    create_network,
+    delete_network
+)
+
 
 @mock.patch('cloudify_vcd.constants.VCloudGateway.exposed_data')
 @mock.patch('cloudify_vcd.utils.VCloudConnect', logger='foo')
@@ -789,3 +794,44 @@ def test_detach_media(*_, **__):
         source=source, target=target, operation=operation)
     detach_media(ctx=_ctx)
     # TODO: Figure what we can assert here.
+
+
+@mock.patch('cloudify_vcd.decorators.get_last_task')
+@mock.patch('cloudify_vcd.constants.VCloudNetwork.exposed_data')
+@mock.patch('pyvcloud.vcd.vdc.VDC.get_gateway', return_value={'href': 'foo'})
+@mock.patch('cloudify_vcd.utils.VCloudConnect', logger='foo')
+@mock.patch('cloudify_vcd.decorators.check_if_task_successful',
+            return_value=True)
+@mock.patch('cloudify_vcd.network_tasks.find_resource_id_from_relationship_'
+            'by_type', return_value='foo')
+def test_create_network(*_, **__):
+    operation = {'name': 'create', 'retry_number': 0}
+    _ctx = get_mock_node_instance_context(properties={
+            'use_external_resource': False,
+            'resource_id': 'foo',
+            'resource_config': {'gateway_name': 'bar', 'network_cidr': '1.1.1.1/1'},
+            'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
+            operation=operation)
+    _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
+                                'cloudify.nodes.vcloud.RoutedVDCNetwork']
+    create_network(ctx=_ctx)
+    assert _ctx.instance.runtime_properties['resource_id'] == 'foo'
+    assert '__created' in _ctx.instance.runtime_properties
+
+
+@mock.patch('cloudify_vcd.constants.VCloudNetwork.exposed_data')
+@mock.patch('cloudify_vcd.utils.VCloudConnect', logger='foo')
+@mock.patch('cloudify_vcd.decorators.check_if_task_successful',
+            return_value=True)
+def test_delete_network(*_, **__):
+    operation = {'name': 'delete', 'retry_number': 0}
+    _ctx = get_mock_node_instance_context(properties={
+            'use_external_resource': False,
+            'resource_id': 'foo',
+            'resource_config': {'foo': 'bar'},
+            'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
+            operation=operation)
+    _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
+                                'cloudify.nodes.vcloud.RoutedVDCNetwork']
+    delete_network(ctx=_ctx)
+    assert '__deleted' in _ctx.instance.runtime_properties
