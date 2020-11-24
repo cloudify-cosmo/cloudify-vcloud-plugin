@@ -20,7 +20,7 @@ def create_media(external_media,
         return media, None
 
     VCloudISO(media_ctx.node.properties['iso'])
-    last_task = media.upload()
+    media.upload()
     return media, None
 
 
