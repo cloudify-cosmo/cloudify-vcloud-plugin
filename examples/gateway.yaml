@@ -1,0 +1,58 @@
+tosca_definitions_version: cloudify_dsl_1_3
+
+imports:
+  - http://cloudify.co/spec/cloudify/5.1.0/types.yaml
+  - plugin:cloudify-vcd-plugin
+
+inputs:
+
+  vcloud_user:
+    type: string
+    default: { get_secret: vcloud_user }
+
+  vcloud_password:
+    type: string
+    default: { get_secret: vcloud_password }
+
+  vcloud_org:
+    type: string
+    default: { get_secret: vcloud_org }
+
+  vcloud_uri:
+    type: string
+    default: { get_secret: vcloud_uri }
+
+  vcloud_vdc:
+    type: string
+    default: { get_secret: vcloud_vdc }
+
+  resource_suffix:
+    type: string
+    default: '1'
+
+  catalog:
+    type: string
+    default: testcatalogue
+
+  template:
+    type: string
+    default: Centos7-GenericCloud
+
+dsl_definitions:
+
+  client_config: &client_config
+    uri: { get_input: vcloud_uri }
+    org: { get_input: vcloud_org }
+    vdc: { get_input: vcloud_vdc }
+    user: { get_input: vcloud_user }
+    password: { get_input: vcloud_password }
+    verify_ssl_certs: false
+
+node_templates:
+
+  gateway:
+    type: cloudify.nodes.vcloud.Gateway
+    properties:
+      client_config: *client_config
+      resource_id: vCloud97-Edges
+

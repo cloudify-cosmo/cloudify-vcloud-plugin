@@ -16,7 +16,10 @@ from time import sleep
 
 from pyvcloud.vcd.vm import VM
 from pyvcloud.vcd.vapp import VApp
-from pyvcloud.vcd.exceptions import EntityNotFoundException
+from pyvcloud.vcd.client import TaskStatus
+from pyvcloud.vcd.exceptions import (
+    VcdTaskException,
+    EntityNotFoundException)
 
 from .base import VCloudResource
 from .network import VCloudNetwork
@@ -56,6 +59,14 @@ class VCloudvApp(VCloudResource):
         else:
             self._vapp = self.get_vapp(self.vapp_name)
         return self._vapp
+
+    @property
+    def networks(self):
+        try:
+            vapp_networks = self.vapp.get_all_networks()
+            return [nw.values()[0] for nw in vapp_networks]
+        except (AttributeError, IndexError):
+            return []
 
     @property
     def exposed_data(self):
@@ -134,21 +145,21 @@ class VCloudvApp(VCloudResource):
     # def delete_vms(self, vm_names):
     #     return self.vapp.delete_vms(vm_names)
     #
-    # def add_network(self, **kwargs):
-    #     task = self.vapp.connect_org_vdc_network(**kwargs)
-    #     if 'add_network' in self.tasks:
-    #         self.tasks['add_network'].append(task.items())
-    #     else:
-    #         self.tasks['add_network'] = [task.items()]
-    #     return task
-    #
-    # def remove_network(self, network_name):
-    #     task = self.vapp.disconnect_org_vdc_network(network_name)
-    #     if 'remove_network' in self.tasks:
-    #         self.tasks['remove_network'].append(task.items())
-    #     else:
-    #         self.tasks['remove_network'] = [task.items()]
-    #     return task
+    def add_network(self, **kwargs):
+        task = self.vapp.connect_org_vdc_network(**kwargs)
+        if 'add_network' in self.tasks:
+            self.tasks['add_network'].append(task)
+        else:
+            self.tasks['add_network'] = [task]
+        return task
+
+    def remove_network(self, network_name):
+        task = self.vapp.disconnect_org_vdc_network(network_name)
+        if 'remove_network' in self.tasks:
+            self.tasks['remove_network'].append(task)
+        else:
+            self.tasks['remove_network'] = [task]
+        return task
 
     def set_lease(self, deployment_lease=0, storage_lease=0):
         self.vapp.set_lease(deployment_lease, storage_lease)
@@ -205,6 +216,10 @@ class VCloudVM(VCloudResource):
         }
 
     @property
+    def vapp_networks(self):
+        return self.vapp_object.networks
+
+    @property
     def exposed_data(self):
         data = {
             'vapp': self.vapp_object.name
@@ -238,7 +253,7 @@ class VCloudVM(VCloudResource):
         # To support bulk delete of VMs using vapp.delete_vms([names])
         vm = self.get_vm(vm_name or self.name)
         task = vm.delete()
-        self.tasks['delete'].append(task.items())
+        self.tasks['delete'].append(task)
         return task
 
     def check_network(self, name, type):
@@ -250,38 +265,48 @@ class VCloudVM(VCloudResource):
 
     def power_on(self, vm_name=None):
         if not vm_name:
-            self.vm.power_on()
+            task = self.vm.power_on()
         else:
             vm = self.get_vm(vm_name)
-            vm.power_on()
+            task = vm.power_on()
+        self.tasks['update'].append(task)
+        return task
 
     def power_off(self, vm_name=None):
         if not vm_name:
-            self.vm.power_off()
+            task = self.vm.power_off()
         else:
             vm = self.get_vm(vm_name)
-            vm.power_off()
+            task = vm.power_off()
+        self.tasks['update'].append(task)
+        return task
 
     def shutdown(self, vm_name=None):
         if not vm_name:
-            self.vm.shutdown()
+            task = self.vm.shutdown()
         else:
             vm = self.get_vm(vm_name)
-            vm.shutdown()
+            task = vm.shutdown()
+        self.tasks['update'].append(task)
+        return task
 
     def deploy(self, vm_name=None, power_on=True, force_customization=False):
         if not vm_name:
-            self.vm.deploy(power_on, force_customization)
+            task = self.vm.deploy(power_on, force_customization)
         else:
             vm = self.get_vm(vm_name)
-            vm.deploy(power_on, force_customization)
+            task = vm.deploy(power_on, force_customization)
+        self.tasks['update'].append(task)
+        return task
 
     def undeploy(self, vm_name=None, action='default'):
         if not vm_name:
-            self.vm.undeploy(action)
+            task = self.vm.undeploy(action)
         else:
             vm = self.get_vm(vm_name)
-            vm.undeploy(action)
+            task = vm.undeploy(action)
+        self.tasks['update'].append(task)
+        return task
 
     def attach_disk_to_vm(self, disk_href, vm_name=None):
         return self.vapp.attach_disk_to_vm(disk_href, vm_name or self.name)
@@ -310,23 +335,53 @@ class VCloudVM(VCloudResource):
     # def update_nic(self, **kwargs):
     #     task = self.vm.update_nic(**kwargs)
     #     if 'update_nic' in self.tasks:
-    #         self.tasks['update_nic'].append(task.items())
+    #         self.tasks['update_nic'].append(task)
     #     else:
-    #         self.tasks['update_nic'] = [task.items()]
+    #         self.tasks['update_nic'] = [task]
     #     return task
 
     def attach_media(self, media_id):
         task = self.vm.insert_cd_from_catalog(media_id)
         if 'media' in self.tasks:
-            self.tasks['media'].append(task.items())
+            self.tasks['media'].append(task)
         else:
-            self.tasks['media'] = [task.items()]
+            self.tasks['media'] = [task]
         return task
 
     def eject_media(self, media_id):
         task = self.vm.eject_cd(media_id)
         if 'media' in self.tasks:
-            self.tasks['media'].append(task.items())
+            self.tasks['media'].append(task)
         else:
-            self.tasks['media'] = [task.items()]
+            self.tasks['media'] = [task]
         return task
+
+    def task_successful(self, task):
+        """ Check if a VCD task succeeded.
+
+        :param task: Element {http://www.vmware.com/vcloud/v1.5}Task object
+        :return: bool
+        """
+        # task = json.loads(task_string)  # If task contains non-JSON
+        # serializable material, we will need to start encoding and decoding.
+        # Leaving this commented out for now.
+        try:
+            result = self.client.get_task_monitor().wait_for_success(
+                task, 10)
+        except VcdTaskException as e:
+            self.logger.info('Failed to validate task status {e}.'.format(e=e))
+            return False
+        # Return True if the API says the task succeeded.
+        return self.vm.is_powered_on() and \
+            result.get('status') == TaskStatus.SUCCESS.value
+
+    def add_vapp_network(self, **kwargs):
+        return self.vapp_object.add_network(**kwargs)
+
+    def remove_vapp_network(self, network_name):
+        return self.vapp_object.remove_network(network_name)
+
+    def get_nic_from_config(self, nic_config):
+        for nic in self.nics:
+            if nic['ip_address'] == nic_config['ip_address']:
+                return nic

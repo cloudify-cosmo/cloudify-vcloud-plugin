@@ -62,16 +62,19 @@ class VCloudNetwork(VCloudResource):
     @property
     def network(self):
         if not self._network:
-            try:
-                self._network = self.get_network()
-            except EntityNotFoundException:
-                raise VCloudSDKException(
-                    'Network {name} has not been initialized.'.format(
-                        name=self.name))
+            for i in range(0, 10):
+                try:
+                    self._network = self.get_network()
+                except (ValueError, EntityNotFoundException) as e:
+                    if i == 9:
+                        raise VCloudSDKException(
+                            'Network {name} has not been initialized. '
+                            'Error: {e}'.format(name=self.name, e=str(e)))
         return self._network
 
     @property
     def allocated_addresses(self):
+        # In busy environments, this can be pretty testy.
         return self.network.list_allocated_ip_address()
 
     @property
@@ -81,7 +84,7 @@ class VCloudNetwork(VCloudResource):
     @property
     def exposed_data(self):
         return {
-            'allocated_ips': self.network.list_allocated_ip_address(),
+            'allocated_ips': self.allocated_addresses,
             'resource': self.network.resource.items()
         }
 
@@ -260,11 +263,11 @@ class VCloudGateway(VCloudResource):
     def exposed_data(self):
         data = {
             'gateway_address': self.default_gateway,
-            'dhcp_pools': self.dhcp_pools,
-            'nat_rules': self.nat_rules,
-            'static_routes': self.static_routes,
-            'firewall_rules': self.firewall_rules,
-            'firewall_objects': self.firewall_objects
+            # 'dhcp_pools': self.dhcp_pools,
+            # 'nat_rules': self.nat_rules,
+            # 'static_routes': self.static_routes,
+            # 'firewall_rules': self.firewall_rules,
+            # 'firewall_objects': self.firewall_objects
         }
         return data
 

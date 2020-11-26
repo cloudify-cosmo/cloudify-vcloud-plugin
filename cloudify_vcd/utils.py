@@ -310,28 +310,58 @@ def cleanup_runtime_properties(current_ctx):
 
 
 def cleanup_objectify(data):
-    data = deepcopy(data)
-    if isinstance(data, ObjectifiedElement):
-        new_data = dict()
-        for child in data.iterchildren():
-            if isinstance(child, (BoolElement, StringElement, IntElement)):
-                new_data[child.tag] = child.pyval
-            else:
-                new_data = cleanup_objectify(data)
-        return new_data
+    # For dev purposes, lets log all this:
+    # TODO: Remove eventually, or find a cleaner way to get as much
+    # info as we can. Because I envision this being a problematic
+    # bit of code.
+    ctx.logger.debug('Logging data {} {}'.format(data, type(data)))
+    ctx.logger.debug('Text: {}'.format(getattr(data, 'text', None)))
+    ctx.logger.debug('Pyval: {}'.format(getattr(data, 'pyval', None)))
+    if hasattr(data, 'items'):
+        ctx.logger.debug('Items: {}'.format(data.items()))
+    try:
+        if hasattr(data, 'child'):
+            ctx.logger.debug('Child: {} {}'.format(
+                data.child, type(data.child)))
+        if hasattr(data, 'iterchildren'):
+            ctx.logger.debug('iterchildren: {} {}'.format(
+                data.iterchildren(),
+                [type(child) for child in data.iterchildren()]
+            ))
+    except (AttributeError, TypeError):
+        pass
 
+    data = deepcopy(data)
+
+    if isinstance(data, (str, int, bool)):
+        return data
+    elif isinstance(data, (BoolElement, StringElement, IntElement)):
+        return data.text
     if isinstance(data, tuple):
         if len(data) == 2:
-            data = {str(data[0]): data[1]}
+            return {str(data[0]): data[1]}
         else:
-            data = list(data)
+            return list(data)
     elif isinstance(data, dict):
+        new_data = {}
         for k, v in list(data.items()):
-            del data[k]
-            data[str(k)] = cleanup_objectify(v)
+            new_data[str(k)] = cleanup_objectify(v)
+        return new_data
     elif isinstance(data, list):
         for n in range(0, len(data)):
             data[n] = cleanup_objectify(data[n])
+        return data
+    elif isinstance(data, ObjectifiedElement):
+        if hasattr(data, 'iterchildren'):
+            new_data = {}
+            for child in data.iterchildren():
+                if hasattr(child, 'pyval'):
+                    new_data[child.tag] = cleanup_objectify(child.pyval)
+                else:
+                    new_data[child.tag] = cleanup_objectify(child)
+            return new_data
+        elif not hasattr(data, 'child') and data.text:
+            return data.text
     return data
 
 
@@ -472,6 +502,8 @@ def cannot_power_off(exc):
         return True
     elif 'RelationType.POWER_OFF' in str(exc):
         return True
+    elif 'is not powered on' in str(exc):
+        return True
     return False
 
 
@@ -479,6 +511,18 @@ def cannot_power_off(exc):
 def task_on_failure(exc):
     if 'Unable to perform this action. ' \
        'Contact your cloud administrator' in str(exc):
+        return True
+    return False
+
+
+def invalid_resource(exc):
+    if 'target entity is invalid' in str(exc):
+        return True
+    return False
+
+
+def uninitialized(exc):
+    if 'has not been initialized' in str(exc):
         return True
     return False
 
@@ -492,7 +536,9 @@ def retry_or_raise(e, r, operation_name):
     :param operation_name: ctx.operation.name.split('.')[-1]
     :return:
     """
+    # TODO: Determine if MissingLinkException is retry or ignore.
     if isinstance(e, (TypeError,
+                      AccessForbiddenException,
                       NotFoundException,
                       EntityNotFoundException)):
         if operation_name not in NO_RESOURCE_OK:
@@ -503,7 +549,7 @@ def retry_or_raise(e, r, operation_name):
             'Attempted to perform {op} operation on {r}, '
             'but the resource was not found.'.format(
                 op=operation_name, r=r.primary_id))
-    elif vcd_busy_exception(e) or vcd_unclear_exception(e):
+    elif vcd_busy_exception(e) or vcd_unclear_exception(e) or uninitialized:
         r.primary_ctx.instance.runtime_properties['__RETRY_BAD_REQUEST'] = True
         r.primary_ctx.instance.update()
         raise OperationRetry(str(e))
@@ -511,7 +557,7 @@ def retry_or_raise(e, r, operation_name):
 
 def check_if_task_successful(_resource, task):
     if isinstance(task, ObjectifiedElement):
-        ctx.logger.error('Task: {task}'.format(task=task.items()))
+        ctx.logger.debug('Task: {task}'.format(task=task.items()))
         try:
             return _resource.task_successful(task)
         except VcdTaskException as e:

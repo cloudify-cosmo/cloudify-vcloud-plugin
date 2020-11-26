@@ -360,6 +360,7 @@ def test_vcloud_gateway_static_route(*_, **__):
 @mock.patch('pyvcloud.vcd.vdc.VDC.get_vapp_href')
 @mock.patch('vcd_plugin_sdk.connection.Org', autospec=True)
 @mock.patch('vcd_plugin_sdk.connection.Client', autospec=True)
+@mock.patch('pyvcloud.vcd.vapp.VApp.disconnect_org_vdc_network')
 def test_vcloud_vapp(*_, **__):
     logger = mock.Mock()
     tasks = {'create': [[{'id': 'bar'}, {'href': 'foo/bar'}]], 'delete': []}
@@ -398,6 +399,8 @@ def test_vcloud_vapp(*_, **__):
             assert vcloud_vapp.client.get_resource.call_count == 9
             vcloud_vapp.get_lease()
             assert vcloud_vapp.client.get_resource.call_count == 10
+    vcloud_vapp.remove_network('bar')
+    assert vcloud_vapp.vapp.disconnect_org_vdc_network.call_count == 1
 
 
 @mock.patch('pyvcloud.vcd.vapp.VApp.get_vm')
@@ -405,10 +408,12 @@ def test_vcloud_vapp(*_, **__):
 @mock.patch('pyvcloud.vcd.vdc.VDC.get_vapp_href')
 @mock.patch('pyvcloud.vcd.vdc.VDC.instantiate_vapp')
 @mock.patch('vcd_plugin_sdk.connection.Org', autospec=True)
+@mock.patch('pyvcloud.vcd.vapp.VApp.connect_org_vdc_network')
 @mock.patch('pyvcloud.vcd.vdc.VDC.get_routed_orgvdc_network')
 @mock.patch('pyvcloud.vcd.vdc.VDC.get_direct_orgvdc_network')
 @mock.patch('vcd_plugin_sdk.connection.Client', autospec=True)
 @mock.patch('pyvcloud.vcd.vdc.VDC.get_isolated_orgvdc_network')
+@mock.patch('pyvcloud.vcd.vapp.VApp.disconnect_org_vdc_network')
 def test_vcloud_vm(*_, **__):
     logger = mock.Mock()
     tasks = {'create': [[{'id': 'bar'}, {'href': 'foo/bar'}]], 'delete': []}
@@ -498,3 +503,16 @@ def test_vcloud_vm(*_, **__):
     assert vcloud_vm.client.post_linked_resource.call_count == 9
     vcloud_vm.eject_media('foo')
     assert vcloud_vm.client.post_linked_resource.call_count == 10
+    vcloud_vm.add_vapp_network(**{
+        'orgvdc_network_name': 'bar',
+    })
+    assert vcloud_vm.vapp_object.vapp.connect_org_vdc_network.call_count == 1
+    vcloud_vm.remove_vapp_network('bar')
+    assert vcloud_vm.vapp_object.vapp.disconnect_org_vdc_network.call_count == 1
+    with mock.patch('pyvcloud.vcd.vm.VM.list_nics',
+                    return_value=[
+                        {'ip_address': 'foo'},
+                        {'ip_address': 'bar'}
+                    ]):
+        assert vcloud_vm.get_nic_from_config(
+            {'ip_address': 'foo'}).get('ip_address') == 'foo'

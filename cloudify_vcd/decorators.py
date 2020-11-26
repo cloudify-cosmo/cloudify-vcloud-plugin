@@ -2,6 +2,7 @@
 from pyvcloud.vcd.exceptions import (
     AccessForbiddenException,
     EntityNotFoundException,
+    MissingLinkException,
     BadRequestException,
     NotFoundException)
 
@@ -19,6 +20,7 @@ from .utils import (
     retry_or_raise,
     get_resource_data,
     check_if_task_successful)
+from vcd_plugin_sdk.exceptions import VCloudSDKException
 
 
 def resource_operation(func):
@@ -47,7 +49,9 @@ def resource_operation(func):
                                      func=func, result=result))
             except (AccessForbiddenException,
                     EntityNotFoundException,
+                    MissingLinkException,
                     BadRequestException,
+                    VCloudSDKException,
                     NotFoundException) as e:
                 ctx.logger.error(
                     'Failed to execute func {func} '
@@ -84,6 +88,5 @@ def resource_operation(func):
         expose_props(operation_name,
                      resource,
                      _ctx=resource_data.primary_ctx)
-        return resource
 
     return operation(func=wrapper, resumable=True)

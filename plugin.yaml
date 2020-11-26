@@ -77,6 +77,7 @@ data_types:
       resource_id:
         type: string
         description: The name of the resource. Required if resource is external.
+        required: false
       client_config:
         type: cloudify.datatypes.vcd.client_config
         description: Configuration options for pyvcloud.vcd.client.Client and pyvcloud.vcd.client.BasicLoginCredentials
@@ -155,6 +156,8 @@ node_types:
         stop:
           implementation: vcd.cloudify_vcd.vapp_tasks.stop_vapp
         delete:
+          implementation: vcd.cloudify_vcd.vapp_tasks.power_off_vapp
+        postdelete:
           implementation: vcd.cloudify_vcd.vapp_tasks.delete_vapp
 
   cloudify.nodes.vcloud.RoutedVDCNetwork:
@@ -273,7 +276,7 @@ relationships:
     derived_from: cloudify.relationships.connected_to
     target_interfaces:
       cloudify.interfaces.relationship_lifecycle:
-        establish:
+        preconfigure:
           implementation: vcd.cloudify_vcd.disk_tasks.attach_disk
         unlink:
           implementation: vcd.cloudify_vcd.disk_tasks.detach_disk
@@ -282,7 +285,7 @@ relationships:
     derived_from: cloudify.relationships.connected_to
     target_interfaces:
       cloudify.interfaces.relationship_lifecycle:
-        establish:
+        preconfigure:
           implementation: vcd.cloudify_vcd.media_tasks.attach_media
         unlink:
           implementation: vcd.cloudify_vcd.media_tasks.detach_media
@@ -291,10 +294,12 @@ relationships:
     derived_from: cloudify.relationships.connected_to
     target_interfaces:
       cloudify.interfaces.relationship_lifecycle:
+        preconfigure:
+          implementation: vcd.cloudify_vcd.vapp_tasks.add_network
         establish:
-          implementation: vcd.cloudify_vcd.media_tasks.add_nic
+          implementation: vcd.cloudify_vcd.vapp_tasks.add_nic
         unlink:
-          implementation: vcd.cloudify_vcd.media_tasks.delete_nic
+          implementation: vcd.cloudify_vcd.vapp_tasks.delete_nic
 
   cloudify.relationships.vcloud.nic_connected_to_network:
     derived_from: cloudify.relationships.connected_to
