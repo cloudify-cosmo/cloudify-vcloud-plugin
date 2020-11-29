@@ -344,7 +344,7 @@ def cleanup_objectify(data):
             return list(data)
     elif isinstance(data, dict):
         new_data = {}
-        for k, v in list(data.items()):
+        for k, v in data.items():
             new_data[str(k)] = cleanup_objectify(v)
         return new_data
     elif isinstance(data, list):

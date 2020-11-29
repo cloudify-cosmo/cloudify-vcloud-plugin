@@ -230,7 +230,7 @@ class VCloudGateway(VCloudResource):
     @property
     def default_gateway(self):
         static_route = self.gateway.get_static_routes()
-        return static_route.defaultRoute.gatewayAddress
+        return static_route.defaultRoute.gatewayAddress.text
 
     @property
     def static_routes(self):
