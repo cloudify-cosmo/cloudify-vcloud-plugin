@@ -18,6 +18,7 @@ from .utils import (
     expose_props,
     get_last_task,
     retry_or_raise,
+    invalid_resource,
     get_resource_data,
     check_if_task_successful)
 from vcd_plugin_sdk.exceptions import VCloudSDKException
@@ -80,6 +81,9 @@ def resource_operation(func):
                     raise NonRecoverableError(
                         'The expected resource {r} does not exist.'.format(
                             r=resource_data.primary_id))
+            except AccessForbiddenException as e:
+                if not invalid_resource(e):
+                    raise OperationRetry(e)
 
         if not check_if_task_successful(resource, last_task):
             resource_data.primary_ctx.instance.runtime_properties[

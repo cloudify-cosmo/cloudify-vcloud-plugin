@@ -296,7 +296,7 @@ relationships:
       cloudify.interfaces.relationship_lifecycle:
         preconfigure:
           implementation: vcd.cloudify_vcd.vapp_tasks.add_network
-        establish:
+        postconfigure:
           implementation: vcd.cloudify_vcd.vapp_tasks.add_nic
         unlink:
           implementation: vcd.cloudify_vcd.vapp_tasks.delete_nic
