@@ -575,6 +575,13 @@ def add_nic(_,
         kwargs={},
         vapp_kwargs=vm_config
     )
+    for nic in vm.nics:
+        _nic_network = nic.get('network')
+        if _nic_network == nic_network:
+            for k, v in nic.items():
+                nic_ctx.instance.runtime_properties[k] = v
+            break
+
     if vm.get_nic_from_config(nic_config):
         return vm, None
     last_task = vm.add_nic(**nic_config)
