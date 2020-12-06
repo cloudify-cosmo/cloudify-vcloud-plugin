@@ -11,10 +11,12 @@ from cloudify.exceptions import OperationRetry, NonRecoverableError
 from .decorators import resource_operation
 from .network_tasks import get_network_type
 from .utils import (
+    bad_vm_name,
     cannot_power_off,
     find_rel_by_type,
     vcd_unresolved_vm,
     vcd_already_exists,
+    expose_ip_property,
     find_resource_id_from_relationship_by_type)
 
 REL_VAPP_NETWORK = 'cloudify.relationships.vcloud.vapp_connected_to_network'
@@ -22,6 +24,7 @@ REL_VM_NETWORK = 'cloudify.relationships.vcloud.vm_connected_to_network'
 REL_VM_VAPP = 'cloudify.relationships.vcloud.vm_contained_in_vapp'
 REL_NIC_NETWORK = 'cloudify.relationships.vcloud.nic_connected_to_network'
 REL_VM_NIC = 'cloudify.relationships.vcloud.vm_connected_to_nic'
+FENCE_MODE = ['isolated', 'direct', 'bridged', 'natRouted']
 
 
 @resource_operation
@@ -52,6 +55,13 @@ def create_vapp(_,
         vapp_ctx.instance, REL_VAPP_NETWORK)
     if network and 'network' not in vapp_config:
         vapp_config['network'] = network
+
+    fence_mode = vapp_config.get('fence_mode')
+    if fence_mode not in FENCE_MODE:
+        raise NonRecoverableError(
+            'The provided resource config parameter fence_mode {fm} '
+            'is invalid. Valid values are {v}.'.format(
+                fm=fence_mode, v=FENCE_MODE))
 
     return vapp_class(
         vapp_id,
@@ -213,6 +223,13 @@ def create_vm(vm_external,
             'Using resource_id instead.'.format(v=vm_name, i=vm_id))
         vm_config['vm_name'] = vm_id
 
+    fence_mode = vm_config.get('fence_mode')
+    if fence_mode not in FENCE_MODE:
+        raise NonRecoverableError(
+            'The provided resource config parameter fence_mode {fm} '
+            'is invalid. Valid values are {v}.'.format(
+                fm=fence_mode, v=FENCE_MODE))
+
     vm = vm_class(
         vm_id,
         vapp_name,
@@ -237,7 +254,7 @@ def create_vm(vm_external,
     try:
         last_task = vm.instantiate_vapp()
     except BadRequestException as e:
-        if not vcd_already_exists(e) and not vm_external:
+        if not (vcd_already_exists(e) and not vm_external) or bad_vm_name(e):
             raise
         else:
             vm.logger.warn('The vm {name} unexpectedly exists.'.format(
@@ -319,6 +336,7 @@ def start_vm(vm_external,
             return vm, last_task
 
     last_task = vm.power_on()
+    expose_ip_property(vm.nics)
     return vm, last_task
 
 
@@ -359,10 +377,13 @@ def stop_vm(vm_external,
         return vm, None
     try:
         last_task = vm.power_off()
-    except (BadRequestException,
+    except (AttributeError,
+            BadRequestException,
             MissingLinkException,
             OperationNotSupportedException) as e:
-        if not vcd_unresolved_vm(e) and not cannot_power_off(e):
+
+        if not vcd_unresolved_vm(e) and not cannot_power_off(e) \
+                and not isinstance(e, AttributeError):
             raise
         last_task = None
     return vm, last_task
@@ -575,9 +596,19 @@ def add_nic(_,
         kwargs={},
         vapp_kwargs=vm_config
     )
-    if vm.get_nic_from_config(nic_config):
-        return vm, None
-    last_task = vm.add_nic(**nic_config)
+    last_task = None
+    if not vm.get_nic_from_config(nic_config):
+        last_task = vm.add_nic(**nic_config)
+    nic_ctx.instance.runtime_properties['ip_address'] = None
+    nic_ctx.instance.runtime_properties['mac_address'] = None
+    for nic in vm.nics:
+        _nic_network = nic.get('network')
+        if _nic_network == nic_network:
+            nic_ctx.instance.runtime_properties['ip_address'] = \
+                nic.get('ip_address')
+            nic_ctx.instance.runtime_properties['mac_address'] = \
+                nic.get('mac_address')
+            break
     return vm, last_task
 
 

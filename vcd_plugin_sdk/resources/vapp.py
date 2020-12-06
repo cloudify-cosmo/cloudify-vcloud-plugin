@@ -232,16 +232,23 @@ class VCloudVM(VCloudResource):
         return data
 
     def get_vm(self, vm_name):
-        vm_resource = self.vapp.get_vm(vm_name)
+        vm_resource = self.vapp_object.vapp.get_vm(vm_name)
         vm = VM(self.client, resource=vm_resource)
         return vm
 
-    # TODO: Not tested/not used
-    # def create(self, kwargs=None):
-    #     kwargs = kwargs or self.kwargs
-    #     task = self.vapp.add_vms(**kwargs)
-    #     self.tasks['create'].append(task.items())
-    #     return task
+    def add_vm(self, new_vm_name):
+        # TODO: Find the right way to get the original template.
+        # Document clearly how to share a VAPP with multiple VMs.
+        # ETC ETC
+        # This should also be used for auto-scaling.
+        # How will NICS work?
+        task = self.vapp.add_vms(
+            [{'vapp': self.vapp_object.vapp.resource,
+             'source_vm_name': self.name,
+             'target_vm_name': new_vm_name}]
+        )
+        self.tasks['create'].append(task.items())
+        return task
 
     def instantiate_vapp(self):
         task = self.vapp_object.instantiate_vapp()
