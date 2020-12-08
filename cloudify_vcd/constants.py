@@ -30,4 +30,4 @@ CLIENT_CONFIG_KEYS = ['uri', 'api_version', 'verify_ssl_certs', 'log_file',
 
 CLIENT_CREDENTIALS_KEYS = ['user', 'password', 'org']
 
-NO_RESOURCE_OK = ['unlink', 'delete', 'stop']
+NO_RESOURCE_OK = ['unlink', 'delete', 'stop', 'postdelete', 'prestop']

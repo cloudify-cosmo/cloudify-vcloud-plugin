@@ -1,3 +1,5 @@
+from cloudify import ctx
+
 from .decorators import resource_operation
 
 
@@ -90,9 +92,11 @@ def detach_disk(_,
                 vm_class,
                 vm_ctx,
                 **___):
+    vapp_name = vm_ctx.instance.runtime_properties.get('data', {}).get('vapp')
+
     vm = vm_class(
         vm_id,
-        vm_ctx.instance.runtime_properties['data']['vapp'],
+        vapp_name,
         vm_client,
         vdc_name=vm_vdc,
         kwargs={},
@@ -103,5 +107,10 @@ def detach_disk(_,
                       disk_vdc,
                       disk_config,
                       disk_ctx.instance.runtime_properties.get('tasks'))
-    last_task = vm.detach_disk_from_vm(disk.href)
+    if not vapp_name:
+        ctx.logger.warn('No vapp was found to detach disk {n}.'.format(
+            n=disk_id))
+        last_task = None
+    else:
+        last_task = vm.detach_disk_from_vm(disk.href)
     return disk, last_task

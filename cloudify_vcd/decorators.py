@@ -53,7 +53,8 @@ def resource_operation(func):
                     MissingLinkException,
                     BadRequestException,
                     VCloudSDKException,
-                    NotFoundException) as e:
+                    NotFoundException,
+                    AttributeError) as e:
                 ctx.logger.error(
                     'Failed to execute func {func} '
                     'with args {args} '
