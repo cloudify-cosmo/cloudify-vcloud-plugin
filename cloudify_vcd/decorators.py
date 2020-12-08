@@ -1,6 +1,8 @@
 
 from pyvcloud.vcd.exceptions import (
+
     AccessForbiddenException,
+    InternalServerException,
     EntityNotFoundException,
     MissingLinkException,
     BadRequestException,
@@ -49,6 +51,7 @@ def resource_operation(func):
                                  'result {result}'.format(
                                      func=func, result=result))
             except (AccessForbiddenException,
+                    InternalServerException,
                     EntityNotFoundException,
                     MissingLinkException,
                     BadRequestException,

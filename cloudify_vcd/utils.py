@@ -10,6 +10,7 @@ from pyvcloud.vcd.exceptions import (
     VcdTaskException,
     NotFoundException,
     EntityNotFoundException,
+    InternalServerException,
     AccessForbiddenException,
 )
 
@@ -547,6 +548,7 @@ def retry_or_raise(e, r, operation_name):
                       AttributeError,
                       NotFoundException,
                       EntityNotFoundException,
+                      InternalServerException,
                       AccessForbiddenException)):
         if operation_name not in NO_RESOURCE_OK:
             raise NonRecoverableError(
