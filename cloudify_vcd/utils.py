@@ -527,6 +527,12 @@ def uninitialized(exc):
     return False
 
 
+def bad_vm_name(exc):
+    if 'Computer name can only contain' in str(exc):
+        return True
+    return False
+
+
 def retry_or_raise(e, r, operation_name):
     """ When we call func in the decorator, we catch some exceptions.
     This function determines whether to raise or retry.
@@ -538,13 +544,14 @@ def retry_or_raise(e, r, operation_name):
     """
     # TODO: Determine if MissingLinkException is retry or ignore.
     if isinstance(e, (TypeError,
-                      AccessForbiddenException,
+                      AttributeError,
                       NotFoundException,
-                      EntityNotFoundException)):
+                      EntityNotFoundException,
+                      AccessForbiddenException)):
         if operation_name not in NO_RESOURCE_OK:
             raise NonRecoverableError(
-                'The expected resource {r} does not exist.'.format(
-                    r=r.primary_id))
+                'The expected resource {r} does not exist. {e}'.format(
+                    r=r.primary_id, e=e))
         ctx.logger.error(
             'Attempted to perform {op} operation on {r}, '
             'but the resource was not found.'.format(
@@ -566,3 +573,20 @@ def check_if_task_successful(_resource, task):
             raise OperationRetry(
                 'Unhandled state validation error: {e}.'.format(e=str(e)))
     return True
+
+
+def expose_ip_property(nics):
+    ip_addresses = ctx.instance.runtime_properties.get('ip_addresses', [])
+    for nic in nics:
+        if nic['primary']:
+            ctx.instance.runtime_properties['ip'] = nic['ip_address']
+            ctx.instance.runtime_properties['public_ip_address'] = \
+                nic['ip_address']
+            ctx.instance.runtime_properties['private_ip_address'] = \
+                nic['ip_address']
+            ctx.instance.runtime_properties['ipv4_address'] = \
+                nic['ip_address']
+        if nic['ip_address'] not in ip_addresses:
+            ip_addresses.append(nic['ip_address'])
+    ctx.instance.runtime_properties['ip_addresses'] = ip_addresses
+    ctx.instance.runtime_properties['ipv4_addresses'] = ip_addresses

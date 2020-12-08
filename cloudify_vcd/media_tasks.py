@@ -97,9 +97,12 @@ def detach_media(_,
                  vm_class,
                  vm_ctx,
                  **___):
+    vapp_name = vm_ctx.instance.runtime_properties.get('data', {}).get('vapp')
+    if not vapp_name:
+        return
     vm = vm_class(
         vm_id,
-        vm_ctx.instance.runtime_properties['data']['vapp'],
+        vapp_name,
         vm_client,
         vdc_name=vm_vdc,
         kwargs={},
