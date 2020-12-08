@@ -397,7 +397,7 @@ class VCloudVM(VCloudResource):
         return self.vapp_object.remove_network(network_name)
 
     def get_nic_from_config(self, nic_config):
-        nic_id = nic_config['nic_id']
+        nic_id = nic_config.get('nic_id')
         if nic_id is not None:
             for nic in self.nics:
                 if nic.get('nic_id') == nic_config['nic_id']:
