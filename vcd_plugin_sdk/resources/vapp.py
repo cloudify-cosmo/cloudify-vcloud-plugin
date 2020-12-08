@@ -331,6 +331,7 @@ class VCloudVM(VCloudResource):
         return task
 
     def update_nic(self, **kwargs):
+        kwargs['nic_id'] = kwargs.pop('index')
         task = self.vm.update_nic(**kwargs)
         if 'update_nic' in self.tasks:
             self.tasks['update_nic'].append(task)
@@ -397,8 +398,8 @@ class VCloudVM(VCloudResource):
         return self.vapp_object.remove_network(network_name)
 
     def get_nic_from_config(self, nic_config):
-        nic_id = nic_config.get('nic_id')
+        nic_id = nic_config.get('index')
         if nic_id is not None:
             for nic in self.nics:
-                if nic.get('nic_id') == nic_config['nic_id']:
+                if nic.get('index') == nic_id:
                     return nic
