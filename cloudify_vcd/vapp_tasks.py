@@ -600,7 +600,7 @@ def add_nic(_,
     nic = vm.get_nic_from_config(nic_config)
     if not nic:
         last_task = vm.add_nic(**nic_config)
-    elif nic_config:
+    else:
         last_task = vm.update_nic(**nic_config)
     nic_ctx.instance.runtime_properties['ip_address'] = None
     nic_ctx.instance.runtime_properties['mac_address'] = None
