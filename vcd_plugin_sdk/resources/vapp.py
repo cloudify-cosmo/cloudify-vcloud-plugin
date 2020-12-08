@@ -330,6 +330,14 @@ class VCloudVM(VCloudResource):
             self.tasks['add_nic'] = [task]
         return task
 
+    def update_nic(self, **kwargs):
+        task = self.vm.update_nic(**kwargs)
+        if 'update_nic' in self.tasks:
+            self.tasks['update_nic'].append(task)
+        else:
+            self.tasks['update_nic'] = [task]
+        return task
+
     def delete_nic(self, index):
         task = self.vm.delete_nic(index)
         if 'remove_nic' in self.tasks:
@@ -389,6 +397,8 @@ class VCloudVM(VCloudResource):
         return self.vapp_object.remove_network(network_name)
 
     def get_nic_from_config(self, nic_config):
-        for nic in self.nics:
-            if nic['ip_address'] == nic_config['ip_address']:
-                return nic
+        nic_id = nic_config['nic_id']
+        if nic_id is not None:
+            for nic in self.nics:
+                if nic.get('nic_id') == nic_config['nic_id']:
+                    return nic
