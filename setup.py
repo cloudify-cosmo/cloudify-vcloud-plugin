@@ -37,7 +37,7 @@ def get_version(rel_file='plugin.yaml'):
 
 setup(
     zip_safe=True,
-    name='cloudify-vcd-plugin',
+    name='cloudify-vcloud-plugin',
     version=get_version(),
     packages=[
         'cloudify_vcd',

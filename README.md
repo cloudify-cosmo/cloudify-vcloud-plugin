@@ -1,3 +1,3 @@
-# cloudify-vcd-plugin
+# cloudify-vcloud-plugin
 
 See plugin [documentation](https://docs.cloudify.co/latest/working_with/official_plugins/infrastructure/vcloud/).

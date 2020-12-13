@@ -172,7 +172,6 @@ commands:
           paths:
             - build/*
 
-
   build_archive:
     steps:
       - attach_workspace:
@@ -388,12 +387,12 @@ workflows:
           requires:
             - wagon
             - rhel_wagon
-      - integration_test:
-          requires:
-            - build_bundle
-          filters:
-            branches:
-              only: /([0-9\.]*\-build|master|dev)/
+#      - integration_test:
+#          requires:
+#            - build_bundle
+#          filters:
+#            branches:
+#              only: /([0-9\.]*\-build|master|dev)/
       - release:
           filters:
             branches:
@@ -405,7 +404,7 @@ workflows:
             - wagon
             - validate_version
             - validate_documentation
-            - integration_test
+#            - integration_test
       - merge_docs:
           filters:
             branches:
@@ -435,10 +434,10 @@ workflows:
           filters:
             branches:
               only: /([0-9\.]*\-build|master|dev)/
-      - integration_test:
-          requires:
-            - rhel_wagon
-            - wagon
-          filters:
-            branches:
-              only: /([0-9\.]*\-build|master|dev)/
+#      - integration_test:
+#          requires:
+#            - rhel_wagon
+#            - wagon
+#          filters:
+#            branches:
+#              only: /([0-9\.]*\-build|master|dev)/

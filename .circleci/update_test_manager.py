@@ -9,4 +9,4 @@ if __name__ == '__main__':
     version = validate_plugin_version(abs_path)
     for package in ['cloudify_vcd', 'vcd_plugin_sdk']:
         replace_plugin_package_on_manager(
-            'cloudify-vcd-plugin', version, package, )
+            'cloudify-vcloud-plugin', version, package, )
