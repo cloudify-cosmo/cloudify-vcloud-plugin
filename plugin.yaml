@@ -1,0 +1,305 @@
+plugins:
+  vcd:
+    executor: central_deployment_agent
+    package_name: cloudify-vcd-plugin
+    package_version: '2.0.0'
+
+data_types:
+
+  cloudify.datatypes.vcd.client_configuration_options:
+    properties: &client_configuration_options
+      uri:
+        type: string
+        required: false
+        description: The hostname or IP of the VCD.
+      api_version:
+        type: string
+        default: '32.0'
+        description: The VCD API version
+      verify_ssl_certs:
+        type: boolean
+        default: true
+        description: Whether to verify SSL certificates.
+      log_file:
+        type: string
+        required: false
+        description: Where to store pyvcloud logs.
+      log_requests:
+        type: boolean
+        default: true
+        description: Whether to log the requests.
+      log_headers:
+        type: boolean
+        default: true
+        description: Whether to log the requests headers.
+      log_bodies:
+        type: boolean
+        default: true
+        description: Whether to log the request bodies.
+      configuration_kwargs:
+        type: dict
+        default: {}
+        description: Additional client configuration options not exposed in cloudify.datatypes.vcd.client_configuration_options.
+
+  cloudify.datatypes.vcd.credentials:
+    properties: &credentials
+      user:
+        type: string
+        required: false
+        description: a VCD user name.
+      password:
+        type: string
+        required: false
+        description: the password for the VCD user name provided.
+      org:
+        type: string
+        required: false
+        description: a VCD org.
+      credentials_kwargs:
+        type: dict
+        default: {}
+        description: Additional client configuration options not exposed in cloudify.datatypes.vcd.credentials.
+
+  cloudify.datatypes.vcd.client_config:
+    properties:
+      <<: *client_configuration_options
+      <<: *credentials
+      vdc:
+        type: string
+        description: The name of the VDC.
+
+  cloudify.datatypes.vcloud.BaseProperties:
+    properties: &BaseProperties
+      use_external_resource:
+        type: boolean
+        description: If the resource has already been created, this should be true, if you wish Cloudify to create the resource, this should be false.
+        default: false
+      resource_id:
+        type: string
+        description: The name of the resource. Required if resource is external.
+        required: false
+      client_config:
+        type: cloudify.datatypes.vcd.client_config
+        description: Configuration options for pyvcloud.vcd.client.Client and pyvcloud.vcd.client.BasicLoginCredentials
+        required: false
+
+node_types:
+
+  cloudify.nodes.vcloud.Media:
+    derived_from: cloudify.nodes.Volume
+    properties:
+      <<: *BaseProperties
+      resource_config:
+        type: dict
+      iso:
+        type: dict
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: vcd.cloudify_vcd.media_tasks.create_media
+        delete:
+          implementation: vcd.cloudify_vcd.media_tasks.delete_media
+
+  cloudify.nodes.vcloud.Disk:
+    derived_from: cloudify.nodes.Volume
+    properties:
+      <<: *BaseProperties
+      resource_config:
+        type: dict
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: vcd.cloudify_vcd.disk_tasks.create_disk
+        delete:
+          implementation: vcd.cloudify_vcd.disk_tasks.delete_disk
+
+  cloudify.nodes.vcloud.NIC:
+    derived_from: cloudify.nodes.Volume
+    properties:
+      <<: *BaseProperties
+      resource_config:
+        type: dict
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        configure:
+          implementation: vcd.cloudify_vcd.vapp_tasks.configure_nic
+
+  cloudify.nodes.vcloud.VM:
+    derived_from: cloudify.nodes.Compute
+    properties:
+      <<: *BaseProperties
+      resource_config:
+        type: dict
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: vcd.cloudify_vcd.vapp_tasks.create_vm
+        configure:
+          implementation: vcd.cloudify_vcd.vapp_tasks.configure_vm
+        start:
+          implementation: vcd.cloudify_vcd.vapp_tasks.start_vm
+        stop:
+          implementation: vcd.cloudify_vcd.vapp_tasks.stop_vm
+        delete:
+          implementation: vcd.cloudify_vcd.vapp_tasks.delete_vm
+
+  cloudify.nodes.vcloud.VApp:
+    derived_from: cloudify.nodes.Root
+    properties:
+      <<: *BaseProperties
+      resource_config:
+        type: dict
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: vcd.cloudify_vcd.vapp_tasks.create_vapp
+        stop:
+          implementation: vcd.cloudify_vcd.vapp_tasks.stop_vapp
+        delete:
+          implementation: vcd.cloudify_vcd.vapp_tasks.power_off_vapp
+        postdelete:
+          implementation: vcd.cloudify_vcd.vapp_tasks.delete_vapp
+
+  cloudify.nodes.vcloud.RoutedVDCNetwork:
+      derived_from: cloudify.nodes.vcloud.NetworkBase
+
+  cloudify.nodes.vcloud.IsolatedVDCNetwork:
+      derived_from: cloudify.nodes.vcloud.NetworkBase
+
+  cloudify.nodes.vcloud.NetworkBase:
+    derived_from: cloudify.nodes.Network
+    properties:
+      <<: *BaseProperties
+      resource_config:
+        type: dict
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: vcd.cloudify_vcd.network_tasks.create_network
+        delete:
+          implementation: vcd.cloudify_vcd.network_tasks.delete_network
+
+  cloudify.nodes.vcloud.FirewallRules:
+    derived_from: cloudify.nodes.Root
+    properties:
+      <<: *BaseProperties
+      resource_config:
+        type: dict
+
+  cloudify.nodes.vcloud.StaticRoutes:
+    derived_from: cloudify.nodes.Root
+    properties:
+      <<: *BaseProperties
+      resource_config:
+        type: list
+
+  cloudify.nodes.vcloud.DHCPPools:
+    derived_from: cloudify.nodes.Root
+    properties:
+      <<: *BaseProperties
+      resource_config:
+        type: list
+
+  cloudify.nodes.vcloud.NatRules:
+    derived_from: cloudify.nodes.Root
+    properties:
+      <<: *BaseProperties
+      resource_config:
+        type: list
+
+  cloudify.nodes.vcloud.Gateway:
+    derived_from: cloudify.nodes.Root
+    properties:
+      <<: *BaseProperties
+      resource_config:
+        type: dict
+        default:
+          name: { get_property: [ SELF, resource_id ] }
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        configure:
+          implementation: vcd.cloudify_vcd.gateway_tasks.configure_gateway
+        delete:
+          implementation: vcd.cloudify_vcd.gateway_tasks.delete_gateway
+
+relationships:
+
+  cloudify.relationships.vcloud.network_connected_to_gateway:
+    derived_from: cloudify.relationships.connected_to
+
+  cloudify.relationships.vcloud.firewall_rules_contained_in_gateway:
+    derived_from: cloudify.relationships.contained_in
+    source_interfaces:
+      cloudify.interfaces.relationship_lifecycle:
+        preconfigure:
+          implementation: vcd.cloudify_vcd.gateway_tasks.create_firewall_rules
+        unlink:
+          implementation: vcd.cloudify_vcd.gateway_tasks.delete_firewall_rules
+
+  cloudify.relationships.vcloud.static_routes_contained_in_gateway:
+    derived_from: cloudify.relationships.contained_in
+    source_interfaces:
+      cloudify.interfaces.relationship_lifecycle:
+        preconfigure:
+          implementation: vcd.cloudify_vcd.gateway_tasks.create_static_routes
+        unlink:
+          implementation: vcd.cloudify_vcd.gateway_tasks.delete_static_routes
+
+  cloudify.relationships.vcloud.dhcp_pools_contained_in_gateway:
+    derived_from: cloudify.relationships.contained_in
+    source_interfaces:
+      cloudify.interfaces.relationship_lifecycle:
+        preconfigure:
+          implementation: vcd.cloudify_vcd.gateway_tasks.create_dhcp_pools
+        unlink:
+          implementation: vcd.cloudify_vcd.gateway_tasks.delete_dhcp_pools
+
+  cloudify.relationships.vcloud.nat_rules_contained_in_gateway:
+    derived_from: cloudify.relationships.contained_in
+    source_interfaces:
+      cloudify.interfaces.relationship_lifecycle:
+        preconfigure:
+          implementation: vcd.cloudify_vcd.gateway_tasks.create_nat_rules
+        unlink:
+          implementation: vcd.cloudify_vcd.gateway_tasks.delete_nat_rules
+
+  cloudify.relationships.vcloud.vm_connected_to_network:
+    derived_from: cloudify.relationships.connected_to
+
+  cloudify.relationships.vcloud.vapp_connected_to_network:
+    derived_from: cloudify.relationships.connected_to
+
+  cloudify.relationships.vcloud.vm_contained_in_vapp:
+    derived_from: cloudify.relationships.contained_in
+
+  cloudify.relationships.vcloud.vm_connected_to_disk:
+    derived_from: cloudify.relationships.connected_to
+    target_interfaces:
+      cloudify.interfaces.relationship_lifecycle:
+        preconfigure:
+          implementation: vcd.cloudify_vcd.disk_tasks.attach_disk
+        unlink:
+          implementation: vcd.cloudify_vcd.disk_tasks.detach_disk
+
+  cloudify.relationships.vcloud.vm_connected_to_media:
+    derived_from: cloudify.relationships.connected_to
+    target_interfaces:
+      cloudify.interfaces.relationship_lifecycle:
+        preconfigure:
+          implementation: vcd.cloudify_vcd.media_tasks.attach_media
+        unlink:
+          implementation: vcd.cloudify_vcd.media_tasks.detach_media
+
+  cloudify.relationships.vcloud.vm_connected_to_nic:
+    derived_from: cloudify.relationships.connected_to
+    target_interfaces:
+      cloudify.interfaces.relationship_lifecycle:
+        preconfigure:
+          implementation: vcd.cloudify_vcd.vapp_tasks.add_network
+        postconfigure:
+          implementation: vcd.cloudify_vcd.vapp_tasks.add_nic
+        unlink:
+          implementation: vcd.cloudify_vcd.vapp_tasks.delete_nic
+
+  cloudify.relationships.vcloud.nic_connected_to_network:
+    derived_from: cloudify.relationships.connected_to
