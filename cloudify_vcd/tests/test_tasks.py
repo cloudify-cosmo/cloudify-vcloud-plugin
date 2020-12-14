@@ -575,7 +575,7 @@ def test_attach_disk(*_, **__):
     source_instance = mock.Mock(
         runtime_properties=DirtyTrackingDict({
             'resource_id': 'foo',
-            'data': {'vapp': ' foo'}
+            'data': {'vapp': 'foo'}
         })
     )
     target_node = mock.Mock(
@@ -630,7 +630,7 @@ def test_detach_disk(*_, **__):
     source_instance = mock.Mock(
         runtime_properties=DirtyTrackingDict({
             'resource_id': 'foo',
-            'data': {'vapp': ' foo'}
+            'data': {'vapp': 'foo'}
         })
     )
     target_node = mock.Mock(
@@ -706,9 +706,11 @@ def test_delete_media(*_, **__):
     assert '__deleted' in _ctx.instance.runtime_properties
 
 
+@mock.patch('pyvcloud.vcd.vdc.VDC.get_vapp_href')
 @mock.patch('cloudify_vcd.decorators.get_last_task')
 @mock.patch('pyvcloud.vcd.vm.VM.insert_cd_from_catalog')
 @mock.patch('cloudify_vcd.constants.VCloudVM.get_vapp')
+@mock.patch('pyvcloud.vcd.vapp.VApp.get_vm')
 @mock.patch('cloudify_vcd.constants.VCloudMedia.exposed_data')
 @mock.patch('cloudify_vcd.utils.VCloudConnect', logger='foo')
 @mock.patch('cloudify_vcd.decorators.check_if_task_successful',
@@ -732,7 +734,7 @@ def test_attach_media(*_, **__):
     source_instance = mock.Mock(
         runtime_properties=DirtyTrackingDict({
             'resource_id': 'foo',
-            'data': {'vapp': ' foo'}
+            'data': {'vapp': 'foo'}
         })
     )
     target_node = mock.Mock(
@@ -762,6 +764,7 @@ def test_attach_media(*_, **__):
     assert 'tasks' in _ctx.target.instance.runtime_properties
 
 
+@mock.patch('pyvcloud.vcd.vdc.VDC.get_vapp_href')
 @mock.patch('cloudify_vcd.decorators.get_last_task')
 @mock.patch('cloudify_vcd.constants.VCloudVM.get_vapp')
 @mock.patch('cloudify_vcd.constants.VCloudMedia.exposed_data')
@@ -788,7 +791,7 @@ def test_detach_media(*_, **__):
     source_instance = mock.Mock(
         runtime_properties=DirtyTrackingDict({
             'resource_id': 'foo',
-            'data': {'vapp': ' foo'}
+            'data': {'vapp': 'foo'}
         })
     )
     target_node = mock.Mock(
@@ -875,7 +878,8 @@ def test_create_vapp(*_, **__):
     _ctx = get_mock_node_instance_context(properties={
             'use_external_resource': False,
             'resource_id': 'foo',
-            'resource_config': {'description': 'bar', 'fence_mode': 'baz'},
+            'resource_config': {'description': 'bar',
+                                'fence_mode': 'isolated'},
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
             operation=operation)
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
@@ -924,6 +928,7 @@ def test_delete_vapp(*_, **__):
     assert '__deleted' in _ctx.instance.runtime_properties
 
 
+@mock.patch('urllib.parse.quote_from_bytes')
 @mock.patch('cloudify_vcd.decorators.get_last_task')
 @mock.patch('cloudify_vcd.constants.VCloudVM.exposed_data')
 @mock.patch('cloudify_vcd.utils.VCloudConnect', logger='foo')
@@ -936,7 +941,9 @@ def test_create_vm(*_, **__):
     _ctx = get_mock_node_instance_context(properties={
             'use_external_resource': False,
             'resource_id': 'foo',
-            'resource_config': {'catalog': 'bar', 'template': 'baz'},
+            'resource_config': {'catalog': 'bar',
+                                'template': 'baz',
+                                'fence_mode': 'isolated'},
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
             operation=operation)
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
@@ -948,6 +955,7 @@ def test_create_vm(*_, **__):
     assert '__created' in _ctx.instance.runtime_properties
 
 
+@mock.patch('urllib.parse.quote_from_bytes')
 @mock.patch('cloudify_vcd.constants.VCloudVM.exposed_data')
 @mock.patch('cloudify_vcd.utils.VCloudConnect', logger='foo')
 @mock.patch('cloudify_vcd.decorators.check_if_task_successful',
@@ -959,7 +967,9 @@ def test_create_vm_external(*_, **__):
     _ctx = get_mock_node_instance_context(properties={
             'use_external_resource': True,
             'resource_id': 'foo',
-            'resource_config': {'catalog': 'bar', 'template': 'baz'},
+            'resource_config': {'catalog': 'bar',
+                                'template': 'baz',
+                                'fence_mode': 'isolated'},
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
             operation=operation)
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
@@ -971,6 +981,7 @@ def test_create_vm_external(*_, **__):
     assert '__created' in _ctx.instance.runtime_properties
 
 
+@mock.patch('urllib.parse.quote_from_bytes')
 @mock.patch('cloudify_vcd.decorators.get_last_task')
 @mock.patch('cloudify_vcd.constants.VCloudVM.exposed_data')
 @mock.patch('cloudify_vcd.utils.VCloudConnect', logger='foo')
@@ -983,7 +994,9 @@ def test_create_vm_handles_bad_request(*_, **__):
     _ctx = get_mock_node_instance_context(properties={
             'use_external_resource': False,
             'resource_id': 'foo',
-            'resource_config': {'catalog': 'bar', 'template': 'baz'},
+            'resource_config': {'catalog': 'bar',
+                                'template': 'baz',
+                                'fence_mode': 'isolated'},
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
             operation=operation)
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
@@ -1001,6 +1014,7 @@ def test_create_vm_handles_bad_request(*_, **__):
     assert '__created' in _ctx.instance.runtime_properties
 
 
+@mock.patch('urllib.parse.quote_from_bytes')
 @mock.patch('cloudify_vcd.decorators.get_last_task')
 @mock.patch('cloudify_vcd.constants.VCloudVM.exposed_data')
 @mock.patch('cloudify_vcd.utils.VCloudConnect', logger='foo')
@@ -1013,7 +1027,9 @@ def test_create_vm_raises_bad_request(*_, **__):
     _ctx = get_mock_node_instance_context(properties={
             'use_external_resource': False,
             'resource_id': 'foo',
-            'resource_config': {'catalog': 'bar', 'template': 'baz'},
+            'resource_config': {'catalog': 'bar',
+                                'template': 'baz',
+                                'fence_mode': 'isolated'},
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
             operation=operation)
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
@@ -1024,6 +1040,7 @@ def test_create_vm_raises_bad_request(*_, **__):
             create_vm(ctx=_ctx)
 
 
+@mock.patch('urllib.parse.quote_from_bytes')
 @mock.patch('cloudify_vcd.decorators.get_last_task')
 @mock.patch('cloudify_vcd.constants.VCloudVM.exposed_data')
 @mock.patch('cloudify_vcd.utils.VCloudConnect', logger='foo')
@@ -1036,7 +1053,9 @@ def test_create_vm_raises_retry(*_, **__):
     _ctx = get_mock_node_instance_context(properties={
             'use_external_resource': False,
             'resource_id': 'foo',
-            'resource_config': {'catalog': 'bar', 'template': 'baz'},
+            'resource_config': {'catalog': 'bar',
+                                'template': 'baz',
+                                'fence_mode': 'isolated'},
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
             operation=operation)
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
@@ -1179,6 +1198,8 @@ def test_configure_nic(*_, **__):
     # assert _ctx.instance.runtime_properties['network'] == 'foobar'
 
 
+@mock.patch('pyvcloud.vcd.vdc.VDC.get_vapp')
+@mock.patch('pyvcloud.vcd.vapp.VApp.get_vm')
 @mock.patch('cloudify_vcd.decorators.get_last_task')
 @mock.patch('cloudify_vcd.constants.VCloudVM.get_vapp')
 @mock.patch('cloudify_vcd.constants.VCloudVM.exposed_data')
@@ -1215,7 +1236,7 @@ def test_add_nic(*_, **__):
     source_instance = mock.Mock(
         runtime_properties=DirtyTrackingDict({
             'resource_id': 'foo',
-            'data': {'vapp': ' foo'}
+            'data': {'vapp': 'foo'}
         }),
         relationships=relationships
     )
@@ -1251,7 +1272,6 @@ def test_add_nic(*_, **__):
         source=source, target=target)
     add_nic(ctx=_ctx)
     assert 'tasks' in _ctx.target.instance.runtime_properties
-    print(_ctx.target.instance.runtime_properties)
 
 
 @mock.patch('cloudify_vcd.decorators.get_last_task')
@@ -1292,7 +1312,7 @@ def test_delete_nic(*_, **__):
     source_instance = mock.Mock(
         runtime_properties=DirtyTrackingDict({
             'resource_id': 'foo',
-            'data': {'vapp': ' foo'}
+            'data': {'vapp': 'foo'}
         }),
         relationships=relationships
     )

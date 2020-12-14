@@ -244,8 +244,8 @@ class VCloudVM(VCloudResource):
         # How will NICS work?
         task = self.vapp.add_vms(
             [{'vapp': self.vapp_object.vapp.resource,
-             'source_vm_name': self.name,
-             'target_vm_name': new_vm_name}]
+              'source_vm_name': self.name,
+              'target_vm_name': new_vm_name}]
         )
         self.tasks['create'].append(task.items())
         return task

@@ -65,7 +65,7 @@ node_templates:
         accept_all_eulas: true
         password: 'test_password'
         hostname: 'testvm'
-        ip_address: '192.178.1.2'
+        ip_address: '192.179.1.2'
       agent_config:
         install_method: none
     relationships:
@@ -89,7 +89,7 @@ node_templates:
         is_primary: false
         is_connected: false
         ip_address_mode: 'MANUAL'
-        ip_address: '192.178.2.2'
+        ip_address: '192.179.2.2'
     relationships:
       - type: cloudify.relationships.vcloud.nic_connected_to_network
         target: test_routed_network2
@@ -135,7 +135,7 @@ node_templates:
     properties:
       client_config: *client_config
       resource_config:
-        - network: 192.178.3.0/24
+        - network: 192.179.3.0/24
           next_hop: 192.168.1.1
           description: 'Test blueprint example'
     relationships:
@@ -166,8 +166,8 @@ node_templates:
     properties:
       client_config: *client_config
       resource_config:
-        - ip_range: '192.178.2.2-192.178.2.100'
-        - ip_range: '192.178.2.101-192.178.2.150'
+        - ip_range: '192.179.2.2-192.179.2.100'
+        - ip_range: '192.179.2.101-192.179.2.150'
     relationships:
       - type: cloudify.relationships.vcloud.dhcp_pools_contained_in_gateway
         target: test_gateway
@@ -183,11 +183,11 @@ node_templates:
           source_values:
             - 'VLAN-102:gatewayinterface'
             - { concat: [ { get_attribute: [ test_routed_network, resource_id ] }, ':network']}
-            - '192.178.1.0:ip'
+            - '192.179.1.0:ip'
           destination_values:
             - 'VLAN-102:gatewayinterface'
             - { concat: [ { get_attribute: [ test_routed_network2, resource_id ] }, ':network']}
-            - '192.178.1.0:ip'
+            - '192.179.1.0:ip'
           services: [{'tcp': {'any': 'any'}}]
     relationships:
       - type: cloudify.relationships.vcloud.firewall_rules_contained_in_gateway
@@ -202,7 +202,7 @@ node_templates:
     properties:
       client_config: *client_config
       resource_config:
-        network_cidr: 192.178.3.1/24
+        network_cidr: 192.179.3.1/24
         description: test isolated network
         primary_dns_ip: 8.8.8.4
         secondary_dns_ip: 8.8.8.8
@@ -218,7 +218,7 @@ node_templates:
       client_config: *client_config
       resource_config:
         gateway_name: { get_attribute: [ test_gateway, resource_id ] }
-        network_cidr: 192.178.2.1/24
+        network_cidr: 192.179.2.1/24
         description: test routed network
         primary_dns_ip: 8.8.8.4
         secondary_dns_ip: 8.8.8.8
@@ -232,12 +232,12 @@ node_templates:
       client_config: *client_config
       resource_config:
         gateway_name: { get_attribute: [ test_gateway, resource_id ] }
-        network_cidr: 192.178.1.1/24
+        network_cidr: 192.179.1.1/24
         description: test routed network
         primary_dns_ip: 8.8.8.4
         secondary_dns_ip: 8.8.8.8
-        ip_range_start: 192.178.1.2
-        ip_range_end: 192.178.1.254
+        ip_range_start: 192.179.1.2
+        ip_range_end: 192.179.1.254
     relationships:
       - type: cloudify.relationships.vcloud.network_connected_to_gateway
         target: test_gateway
