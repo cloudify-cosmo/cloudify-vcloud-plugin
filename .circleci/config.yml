@@ -367,16 +367,16 @@ workflows:
           filters:
             branches:
               only: /([0-9\.]*\-build|main|dev)/
-      - wagon:
-          filters:
-            branches:
-              only: /([0-9\.]*\-build|main|dev)/
+#      - wagon:
+#          filters:
+#            branches:
+#              only: /([0-9\.]*\-build|main|dev)/
       - build_bundle:
           filters:
             branches:
               only: /main/
           requires:
-            - wagon
+#            - wagon
             - rhel_wagon
       - release:
           filters:
@@ -385,10 +385,9 @@ workflows:
           requires:
             - unittests_py36
             - rhel_wagon
-            - wagon
+#            - wagon
             - validate_version
             - validate_documentation
-#            - integration_test
       - merge_docs:
           filters:
             branches:
@@ -409,10 +408,10 @@ workflows:
       - py3_compat
       - unittests_py36
       - validate_version
-      - wagon:
-          filters:
-            branches:
-              only: /([0-9\.]*\-build|main|dev)/
+#      - wagon:
+#          filters:
+#            branches:
+#              only: /([0-9\.]*\-build|main|dev)/
       - rhel_wagon:
           filters:
             branches:
