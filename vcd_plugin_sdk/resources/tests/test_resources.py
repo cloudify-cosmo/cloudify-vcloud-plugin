@@ -508,7 +508,8 @@ def test_vcloud_vm(*_, **__):
     })
     assert vcloud_vm.vapp_object.vapp.connect_org_vdc_network.call_count == 1
     vcloud_vm.remove_vapp_network('bar')
-    assert vcloud_vm.vapp_object.vapp.disconnect_org_vdc_network.call_count == 1
+    assert \
+        vcloud_vm.vapp_object.vapp.disconnect_org_vdc_network.call_count == 1
     with mock.patch('pyvcloud.vcd.vm.VM.list_nics',
                     return_value=[
                         {'ip_address': 'foo'},

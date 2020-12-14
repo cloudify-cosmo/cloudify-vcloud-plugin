@@ -11,9 +11,6 @@ checkout:
 
 
 executors:
-  py27:
-    docker:
-      - image: circleci/python:2.7
 
   py36:
     docker:
@@ -295,30 +292,25 @@ commands:
 
 jobs:
 
-  unittests_py27:
-    executor: py27
-    steps:
-      - run_unittest
-
   unittests_py36:
     executor: py36
     steps:
       - run_unittest
 
   py3_compat:
-    executor: py27
+    executor: py36
     steps:
       - checkout
       - check_py3_compat
 
   validate_version:
-    executor: py27
+    executor: py36
     steps:
       - checkout
       - validate_version
 
   validate_documentation:
-    executor: py27
+    executor: py36
     steps:
       - checkout
       - validate_documentation
@@ -351,13 +343,13 @@ jobs:
       - checkout
 
   release:
-    executor: py27
+    executor: py36
     steps:
       - checkout
       - release_plugin
 
   merge_docs:
-    executor: py27
+    executor: py36
     steps:
       - checkout
       - merge_docs
@@ -368,7 +360,6 @@ workflows:
   tests:
     jobs:
       - py3_compat
-      - unittests_py27
       - unittests_py36
       - validate_version
       - validate_documentation
@@ -398,7 +389,6 @@ workflows:
             branches:
               only: /master/
           requires:
-            - unittests_py27
             - unittests_py36
             - rhel_wagon
             - wagon
@@ -423,7 +413,6 @@ workflows:
               - master
     jobs:
       - py3_compat
-      - unittests_py27
       - unittests_py36
       - validate_version
       - wagon:
