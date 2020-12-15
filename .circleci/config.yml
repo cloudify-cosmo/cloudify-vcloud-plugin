@@ -72,9 +72,9 @@ commands:
       - run:
           name: Set Python
           command: |
-            if ! command -v COMMAND &> /dev/null
+            if ! pyenv -v COMMAND &> /dev/null
             then
-                echo "COMMAND could not be found"
+                echo "pyenv could not be found"
                 exit
             else
                 pyenv global 3.6.5
@@ -184,9 +184,9 @@ commands:
       - run:
           name: Set Python
           command: |
-            if ! command -v COMMAND &> /dev/null
+            if ! pyenv -v COMMAND &> /dev/null
             then
-                echo "COMMAND could not be found"
+                echo "pyenv could not be found"
                 exit
             else
                 pyenv global 3.6.5
@@ -247,9 +247,9 @@ commands:
       - run:
           name: Set Python
           command: |
-            if ! command -v COMMAND &> /dev/null
+            if ! pyenv -v COMMAND &> /dev/null
             then
-                echo "COMMAND could not be found"
+                echo "pyenv could not be found"
                 exit
             else
                 pyenv global 3.6.5
@@ -292,9 +292,9 @@ commands:
       - run:
           name: Set Python
           command: |
-            if ! command -v COMMAND &> /dev/null
+            if ! pyenv -v COMMAND &> /dev/null
             then
-                echo "COMMAND could not be found"
+                echo "pyenv could not be found"
                 exit
             else
                 pyenv global 3.6.5
