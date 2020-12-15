@@ -70,6 +70,16 @@ commands:
   validate_documentation:
     steps:
       - run:
+          name: Set Python
+          command: |
+            if ! command -v COMMAND &> /dev/null
+            then
+                echo "COMMAND could not be found"
+                exit
+            else
+                pyenv global 3.6.5
+            fi
+      - run:
           name: "Pull Submodules"
           command: |
             git submodule init
@@ -171,6 +181,16 @@ commands:
 
   build_archive:
     steps:
+      - run:
+          name: Set Python
+          command: |
+            if ! command -v COMMAND &> /dev/null
+            then
+                echo "COMMAND could not be found"
+                exit
+            else
+                pyenv global 3.6.5
+            fi
       - attach_workspace:
           at: workspace
       - run:
@@ -225,6 +245,16 @@ commands:
   release_plugin:
     steps:
       - run:
+          name: Set Python
+          command: |
+            if ! command -v COMMAND &> /dev/null
+            then
+                echo "COMMAND could not be found"
+                exit
+            else
+                pyenv global 3.6.5
+            fi
+      - run:
           name: "Pull Submodules"
           command: |
             git submodule init
@@ -255,11 +285,20 @@ commands:
       - run: python .circleci/package_release.py
 
 
-
   merge_docs:
     steps:
       - attach_workspace:
           at: workspace
+      - run:
+          name: Set Python
+          command: |
+            if ! command -v COMMAND &> /dev/null
+            then
+                echo "COMMAND could not be found"
+                exit
+            else
+                pyenv global 3.6.5
+            fi
       - run:
           name: "Pull Submodules"
           command: |
