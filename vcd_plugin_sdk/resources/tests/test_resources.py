@@ -318,7 +318,7 @@ def test_vcloud_gateway_dhcp_pool(*_, **__):
                           mock.MagicMock)
 
     vcloud_gateway.get_dhcp_pool_from_ip_range(pool_definition['ip_range'])
-    assert vcloud_gateway.client.get_resource.call_count == 4
+    assert vcloud_gateway.client.get_resource.call_count == 2
 
 
 @mock.patch('vcd_plugin_sdk.connection.Org', autospec=True)
@@ -396,9 +396,9 @@ def test_vcloud_vapp(*_, **__):
         with mock.patch('lxml.etree.cleanup_namespaces'):
             vcloud_vapp.set_lease(1, 1)
             assert vcloud_vapp.client.put_resource.call_count == 1
-            assert vcloud_vapp.client.get_resource.call_count == 9
+            assert vcloud_vapp.client.get_resource.call_count == 6
             vcloud_vapp.get_lease()
-            assert vcloud_vapp.client.get_resource.call_count == 10
+            assert vcloud_vapp.client.get_resource.call_count == 7
     vcloud_vapp.remove_network('bar')
     assert vcloud_vapp.vapp.disconnect_org_vdc_network.call_count == 1
 

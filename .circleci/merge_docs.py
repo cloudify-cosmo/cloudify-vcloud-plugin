@@ -1,4 +1,8 @@
 from ecosystem_cicd_tools.github_stuff import merge_documentation_pulls
 
 if __name__ == '__main__':
+<<<<<<< HEAD
     merge_documentation_pulls(branch='main')
+=======
+    merge_documentation_pulls()
+>>>>>>> af5df53 (try to minimize some lookups)

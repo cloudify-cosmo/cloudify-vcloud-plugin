@@ -92,7 +92,7 @@ class VCloudvApp(VCloudResource):
                     c.CatalogItems.CatalogItem.items()
         return items
 
-    def get_vapp(self, vapp_name):
+    def get_vapp(self, vapp_name=None):
         vapp_resource = self.vdc.get_vapp(vapp_name)
         return VApp(self.client, resource=vapp_resource)
 
