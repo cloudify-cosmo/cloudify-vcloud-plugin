@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from time import sleep
+
 from pyvcloud.vcd.gateway import Gateway
 from pyvcloud.vcd.nat_rule import NatRule
 from pyvcloud.vcd.dhcp_pool import DhcpPool
@@ -63,6 +65,7 @@ class VCloudNetwork(VCloudResource):
     def network(self):
         if not self._network:
             for i in range(0, 10):
+                # This is necessary because of Vcloud API is async.
                 try:
                     self._network = self.get_network()
                 except (ValueError, EntityNotFoundException) as e:
@@ -70,6 +73,7 @@ class VCloudNetwork(VCloudResource):
                         raise VCloudSDKException(
                             'Network {name} has not been initialized. '
                             'Error: {e}'.format(name=self.name, e=str(e)))
+                    sleep(5)
         return self._network
 
     @property
@@ -199,6 +203,7 @@ class VCloudGateway(VCloudResource):
         self._gateway_name = gateway_name
         self.kwargs = kwargs
         self._gateway = None
+        self._gateway_static_routes = None
 
         super().__init__(connection, vdc_name, tasks=tasks)
 
@@ -208,9 +213,7 @@ class VCloudGateway(VCloudResource):
 
     @property
     def gateway(self):
-        if self._gateway:
-            self._gateway.reload()
-        else:
+        if not self._gateway:
             self._gateway = self.get_gateway()
         return self._gateway
 
@@ -229,15 +232,13 @@ class VCloudGateway(VCloudResource):
 
     @property
     def default_gateway(self):
-        static_route = self.gateway.get_static_routes()
-        return static_route.defaultRoute.gatewayAddress.text
+        return self.gateway_static_routes.defaultRoute.gatewayAddress.text
 
     @property
     def static_routes(self):
         static_routes = {}
-        static_route = self.gateway.get_static_routes()
-        if hasattr(static_route.staticRoutes, 'route'):
-            for route in static_route.staticRoutes.route:
+        if hasattr(self.gateway_static_routes.staticRoutes, 'route'):
+            for route in self.gateway_static_routes.staticRoutes.route:
                 static_routes[route.network] = {
                     #  'mtu': route.mtu,
                     'description': route.description,
@@ -265,11 +266,20 @@ class VCloudGateway(VCloudResource):
             'gateway_address': self.default_gateway,
             # 'dhcp_pools': self.dhcp_pools,
             # 'nat_rules': self.nat_rules,
-            # 'static_routes': self.static_routes,
+            'static_routes': self.static_routes,
             # 'firewall_rules': self.firewall_rules,
             # 'firewall_objects': self.firewall_objects
         }
         return data
+
+    @property
+    def gateway_static_routes(self):
+        if not self._gateway_static_routes:
+            self.update_gateway_static_routes()
+        return self._gateway_static_routes
+
+    def update_gateway_static_routes(self):
+        self._gateway_static_routes = self.gateway.get_static_routes()
 
     def get_gateway(self, gateway_name=None):
         gateway_name = gateway_name or self.name
@@ -408,6 +418,7 @@ class VCloudGateway(VCloudResource):
         return static_routes
 
     def get_static_route_from_network(self, network):
+        self.update_gateway_static_routes()
         for route in self.get_static_routes():
             if route.resource_id == network:
                 return route

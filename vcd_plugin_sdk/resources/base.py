@@ -52,8 +52,10 @@ class VCloudResource(object):
 
     @property
     def vdc(self):
-        if self._vdc:
-            self._vdc.reload()
+        # TODO: Create a method for reloading when necessary. For example,
+        # TODO: as part of a try/except block.
+        # if self._vdc:
+        #     self._vdc.reload()
         return self._vdc
 
     def task_successful(self, task):
@@ -78,10 +80,10 @@ class VCloudResource(object):
                 'vcd_plugin_sdk.resources.base.VCloudResource.vapp, '
                 'but no vapp_name was provided.')
         if not self._vapp:
-            self._vapp = self.get_vapp(self._vapp_name)
+            self._vapp = self.get_vapp()
         return self._vapp
 
-    def get_vapp(self, vapp_name):
+    def get_vapp(self, vapp_name=None):
         vapp_name = vapp_name or self._vapp_name
         try:
             vapp_resource = self.vdc.get_vapp(vapp_name)
