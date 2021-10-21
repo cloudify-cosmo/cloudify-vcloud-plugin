@@ -20,14 +20,18 @@ def get_network_type(types):
 
 
 @resource_operation
-def create_network(external_network,
-                   network_id,
-                   network_client,
-                   network_vdc,
-                   network_config,
-                   network_class,
-                   ctx,
-                   **__):
+def create_network(*args, **kwargs):
+    return _create_network(*args, **kwargs)
+
+
+def _create_network(external_network,
+                    network_id,
+                    network_client,
+                    network_vdc,
+                    network_config,
+                    network_class,
+                    ctx,
+                    **__):
 
     network = find_resource_id_from_relationship_by_type(
         ctx.instance, REL_NETWORK_GW)
@@ -47,14 +51,19 @@ def create_network(external_network,
 
 
 @resource_operation
-def delete_network(external_network,
-                   network_id,
-                   network_client,
-                   network_vdc,
-                   network_config,
-                   network_class,
-                   ctx,
-                   **___):
+def delete_network(*args, **kwargs):
+    return _delete_network(*args, **kwargs)
+
+
+def _delete_network(external_network,
+                    network_id,
+                    network_client,
+                    network_vdc,
+                    network_config,
+                    network_class,
+                    ctx,
+                    **___):
+
     network = network_class(
         network_id,
         get_network_type(ctx.node.type_hierarchy),

@@ -186,14 +186,19 @@ def delete_vapp(vapp_ext,
 
 
 @resource_operation
-def create_vm(vm_external,
-              vm_id,
-              vm_client,
-              vm_vdc,
-              vm_config,
-              vm_class,
-              vm_ctx,
-              **_):
+def create_vm(*args, **kwargs):
+    return _create_vm(*args, **kwargs)
+
+
+def _create_vm(vm_external,
+               vm_id,
+               vm_client,
+               vm_vdc,
+               vm_config,
+               vm_class,
+               vm_ctx,
+               **_):
+
     """
     Instiatiate a vApp and create a virtual machine.
 
@@ -268,14 +273,18 @@ def create_vm(vm_external,
 
 
 @resource_operation
-def configure_vm(_,
-                 vm_id,
-                 vm_client,
-                 vm_vdc,
-                 vm_config,
-                 vm_class,
-                 vm_ctx,
-                 **__):
+def configure_vm(*args, **kwargs):
+    return _configure_vm(*args, **kwargs)
+
+
+def _configure_vm(_,
+                  vm_id,
+                  vm_client,
+                  vm_vdc,
+                  vm_config,
+                  vm_class,
+                  vm_ctx,
+                  **__):
 
     vapp_name = find_resource_id_from_relationship_by_type(
         vm_ctx.instance, REL_VM_VAPP)
@@ -290,14 +299,18 @@ def configure_vm(_,
 
 
 @resource_operation
-def start_vm(vm_external,
-             vm_id,
-             vm_client,
-             vm_vdc,
-             vm_config,
-             vm_class,
-             vm_ctx,
-             **__):
+def start_vm(*args, **kwargs):
+    return _start_vm(*args, **kwargs)
+
+
+def _start_vm(vm_external,
+              vm_id,
+              vm_client,
+              vm_vdc,
+              vm_config,
+              vm_class,
+              vm_ctx,
+              **__):
     """
     Power on both existing and new VMs.
     :param vm_external:
@@ -344,14 +357,18 @@ def start_vm(vm_external,
 
 
 @resource_operation
-def stop_vm(vm_external,
-            vm_id,
-            vm_client,
-            vm_vdc,
-            vm_config,
-            vm_class,
-            vm_ctx,
-            **__):
+def stop_vm(*args, **kwargs):
+    return _stop_vm(*args, **kwargs)
+
+
+def _stop_vm(vm_external,
+             vm_id,
+             vm_client,
+             vm_vdc,
+             vm_config,
+             vm_class,
+             vm_ctx,
+             **__):
     """
 
     :param vm_external:
@@ -393,14 +410,18 @@ def stop_vm(vm_external,
 
 
 @resource_operation
-def delete_vm(vm_external,
-              vm_id,
-              vm_client,
-              vm_vdc,
-              vm_config,
-              vm_class,
-              vm_ctx,
-              **__):
+def delete_vm(*args, **kwargs):
+    return _delete_vm(*args, **kwargs)
+
+
+def _delete_vm(vm_external,
+               vm_id,
+               vm_client,
+               vm_vdc,
+               vm_config,
+               vm_class,
+               vm_ctx,
+               **__):
     """
 
     :param vm_external:
@@ -444,14 +465,18 @@ def delete_vm(vm_external,
 
 
 @resource_operation
-def configure_nic(_,
-                  __,
-                  ___,
-                  ____,
-                  nic_config,
-                  _____,
-                  nic_ctx,
-                  **______):
+def configure_nic(*args, **kwargs):
+    return _configure_vm(*args, **kwargs)
+
+
+def _configure_nic(_=None,
+                   __=None,
+                   ___=None,
+                   ____=None,
+                   nic_config=None,
+                   _____=None,
+                   nic_ctx=None,
+                   **______):
     """
 
     :param _: Unused external
@@ -477,21 +502,25 @@ def configure_nic(_,
 
 
 @resource_operation
-def add_network(_,
-                __,
-                ___,
-                ____,
-                nic_config,
-                _____,
-                nic_ctx,
-                ______,
-                vm_id,
-                vm_client,
-                vm_vdc,
-                vm_config,
-                vm_class,
-                vm_ctx,
-                **_______):
+def add_network(*args, **kwargs):
+    return _add_network(*args, **kwargs)
+
+
+def _add_network(_,
+                 __,
+                 ___,
+                 ____,
+                 nic_config,
+                 _____,
+                 nic_ctx,
+                 ______,
+                 vm_id,
+                 vm_client,
+                 vm_vdc,
+                 vm_config,
+                 vm_class,
+                 vm_ctx,
+                 **_______):
 
     """Add a network to a VM.
 
@@ -548,21 +577,25 @@ def add_network(_,
 
 
 @resource_operation
-def add_nic(_,
-            __,
-            ___,
-            ____,
-            nic_config,
-            _____,
-            nic_ctx,
-            ______,
-            vm_id,
-            vm_client,
-            vm_vdc,
-            vm_config,
-            vm_class,
-            vm_ctx,
-            **_______):
+def add_nic(*args, **kwargs):
+    return _add_nic(*args, **kwargs)
+
+
+def _add_nic(_,
+             __,
+             ___,
+             ____,
+             nic_config,
+             _____,
+             nic_ctx,
+             ______,
+             vm_id,
+             vm_client,
+             vm_vdc,
+             vm_config,
+             vm_class,
+             vm_ctx,
+             **_______):
     """
     Add Nic to VM.
     :param _: Unused external nic
@@ -616,21 +649,25 @@ def add_nic(_,
 
 
 @resource_operation
-def delete_nic(_,
-               __,
-               ___,
-               ____,
-               nic_config,
-               _____,
-               nic_ctx,
-               ______,
-               vm_id,
-               vm_client,
-               vm_vdc,
-               vm_config,
-               vm_class,
-               vm_ctx,
-               **_______):
+def delete_nic(*args, **kwargs):
+    return _delete_nic(*args, **kwargs)
+
+
+def _delete_nic(_,
+                __,
+                ___,
+                ____,
+                nic_config,
+                _____,
+                nic_ctx,
+                ______,
+                vm_id,
+                vm_client,
+                vm_vdc,
+                vm_config,
+                vm_class,
+                vm_ctx,
+                **_______):
     """
     Delete NIC and remove network from vapp.
     :param _: Unused external nic

@@ -30,6 +30,7 @@ class VCloudResource(object):
 
         self._connection = connection or VCloudConnect()
         self.logger = self.connection.logger
+        self.vdc_name = vdc_name
 
         try:
             vdc_resource = self._connection.org.get_vdc(vdc_name)
