@@ -38,10 +38,10 @@ commands:
           command: pip install --user tox
       - run:
           name: Run Flake8
-          command: /home/circleci/.local/bin/tox -e code_quality
+          command: /home/circleci/.local/bin/tox -e flake8
       - run:
          name: Run nosetest
-         command: /home/circleci/.local/bin/tox -e unit_tests
+         command: /home/circleci/.local/bin/tox -e pytest
 
   check_py3_compat:
     steps:

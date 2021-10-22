@@ -15,7 +15,7 @@
 from functools import wraps
 
 from cloudify.exceptions import OperationRetry
-from cloudify_common_sdk.utils import get_ctx_instance
+from cloudify_common_sdk.utils import get_ctx_node, get_ctx_instance
 
 from . import utils
 from ..utils import (get_last_task, check_if_task_successful)
@@ -32,6 +32,9 @@ def with_vcd_client():
             :return:
             """
             ctx = kwargs.get('ctx')
+            _ctx_node = get_ctx_node()
+            if 'vcloud_config' not in kwargs:
+                kwargs['vcloud_config'] = _ctx_node.properties['vcloud_config']
             kwargs['vcloud_cx'] = utils.get_vcloud_cx(
                 kwargs['vcloud_config'], ctx.logger)
             resource, result = utils.get_function_return(func(*args, **kwargs))
@@ -55,6 +58,9 @@ def with_network_resource():
             :param kwargs:
             :return:
             """
+            _ctx_node = get_ctx_node()
+            if 'network' not in kwargs:
+                kwargs['network'] = _ctx_node.properties['network']
             client = utils.get_network_client(**kwargs)
             kwargs['network_client'] = client
             return func(*args, **kwargs)

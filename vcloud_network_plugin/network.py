@@ -19,6 +19,11 @@ from cloudify_vcd.legacy.network.tasks import create_network, delete_network
 
 @operation(resumable=True)
 def create(*args, **kwargs):
+    _ctx = kwargs.get('ctx')
+    _ctx.logger.info(
+        'Using translation of legacy tosca-cloudify-plugin '
+        'cloudify.vcloud.nodes.Network node type. Please upgrade to '
+        'cloudify.vcloud.plugin cloudify.nodes.vcloud.Network.')
     create_network(*args, **kwargs)
 
 

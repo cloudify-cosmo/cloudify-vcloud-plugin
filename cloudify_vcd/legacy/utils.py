@@ -16,28 +16,52 @@ from vcd_plugin_sdk.resources.vapp import VCloudVM
 from vcd_plugin_sdk.connection import VCloudConnect
 from vcd_plugin_sdk.resources.network import VCloudNetwork, VCloudGateway
 
+from cloudify.exceptions import NonRecoverableError
 from cloudify_common_sdk.utils import (
     get_ctx_node,
     get_ctx_instance)
 
 
+class RequiredClientKeyMissing(NonRecoverableError):
+    def __init__(self, key, *args, **kwargs):
+        msg = 'Required vcloud config key "{}" not provided.'.format(key)
+        super().__init__(msg, *args, **kwargs)
+
+
 def get_function_return(func_ret):
-    if not isinstance(func_ret, tuple) and len(func_ret) == 2:
+    if isinstance(func_ret, tuple) and len(func_ret) == 2:
         return func_ret
     return None, None
 
 
 def get_vcloud_cx(client_config, logger):
+    for bad, good in [('username', 'user'),
+                      ('ssl_verify', 'verify_ssl_certs')]:
+        if bad in client_config:
+            logger.warning(
+                'The vcloud_config contains the key "{}". '
+                'This is an invalid key. The correct key is "{}".'.format(
+                    good, bad))
+            client_config[good] = client_config.pop(bad)
+
+    for key in ['user', 'password', 'org']:
+        if key not in client_config:
+            raise RequiredClientKeyMissing(key)
+
     credentials = {
         'org': client_config.pop('org'),
         'user': client_config.pop('user'),
         'password': client_config.pop('password')
     }
-    new_client_config = {
-        'uri': client_config.pop('url'),
-        'api_version': client_config.pop('api_version'),
-        'verify_ssl_certs': client_config.pop('verify_ssl_certs'),
-    }
+    new_client_config = {'uri': client_config.pop('url')}
+
+    if 'api_version' in client_config:
+        new_client_config['api_version'] = client_config.pop('api_version')
+
+    if 'verify_ssl_certs' in client_config:
+        new_client_config['verify_ssl_certs'] = client_config.pop(
+            'verify_ssl_certs')
+
     # TODO: Figure out what to do with the rest of the stuff in client_config.
     return VCloudConnect(logger, new_client_config, credentials)
 
@@ -66,15 +90,16 @@ def get_network_client(network, vcloud_cx, vcloud_config, ctx, **_):
     else:
         network_type = 'isolated_vdc_network'
 
+    tasks = _ctx_instance.runtime_properties.get('__TASKS', [])
+
     new_network_config = {
-        'resource_name': _ctx_node.properties.get(
+        'network_name': _ctx_node.properties.get(
             'resource_id', _ctx_instance.id),
-        'resource_type': network_type,
+        'network_type': network_type,
         'connection': vcloud_cx,
         'vdc_name': vcloud_config.get('vdc'),
-        'vapp_name': None,
         'kwargs': network,
-        'tasks': _ctx_instance.runtime_properties['__TASKS']
+        'tasks': tasks
     }
 
     return VCloudNetwork(**new_network_config)
@@ -82,13 +107,14 @@ def get_network_client(network, vcloud_cx, vcloud_config, ctx, **_):
 
 def get_gateway_client(vcloud_cx, vcloud_config, ctx, **_):
     _ctx_instance = get_ctx_instance(ctx)
+    tasks = _ctx_instance.runtime_properties.get('__TASKS', [])
 
     if 'edge_gateway' in vcloud_config:
         return VCloudGateway(
             vcloud_config['edge_gateway'],
             connection=vcloud_cx,
             vdc_name=vcloud_config.get('vdc'),
-            tasks=_ctx_instance.runtime_properties['__TASKS']
+            tasks=tasks
         )
 
 
