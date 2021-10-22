@@ -24,12 +24,13 @@ def test_external_resource_exists(*_, **__):
     :return:
     """
     operation = {'name': 'create', 'retry_number': 0}
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': True,
             'resource_id': 'foo',
             'resource_config': {'foo': 'bar'},
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
-            operation=operation)
+        operation=operation)
     _task = E.Task(
         status='foo',
         serviceNamespace='bar',
@@ -55,7 +56,8 @@ def test_external_resource_not_exists(*_, **__):
     :return:
     """
     operation = {'name': 'foo', 'retry_number': 1}
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': True,
             'resource_id': 'foo',
             'resource_config': {'foo': 'bar'},
@@ -82,7 +84,8 @@ def test_external_resource_not_exists_create_op(*_, **__):
     :return:
     """
     operation = {'name': 'create', 'retry_number': 1}
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': True,
             'resource_id': 'foo',
             'resource_config': {'foo': 'bar'},
@@ -111,7 +114,8 @@ def test_implicit_external_resource_bad_request(*_, **__):
     :return:
     """
     operation = {'name': 'foo', 'retry_number': 1}
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': False,
             'resource_id': 'foo',
             'resource_config': {'foo': 'bar'},
@@ -148,12 +152,13 @@ def test_new_resource(*_, **__):
     :return:
     """
     operation = {'name': 'create', 'retry_number': 0}
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': False,
             'resource_id': 'foo',
             'resource_config': {'foo': 'bar'},
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
-            operation=operation)
+        operation=operation)
     _task = E.Task(
         status='foo',
         serviceNamespace='bar',
@@ -180,11 +185,13 @@ def test_new_resource_access_forbidden(*_, **__):
     :return:
     """
     operation = {'name': 'foo', 'retry_number': 1}
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': False,
             'resource_id': 'foo',
             'resource_config': {'foo': 'bar'},
-            'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
+            'client_config': {'foo': 'bar', 'vdc': 'vdc'}
+        },
         operation=operation
     )
 
@@ -207,11 +214,13 @@ def test_new_resource_bad_request_handled(*_, **__):
     :param __:
     :return:
     """
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': False,
             'resource_id': 'foo',
             'resource_config': {'foo': 'bar'},
-            'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
+            'client_config': {'foo': 'bar', 'vdc': 'vdc'}
+        },
     )
 
     @resource_operation
@@ -241,11 +250,13 @@ def test_new_resource_not_found(*_, **__):
     :param __:
     :return:
     """
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': False,
             'resource_id': 'foo',
             'resource_config': {'foo': 'bar'},
-            'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
+            'client_config': {'foo': 'bar', 'vdc': 'vdc'}
+        },
     )
 
     @resource_operation

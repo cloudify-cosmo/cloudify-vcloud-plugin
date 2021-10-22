@@ -67,12 +67,13 @@ from ..vapp_tasks import (
             return_value=True)
 def test_configure_gateway(*_, **__):
     operation = {'name': 'create', 'retry_number': 0}
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': False,
             'resource_id': 'foo',
             'resource_config': {'foo': 'bar'},
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
-            operation=operation)
+        operation=operation)
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
                                 'cloudify.nodes.vcloud.Gateway']
     configure_gateway(ctx=_ctx)
@@ -86,12 +87,13 @@ def test_configure_gateway(*_, **__):
             return_value=True)
 def test_delete_gateway(*_, **__):
     operation = {'name': 'delete', 'retry_number': 0}
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': False,
             'resource_id': 'foo',
             'resource_config': {'foo': 'bar'},
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
-            operation=operation)
+        operation=operation)
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
                                 'cloudify.nodes.vcloud.Gateway']
     delete_gateway(ctx=_ctx)
@@ -516,12 +518,13 @@ def test_delete_nat_rules(*_, **__):
             return_value=True)
 def test_create_disk(*_, **__):
     operation = {'name': 'create', 'retry_number': 0}
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': False,
             'resource_id': 'foo',
             'resource_config': {'size': 1, 'description': 'foo'},
             'client_config': {'size': 'bar', 'vdc': 'vdc'}},
-            operation=operation)
+        operation=operation)
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
                                 'cloudify.nodes.vcloud.Disk']
     with mock.patch('vcd_plugin_sdk.resources.base.VDC') as vdc:
@@ -538,12 +541,13 @@ def test_create_disk(*_, **__):
             return_value=True)
 def test_delete_disk(*_, **__):
     operation = {'name': 'delete', 'retry_number': 0}
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': False,
             'resource_id': 'foo',
             'resource_config': {'size': 1, 'description': 'foo'},
             'client_config': {'size': 'bar', 'vdc': 'vdc'}},
-            operation=operation)
+        operation=operation)
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
                                 'cloudify.nodes.vcloud.Disk']
     delete_disk(ctx=_ctx)
@@ -669,14 +673,15 @@ def test_detach_disk(*_, **__):
             return_value=True)
 def test_create_media(*_, **__):
     operation = {'name': 'create', 'retry_number': 0}
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': False,
             'resource_id': 'foo',
             'resource_config': {'catalog_name': 'foo'},
             'iso': {'vol_ident': 'foo', 'sys_ident': '',
                     'files': {'ISO/FOLDER/content.json': 'baz'}},
             'client_config': {'size': 'bar', 'vdc': 'vdc'}},
-            operation=operation)
+        operation=operation)
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
                                 'cloudify.nodes.vcloud.Media']
     create_media(ctx=_ctx)
@@ -692,14 +697,15 @@ def test_create_media(*_, **__):
             return_value=True)
 def test_delete_media(*_, **__):
     operation = {'name': 'delete', 'retry_number': 0}
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': False,
             'resource_id': 'foo',
             'resource_config': {'catalog_name': 'foo'},
             'iso': {'vol_ident': 'foo', 'sys_ident': '',
                     'files': {'ISO/FOLDER/content.json': 'baz'}},
             'client_config': {'size': 'bar', 'vdc': 'vdc'}},
-            operation=operation)
+        operation=operation)
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
                                 'cloudify.nodes.vcloud.Media']
     delete_media(ctx=_ctx)
@@ -833,14 +839,15 @@ def test_detach_media(*_, **__):
             'by_type', return_value='foo')
 def test_create_network(*_, **__):
     operation = {'name': 'create', 'retry_number': 0}
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': False,
             'resource_id': 'foo',
             'resource_config': {
                 'gateway_name': 'bar',
                 'network_cidr': '1.1.1.1/1'},
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
-            operation=operation)
+        operation=operation)
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
                                 'cloudify.nodes.vcloud.RoutedVDCNetwork']
     create_network(ctx=_ctx)
@@ -854,12 +861,13 @@ def test_create_network(*_, **__):
             return_value=True)
 def test_delete_network(*_, **__):
     operation = {'name': 'delete', 'retry_number': 0}
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': False,
             'resource_id': 'foo',
             'resource_config': {'foo': 'bar'},
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
-            operation=operation)
+        operation=operation)
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
                                 'cloudify.nodes.vcloud.RoutedVDCNetwork']
     delete_network(ctx=_ctx)
@@ -875,13 +883,14 @@ def test_delete_network(*_, **__):
             'by_type', return_value='foo')
 def test_create_vapp(*_, **__):
     operation = {'name': 'create', 'retry_number': 0}
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': False,
             'resource_id': 'foo',
             'resource_config': {'description': 'bar',
                                 'fence_mode': 'isolated'},
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
-            operation=operation)
+        operation=operation)
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
                                 'cloudify.nodes.vcloud.VApp']
     create_vapp(ctx=_ctx)
@@ -896,12 +905,13 @@ def test_create_vapp(*_, **__):
             return_value=True)
 def test_stop_vapp(*_, **__):
     operation = {'name': 'stop', 'retry_number': 0}
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': False,
             'resource_id': 'foo',
             'resource_config': {'description': 'bar', 'fence_mode': 'baz'},
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
-            operation=operation)
+        operation=operation)
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
                                 'cloudify.nodes.vcloud.VApp']
     stop_vapp(ctx=_ctx)
@@ -916,12 +926,13 @@ def test_stop_vapp(*_, **__):
             return_value=True)
 def test_delete_vapp(*_, **__):
     operation = {'name': 'delete', 'retry_number': 0}
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': False,
             'resource_id': 'foo',
             'resource_config': {'description': 'bar', 'fence_mode': 'baz'},
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
-            operation=operation)
+        operation=operation)
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
                                 'cloudify.nodes.vcloud.VApp']
     delete_vapp(ctx=_ctx)
@@ -938,14 +949,17 @@ def test_delete_vapp(*_, **__):
             'by_type', return_value='foo')
 def test_create_vm(*_, **__):
     operation = {'name': 'create', 'retry_number': 0}
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': False,
             'resource_id': 'foo',
-            'resource_config': {'catalog': 'bar',
-                                'template': 'baz',
-                                'fence_mode': 'isolated'},
+            'resource_config': {
+                'catalog': 'bar',
+                'template': 'baz',
+                'fence_mode': 'isolated'
+            },
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
-            operation=operation)
+        operation=operation)
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
                                 'cloudify.nodes.vcloud.VM']
     with mock.patch('vcd_plugin_sdk.resources.base.VDC') as vdc:
@@ -964,14 +978,16 @@ def test_create_vm(*_, **__):
             'by_type', return_value='foo')
 def test_create_vm_external(*_, **__):
     operation = {'name': 'create', 'retry_number': 0}
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': True,
             'resource_id': 'foo',
             'resource_config': {'catalog': 'bar',
                                 'template': 'baz',
                                 'fence_mode': 'isolated'},
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
-            operation=operation)
+        operation=operation
+    )
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
                                 'cloudify.nodes.vcloud.VM']
     with mock.patch('vcd_plugin_sdk.resources.base.VDC') as vdc:
@@ -991,24 +1007,30 @@ def test_create_vm_external(*_, **__):
             'by_type', return_value='foo')
 def test_create_vm_handles_bad_request(*_, **__):
     operation = {'name': 'create', 'retry_number': 0}
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': False,
             'resource_id': 'foo',
-            'resource_config': {'catalog': 'bar',
-                                'template': 'baz',
-                                'fence_mode': 'isolated'},
-            'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
-            operation=operation)
+            'resource_config': {
+                'catalog': 'bar',
+                'template': 'baz',
+                'fence_mode': 'isolated'},
+            'client_config': {'foo': 'bar', 'vdc': 'vdc'}
+        },
+        operation=operation)
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
                                 'cloudify.nodes.vcloud.VM']
-    with mock.patch('cloudify_vcd.constants.VCloudVM.instantiate_vapp',
-                    side_effect=BadRequestException(
-                        400,
-                        'foo',
-                        {
-                            'message': 'DUPLICATE_NAME',
-                            'minorCode': 400
-                        })):
+    with mock.patch(
+            'cloudify_vcd.constants.VCloudVM.instantiate_vapp',
+            side_effect=BadRequestException(
+                400,
+                'foo',
+                {
+                    'message': 'DUPLICATE_NAME',
+                    'minorCode': 400
+                }
+            )
+    ):
         create_vm(ctx=_ctx)
     assert _ctx.instance.runtime_properties['resource_id'] == 'foo'
     assert '__created' in _ctx.instance.runtime_properties
@@ -1024,14 +1046,15 @@ def test_create_vm_handles_bad_request(*_, **__):
             'by_type', return_value='foo')
 def test_create_vm_raises_bad_request(*_, **__):
     operation = {'name': 'create', 'retry_number': 0}
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': False,
             'resource_id': 'foo',
             'resource_config': {'catalog': 'bar',
                                 'template': 'baz',
                                 'fence_mode': 'isolated'},
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
-            operation=operation)
+        operation=operation)
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
                                 'cloudify.nodes.vcloud.VM']
     with mock.patch('cloudify_vcd.constants.VCloudVM.instantiate_vapp',
@@ -1050,14 +1073,15 @@ def test_create_vm_raises_bad_request(*_, **__):
             'by_type', return_value='foo')
 def test_create_vm_raises_retry(*_, **__):
     operation = {'name': 'create', 'retry_number': 0}
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': False,
             'resource_id': 'foo',
             'resource_config': {'catalog': 'bar',
                                 'template': 'baz',
                                 'fence_mode': 'isolated'},
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
-            operation=operation)
+        operation=operation)
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
                                 'cloudify.nodes.vcloud.VM']
     with mock.patch('cloudify_vcd.constants.VCloudVM.instantiate_vapp',
@@ -1082,12 +1106,13 @@ def test_create_vm_raises_retry(*_, **__):
             'by_type', return_value='foo')
 def test_configure_vm(*_, **__):
     operation = {'name': 'configure', 'retry_number': 0}
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': False,
             'resource_id': 'foo',
             'resource_config': {'catalog': 'bar', 'template': 'baz'},
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
-            operation=operation)
+        operation=operation)
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
                                 'cloudify.nodes.vcloud.VM']
     with mock.patch('vcd_plugin_sdk.resources.base.VDC') as vdc:
@@ -1106,12 +1131,14 @@ def test_configure_vm(*_, **__):
             'by_type', return_value='foo')
 def test_start_vm(*_, **__):
     operation = {'name': 'start', 'retry_number': 0}
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': False,
             'resource_id': 'foo',
             'resource_config': {'catalog': 'bar', 'template': 'baz'},
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
-            operation=operation)
+        operation=operation
+    )
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
                                 'cloudify.nodes.vcloud.VM']
     with mock.patch('vcd_plugin_sdk.resources.base.VDC') as vdc:
@@ -1130,12 +1157,14 @@ def test_start_vm(*_, **__):
             'by_type', return_value='foo')
 def test_stop_vm(*_, **__):
     operation = {'name': 'stop', 'retry_number': 0}
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': False,
             'resource_id': 'foo',
             'resource_config': {'catalog': 'bar', 'template': 'baz'},
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
-            operation=operation)
+        operation=operation
+    )
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
                                 'cloudify.nodes.vcloud.VM']
     with mock.patch('vcd_plugin_sdk.resources.base.VDC') as vdc:
@@ -1154,12 +1183,14 @@ def test_stop_vm(*_, **__):
             'by_type', return_value='foo')
 def test_delete_vm(*_, **__):
     operation = {'name': 'delete', 'retry_number': 0}
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': False,
             'resource_id': 'foo',
             'resource_config': {'catalog': 'bar', 'template': 'baz'},
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
-            operation=operation)
+        operation=operation
+    )
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
                                 'cloudify.nodes.vcloud.VM']
     with mock.patch('vcd_plugin_sdk.resources.base.VDC') as vdc:
@@ -1178,7 +1209,8 @@ def test_configure_nic(*_, **__):
             )
         )
     )]
-    _ctx = get_mock_node_instance_context(properties={
+    _ctx = get_mock_node_instance_context(
+        properties={
             'use_external_resource': False,
             'resource_id': 'foo',
             'resource_config': {
@@ -1189,8 +1221,9 @@ def test_configure_nic(*_, **__):
                 'ip_address': '192.169.2.2'
             },
             'client_config': {'foo': 'bar', 'vdc': 'vdc'}},
-            operation=operation,
-            relationships=relationships)
+        operation=operation,
+        relationships=relationships
+    )
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
                                 'cloudify.nodes.vcloud.NIC']
     configure_nic(ctx=_ctx)

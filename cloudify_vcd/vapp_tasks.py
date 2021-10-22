@@ -225,7 +225,7 @@ def _create_vm(vm_external,
 
     vm_name = vm_config.get('vm_name')
     if vm_name != vm_id:
-        ctx.logger.warn(
+        ctx.logger.debug(
             'The parameter vm_name {v} in resource_config does not match '
             'the resource ID provided {i}. '
             'Using resource_id instead.'.format(v=vm_name, i=vm_id))
@@ -265,7 +265,7 @@ def _create_vm(vm_external,
         if not (vcd_already_exists(e) and not vm_external) or bad_vm_name(e):
             raise
         else:
-            vm.logger.warn('The vm {name} unexpectedly exists.'.format(
+            vm.logger.debug('The vm {name} unexpectedly exists.'.format(
                 name=vm.name))
             last_task = None
     vm_ctx.instance.runtime_properties['__VM_CREATE_VAPP'] = True
@@ -344,9 +344,9 @@ def _start_vm(vm_external,
             last_task = \
                 vm_ctx.instance.runtime_properties['tasks']['update'][-1]
         except (KeyError, IndexError):
-            vm.logger.warn('The vm {name} is powered on, '
-                           'but has no previous start task '
-                           'and is not external.'.format(name=vm.name))
+            vm.logger.debug('The vm {name} is powered on, '
+                            'but has no previous start task '
+                            'and is not external.'.format(name=vm.name))
             return vm, None
         else:
             return vm, last_task
@@ -466,7 +466,7 @@ def _delete_vm(vm_external,
 
 @resource_operation
 def configure_nic(*args, **kwargs):
-    return _configure_vm(*args, **kwargs)
+    return _configure_nic(*args, **kwargs)
 
 
 def _configure_nic(_=None,
@@ -718,7 +718,7 @@ def _delete_nic(_,
         last_task = vm.remove_vapp_network(nic_config['network_name'])
         return vm, last_task
 
-    ctx.logger.warn(
+    ctx.logger.debug(
         'The NIC {config} was not found, '
         'so we cannot remove it from the VM.'.format(config=nic_config))
 
