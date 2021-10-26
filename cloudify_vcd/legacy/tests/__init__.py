@@ -12,7 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from cloudify.mocks import MockCloudifyContext
+from cloudify.mocks import MockNodeContext, MockCloudifyContext
+
+
+class CorrectedMockNodeContext(MockNodeContext):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.type_hierarchy = self.type
+
+
+class CorrectedMockCloudifyContext(MockCloudifyContext):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        node_name = kwargs.get('node_name')
+        properties = kwargs.get('properties')
+        node_type = kwargs.get('node_type')
+        self._node = CorrectedMockNodeContext(
+            node_name, properties, node_type)
+        self.type_hierarchy = self.type
 
 
 DEFAULT_NODE_PROPS = {
@@ -61,7 +79,7 @@ def create_ctx(node_id,
         'name': operation_name,
         'retry': 0,
     }
-    mock_ctx = MockCloudifyContext(
+    mock_ctx = CorrectedMockCloudifyContext(
         node_id=node_id,
         node_name=node_id,
         node_type=node_type,
@@ -70,5 +88,4 @@ def create_ctx(node_id,
         relationships=relationships,
         operation=operation
     )
-    mock_ctx.node.type_hierarchy = type_hierarchy
     return mock_ctx

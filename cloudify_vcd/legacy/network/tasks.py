@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 from cloudify.exceptions import NonRecoverableError
+
 from vcd_plugin_sdk.resources.network import VCloudNetwork
 from cloudify_common_sdk.utils import \
     skip_creative_or_destructive_operation as skip

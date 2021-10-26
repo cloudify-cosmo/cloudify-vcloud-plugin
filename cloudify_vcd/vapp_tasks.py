@@ -33,13 +33,13 @@ def create_vapp(*args, **kwargs):
     return _create_vapp(*args, **kwargs)
 
 
-def _create_vapp(_,
-                 vapp_id,
-                 vapp_client,
-                 vapp_vdc,
-                 vapp_config,
-                 vapp_class,
-                 vapp_ctx,
+def _create_vapp(_=None,
+                 vapp_id=None,
+                 vapp_client=None,
+                 vapp_vdc=None,
+                 vapp_config=None,
+                 vapp_class=None,
+                 vapp_ctx=None,
                  **___):
     """
     At the moment this function does nothing substantial.
@@ -77,13 +77,13 @@ def _create_vapp(_,
 
 
 @resource_operation
-def stop_vapp(vapp_ext,
-              vapp_id,
-              vapp_client,
-              vapp_vdc,
-              vapp_config,
-              vapp_class,
-              __,
+def stop_vapp(vapp_ext=None,
+              vapp_id=None,
+              vapp_client=None,
+              vapp_vdc=None,
+              vapp_config=None,
+              vapp_class=None,
+              __=None,
               **___):
     """
     Perform undeploy operation on a vApp.
@@ -111,13 +111,13 @@ def stop_vapp(vapp_ext,
 
 
 @resource_operation
-def power_off_vapp(vapp_ext,
-                   vapp_id,
-                   vapp_client,
-                   vapp_vdc,
-                   vapp_config,
-                   vapp_class,
-                   __,
+def power_off_vapp(vapp_ext=None,
+                   vapp_id=None,
+                   vapp_client=None,
+                   vapp_vdc=None,
+                   vapp_config=None,
+                   vapp_class=None,
+                   __=None,
                    **___):
     """
     Execute power off on the vApp before deletion.
@@ -151,13 +151,13 @@ def power_off_vapp(vapp_ext,
 
 
 @resource_operation
-def delete_vapp(vapp_ext,
-                vapp_id,
-                vapp_client,
-                vapp_vdc,
-                vapp_config,
-                vapp_class,
-                __,
+def delete_vapp(vapp_ext=None,
+                vapp_id=None,
+                vapp_client=None,
+                vapp_vdc=None,
+                vapp_config=None,
+                vapp_class=None,
+                __=None,
                 **___):
     """
     Delete a vApp.
@@ -194,13 +194,13 @@ def create_vm(*args, **kwargs):
     return _create_vm(*args, **kwargs)
 
 
-def _create_vm(vm_external,
-               vm_id,
-               vm_client,
-               vm_vdc,
-               vm_config,
-               vm_class,
-               vm_ctx,
+def _create_vm(vm_external=None,
+               vm_id=None,
+               vm_client=None,
+               vm_vdc=None,
+               vm_config=None,
+               vm_class=None,
+               vm_ctx=None,
                **_):
 
     """
@@ -244,7 +244,7 @@ def _create_vm(vm_external,
 
     vm = vm_class(
         vm_id,
-        vapp_name,
+        vapp_name or vm_id,
         vm_client,
         vdc_name=vm_vdc,
         kwargs={},
@@ -281,13 +281,13 @@ def configure_vm(*args, **kwargs):
     return _configure_vm(*args, **kwargs)
 
 
-def _configure_vm(_,
-                  vm_id,
-                  vm_client,
-                  vm_vdc,
-                  vm_config,
-                  vm_class,
-                  vm_ctx,
+def _configure_vm(_=None,
+                  vm_id=None,
+                  vm_client=None,
+                  vm_vdc=None,
+                  vm_config=None,
+                  vm_class=None,
+                  vm_ctx=None,
                   **__):
 
     vapp_name = find_resource_id_from_relationship_by_type(
@@ -307,13 +307,13 @@ def start_vm(*args, **kwargs):
     return _start_vm(*args, **kwargs)
 
 
-def _start_vm(vm_external,
-              vm_id,
-              vm_client,
-              vm_vdc,
-              vm_config,
-              vm_class,
-              vm_ctx,
+def _start_vm(vm_external=None,
+              vm_id=None,
+              vm_client=None,
+              vm_vdc=None,
+              vm_config=None,
+              vm_class=None,
+              vm_ctx=None,
               **__):
     """
     Power on both existing and new VMs.
@@ -365,13 +365,13 @@ def stop_vm(*args, **kwargs):
     return _stop_vm(*args, **kwargs)
 
 
-def _stop_vm(vm_external,
-             vm_id,
-             vm_client,
-             vm_vdc,
-             vm_config,
-             vm_class,
-             vm_ctx,
+def _stop_vm(vm_external=None,
+             vm_id=None,
+             vm_client=None,
+             vm_vdc=None,
+             vm_config=None,
+             vm_class=None,
+             vm_ctx=None,
              **__):
     """
 
@@ -418,13 +418,13 @@ def delete_vm(*args, **kwargs):
     return _delete_vm(*args, **kwargs)
 
 
-def _delete_vm(vm_external,
-               vm_id,
-               vm_client,
-               vm_vdc,
-               vm_config,
-               vm_class,
-               vm_ctx,
+def _delete_vm(vm_external=None,
+               vm_id=None,
+               vm_client=None,
+               vm_vdc=None,
+               vm_config=None,
+               vm_class=None,
+               vm_ctx=None,
                **__):
     """
 
@@ -510,20 +510,20 @@ def add_network(*args, **kwargs):
     return _add_network(*args, **kwargs)
 
 
-def _add_network(_,
-                 __,
-                 ___,
-                 ____,
-                 nic_config,
-                 _____,
-                 nic_ctx,
-                 ______,
-                 vm_id,
-                 vm_client,
-                 vm_vdc,
-                 vm_config,
-                 vm_class,
-                 vm_ctx,
+def _add_network(_=None,
+                 __=None,
+                 ___=None,
+                 ____=None,
+                 nic_config=None,
+                 _____=None,
+                 nic_ctx=None,
+                 ______=None,
+                 vm_id=None,
+                 vm_client=None,
+                 vm_vdc=None,
+                 vm_config=None,
+                 vm_class=None,
+                 vm_ctx=None,
                  **_______):
 
     """Add a network to a VM.
@@ -551,8 +551,12 @@ def _add_network(_,
     nic_network = find_resource_id_from_relationship_by_type(
         nic_ctx.instance, REL_NIC_NETWORK)
     vapp_node = find_rel_by_type(vm_ctx.instance, REL_VM_VAPP)
-    fence_mode = vapp_node.target.node.properties['resource_config'].get(
-        'fence_mode')
+    if vapp_node:
+        fence_mode = vapp_node.target.node.properties['resource_config'].get(
+            'fence_mode')
+    elif 'server' in vm_ctx.instance.runtime_properties:
+        fence_mode = vm_ctx.instance.runtime_properties['server'].get(
+            'fence_mode', 'bridged')
 
     if nic_network:
         nic_config['network_name'] = nic_network
@@ -585,20 +589,20 @@ def add_nic(*args, **kwargs):
     return _add_nic(*args, **kwargs)
 
 
-def _add_nic(_,
-             __,
-             ___,
-             ____,
-             nic_config,
-             _____,
-             nic_ctx,
-             ______,
-             vm_id,
-             vm_client,
-             vm_vdc,
-             vm_config,
-             vm_class,
-             vm_ctx,
+def _add_nic(_=None,
+             __=None,
+             ___=None,
+             ____=None,
+             nic_config=None,
+             _____=None,
+             nic_ctx=None,
+             ______=None,
+             vm_id=None,
+             vm_client=None,
+             vm_vdc=None,
+             vm_config=None,
+             vm_class=None,
+             vm_ctx=None,
              **_______):
     """
     Add Nic to VM.
@@ -657,20 +661,20 @@ def delete_nic(*args, **kwargs):
     return _delete_nic(*args, **kwargs)
 
 
-def _delete_nic(_,
-                __,
-                ___,
-                ____,
-                nic_config,
-                _____,
-                nic_ctx,
-                ______,
-                vm_id,
-                vm_client,
-                vm_vdc,
-                vm_config,
-                vm_class,
-                vm_ctx,
+def _delete_nic(_=None,
+                __=None,
+                ___=None,
+                ____=None,
+                nic_config=None,
+                _____=None,
+                nic_ctx=None,
+                ______=None,
+                vm_id=None,
+                vm_client=None,
+                vm_vdc=None,
+                vm_config=None,
+                vm_class=None,
+                vm_ctx=None,
                 **_______):
     """
     Delete NIC and remove network from vapp.

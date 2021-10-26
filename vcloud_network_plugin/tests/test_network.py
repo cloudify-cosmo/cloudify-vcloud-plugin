@@ -63,6 +63,7 @@ def test_create_external_network_with_gateway(*_, **__):
         node_properties=network_node_props)
     current_ctx.set(_ctx)
     create(ctx=_ctx)
+    assert _ctx.instance.runtime_properties['resource_id'] == 'foo'
 
 
 @patch('vcd_plugin_sdk.connection.Org', autospec=True)
@@ -80,6 +81,7 @@ def test_delete_external_network_with_gateway(*_, **__):
         node_properties=network_node_props)
     current_ctx.set(_ctx)
     delete(ctx=_ctx)
+    assert _ctx.instance.runtime_properties['resource_id'] == 'foo'
 
 
 @patch('cloudify_vcd.legacy.decorators.get_last_task')
@@ -101,6 +103,7 @@ def test_create_network_with_gateway(*_, **__):
         node_properties=network_node_props)
     current_ctx.set(_ctx)
     create(ctx=_ctx)
+    assert _ctx.instance.runtime_properties['resource_id'] == 'foo'
 
 
 @patch('cloudify_vcd.legacy.decorators.get_last_task')
@@ -122,3 +125,4 @@ def test_delete_network_with_gateway(*_, **__):
         operation_name='cloudify.interfaces.lifecycle.delete')
     current_ctx.set(_ctx)
     delete(ctx=_ctx)
+    assert _ctx.instance.runtime_properties['resource_id'] == 'foo'

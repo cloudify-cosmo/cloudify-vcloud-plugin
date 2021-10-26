@@ -19,6 +19,9 @@ from cloudify_vcd.legacy.compute.tasks import (
     start_server,
     stop_server,
     delete_server,
+    preconfigure_nic,
+    postconfigure_nic,
+    unlink_nic
 )
 
 
@@ -29,7 +32,9 @@ def create(*args, **kwargs):
 
 @operation(resumable=True)
 def configure(*args, **kwargs):
+    preconfigure_nic(*args, **kwargs)
     configure_server(*args, **kwargs)
+    postconfigure_nic(*args, **kwargs)
 
 
 @operation(resumable=True)
@@ -44,6 +49,7 @@ def stop(*args, **kwargs):
 
 @operation(resumable=True)
 def delete(*args, **kwargs):
+    unlink_nic(*args, **kwargs)
     delete_server(*args, **kwargs)
 
 

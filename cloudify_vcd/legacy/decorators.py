@@ -105,3 +105,23 @@ def with_vm_resource():
             return func(*args, **kwargs)
         return wrapper_inner
     return wrapper_outer
+
+
+def with_port_resource():
+    def wrapper_outer(func):
+        @wraps(func)
+        def wrapper_inner(*args, **kwargs):
+            """
+            Initializes the gateway object with connection and the translated
+                configuration from vm property.
+            :param args:
+            :param kwargs:
+            :return:
+            """
+            _ctx_node = get_ctx_node()
+            if 'port' not in kwargs:
+                kwargs['port'] = _ctx_node.properties['port']
+            utils.get_port_config(**kwargs)
+            return func(*args, **kwargs)
+        return wrapper_inner
+    return wrapper_outer

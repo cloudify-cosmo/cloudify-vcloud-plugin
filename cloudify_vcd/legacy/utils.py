@@ -126,11 +126,16 @@ def get_network_client(network, vcloud_cx, vcloud_config, ctx, **_):
     tasks = _ctx_instance.runtime_properties.get('__TASKS', [])
     if 'name' in network:
         network_name = network.pop('name')
+    elif 'resource_id' in _ctx_instance.runtime_properties:
+        network_name = _ctx_instance.runtime_properties['resource_id']
     else:
         network_name = _ctx_node.properties.get(
             'resource_id', _ctx_instance.id)
 
     network = convert_network_config(network)
+
+    _ctx_instance.runtime_properties['resource_id'] = network_name
+    _ctx_instance.runtime_properties['network'] = network
 
     new_network_config = {
         'network_name': network_name,
@@ -143,7 +148,7 @@ def get_network_client(network, vcloud_cx, vcloud_config, ctx, **_):
     return VCloudNetwork(**new_network_config)
 
 
-def get_port_client(port, vcloud_cx, vcloud_config, ctx, **kwargs):
+def get_port_config(port, ctx, **kwargs):
     """
     :param port:
     :param vcloud_cx:
@@ -185,11 +190,17 @@ def get_gateway_client(vcloud_cx, vcloud_config, ctx, **_):
 def get_vm_client(server, vcloud_cx, vcloud_config, ctx):
     _ctx_node = get_ctx_node(ctx)
     _ctx_instance = get_ctx_instance(ctx)
-    name = server.pop(
-        'name', _ctx_node.properties.get('resource_id', _ctx_instance.id))
+    if 'name' in server:
+        name = server.pop('name')
+    elif 'name' in _ctx_instance.runtime_properties:
+        name = _ctx_instance.runtime_properties['name']
+    else:
+        name = _ctx_node.properties.get('resource_id', _ctx_instance.id)
     tasks = _ctx_instance.runtime_properties.get('__TASKS', [])
     convert_vm_config(server)
     get_server_network(server, _ctx_node, _ctx_instance)
+    _ctx_instance.runtime_properties['resource_id'] = name
+    _ctx_instance.runtime_properties['server'] = server
     return VCloudVM(name,
                     name,
                     connection=vcloud_cx,
@@ -206,23 +217,23 @@ def get_server_network(server, _ctx_node, _ctx_instance):
     if 'network' not in server and \
             'management_network_name' in _ctx_node.properties:
         server['network'] = _ctx_node.properties['management_network_name']
-    elif 'netwokr' not in server:
+    elif 'network' not in server:
         for rel in find_rels_by_type(_ctx_instance, VM_NIC_REL):
-            if rel.node.properties['port']['primary_interface']:
+            if rel.target.node.properties['port'].get('primary_interface'):
                 break
         if rel:
-            server['network'] = rel.instance.runtime_properties.get(
+            server['network'] = rel.target.instance.runtime_properties.get(
                 'network_name')
 
     if 'network_adapter_type' not in server and rel:
         server['network_adapter_type'] = \
-            rel.instance.runtime_properties['__future_config'].get(
+            rel.target.instance.runtime_properties['port'].get(
                 'adapter_type', server_network_adapter)
     elif 'network_adapter_type' not in server:
         server['network_adapter_type'] = server_network_adapter
 
     if 'ip_address' not in server and rel:
-        ip_address = rel.instance.runtime_properties['__future_config'].get(
+        ip_address = rel.target.instance.runtime_properties['port'].get(
             'ip_address')
         if ip_address:
             server['ip_address'] = ip_address

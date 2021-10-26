@@ -13,15 +13,18 @@
 # limitations under the License.
 
 from cloudify.decorators import operation
+from cloudify_vcd.legacy.compute.tasks import port_creation_validation
 
 # TODO: We need to add add_network, add_nic, and remove_nic, after we do VM.
 
 
 @operation(resumable=True)
-def creation_validation(port, *args, **kwargs):
-    pass
+def creation_validation(*args, **kwargs):
+    port_creation_validation(*args, **kwargs)
 
 
 @operation(resumable=True)
-def delete(*args, **kwargs):
-    pass
+def delete(*_, **kwargs):
+    _ctx = kwargs.get('ctx')
+    for key in _ctx.instance.runtime_properties.keys():
+        del _ctx.instance.runtime_properties[key]
