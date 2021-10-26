@@ -12,6 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import ipaddress
+from copy import deepcopy
+
+from ..utils import (
+    find_rels_by_type,
+    find_resource_id_from_relationship_by_type)
+
 from vcd_plugin_sdk.resources.vapp import VCloudVM
 from vcd_plugin_sdk.connection import VCloudConnect
 from vcd_plugin_sdk.resources.network import VCloudNetwork, VCloudGateway
@@ -20,6 +27,31 @@ from cloudify.exceptions import NonRecoverableError
 from cloudify_common_sdk.utils import (
     get_ctx_node,
     get_ctx_instance)
+
+
+OLD_NETWORK_KEYS = [
+    'dns',
+    'name',
+    'dhcp',
+    'netmask',
+    'gateway_ip',
+    'dns_suffix',
+    'static_range',
+    'edge_gateway'
+]
+OLD_PORT_KEYS = [
+    'network',
+    'mac_address',
+    'primary_interface',
+    'ip_allocation_mode'
+]
+OLD_VM_KEYS = [
+    'name',
+    'hardware',
+    'guest_customization',
+]
+PORT_NET_REL = 'cloudify.vcloud.port_connected_to_network'
+VM_NIC_REL = 'cloudify.vcloud.server_connected_to_port'
 
 
 class RequiredClientKeyMissing(NonRecoverableError):
@@ -35,6 +67,7 @@ def get_function_return(func_ret):
 
 
 def get_vcloud_cx(client_config, logger):
+    client_config = deepcopy(client_config)
     for bad, good in [('username', 'user'),
                       ('ssl_verify', 'verify_ssl_certs')]:
         if bad in client_config:
@@ -85,24 +118,55 @@ def get_network_client(network, vcloud_cx, vcloud_config, ctx, **_):
     _ctx_instance = get_ctx_instance(ctx)
 
     if 'edge_gateway' in vcloud_config:
-        network_type = 'routed_vdc_network'
         network['gateway_name'] = vcloud_config['edge_gateway']
+        network_type = 'routed_vdc_network'
     else:
         network_type = 'isolated_vdc_network'
 
     tasks = _ctx_instance.runtime_properties.get('__TASKS', [])
+    if 'name' in network:
+        network_name = network.pop('name')
+    else:
+        network_name = _ctx_node.properties.get(
+            'resource_id', _ctx_instance.id)
+
+    network = convert_network_config(network)
 
     new_network_config = {
-        'network_name': _ctx_node.properties.get(
-            'resource_id', _ctx_instance.id),
+        'network_name': network_name,
         'network_type': network_type,
         'connection': vcloud_cx,
         'vdc_name': vcloud_config.get('vdc'),
         'kwargs': network,
         'tasks': tasks
     }
-
     return VCloudNetwork(**new_network_config)
+
+
+def get_port_client(port, vcloud_cx, vcloud_config, ctx, **kwargs):
+    """
+    :param port:
+    :param vcloud_cx:
+    :param vcloud_config:
+    :param ctx:
+    :param kwargs:
+    :return:
+    """
+
+    _node_instance = get_ctx_instance(ctx)
+
+    if 'network' in port:
+        network = port.pop('network')
+    else:
+        network = find_resource_id_from_relationship_by_type(
+            _node_instance, PORT_NET_REL)
+
+    port = convert_port_config(port)
+    if 'is_connected' not in port:
+        # TODO: Decide what to do here.
+        pass
+    _node_instance.runtime_properties['network'] = network
+    _node_instance.runtime_properties['port'] = port
 
 
 def get_gateway_client(vcloud_cx, vcloud_config, ctx, **_):
@@ -118,12 +182,187 @@ def get_gateway_client(vcloud_cx, vcloud_config, ctx, **_):
         )
 
 
-def get_vm_client(vcloud_cx, vcloud_config, ctx):
+def get_vm_client(server, vcloud_cx, vcloud_config, ctx):
     _ctx_node = get_ctx_node(ctx)
     _ctx_instance = get_ctx_instance(ctx)
-    name = _ctx_node.properties.get('resource_id', _ctx_instance.id)
+    name = server.pop(
+        'name', _ctx_node.properties.get('resource_id', _ctx_instance.id))
+    tasks = _ctx_instance.runtime_properties.get('__TASKS', [])
+    convert_vm_config(server)
+    get_server_network(server, _ctx_node, _ctx_instance)
     return VCloudVM(name,
                     name,
                     connection=vcloud_cx,
                     vdc_name=vcloud_config.get('vdc'),
-                    tasks=_ctx_instance.runtime_properties['__TASKS'])
+                    kwargs={},
+                    vapp_kwargs=server,
+                    tasks=tasks)
+
+
+def get_server_network(server, _ctx_node, _ctx_instance):
+    rel = None
+    server_network_adapter = 'VMXNET3'
+
+    if 'network' not in server and \
+            'management_network_name' in _ctx_node.properties:
+        server['network'] = _ctx_node.properties['management_network_name']
+    elif 'netwokr' not in server:
+        for rel in find_rels_by_type(_ctx_instance, VM_NIC_REL):
+            if rel.node.properties['port']['primary_interface']:
+                break
+        if rel:
+            server['network'] = rel.instance.runtime_properties.get(
+                'network_name')
+
+    if 'network_adapter_type' not in server and rel:
+        server['network_adapter_type'] = \
+            rel.instance.runtime_properties['__future_config'].get(
+                'adapter_type', server_network_adapter)
+    elif 'network_adapter_type' not in server:
+        server['network_adapter_type'] = server_network_adapter
+
+    if 'ip_address' not in server and rel:
+        ip_address = rel.instance.runtime_properties['__future_config'].get(
+            'ip_address')
+        if ip_address:
+            server['ip_address'] = ip_address
+
+
+def convert_network_config(config):
+
+    if 'network_cidr' not in config:
+        cidr = get_network_cidr(config)
+        if cidr:
+            config['network_cidr'] = cidr
+
+    if 'ip_range_start' not in config or 'ip_range_end' not in config:
+        ip_range_start, ip_range_end = get_ip_range(config)
+        config['ip_range_start'] = ip_range_start.compressed
+        config['ip_range_end'] = ip_range_end.compressed
+
+    if 'dns' in config:
+        primary_ip, secondary_ip = get_dns_ips(config['dns'])
+        config['primary_dns_ip'] = primary_ip
+        config['secondary_dns_ip'] = secondary_ip
+
+    for key in OLD_NETWORK_KEYS:
+        config.pop(key, None)
+
+    return config
+
+
+def get_start_end_ip_config(config=None):
+    start = None
+    end = None
+    if config:
+        start, end = config.split('-')
+        start = ipaddress.IPv4Address(start)
+        end = ipaddress.IPv4Address(end)
+    return start, end
+
+
+def get_gateway_ip(config):
+    gateway_ip = config.get('gateway_ip')
+    if gateway_ip:
+        return ipaddress.IPv4Address(gateway_ip)
+
+
+def get_ip_range(config):
+    start_static, end_static = get_start_end_ip_config(
+        config.get('static_range'))
+    start_dhcp, end_dhcp = get_start_end_ip_config(config.get('dhcp_range'))
+    start_list = sorted(
+        [n for n in [start_static, start_dhcp] if n])
+    if start_list:
+        start = start_list[-1]
+    else:
+        return None, None
+    end_list = sorted([n for n in [end_static, end_dhcp] if n])
+    if end_list:
+        end = end_list[-1]
+    else:
+        return None, None
+    return start, end
+
+
+def get_network_cidr(config):
+    """
+    A naive way to generate a CIDR from old style network configuration.
+    :param config:
+    :return:
+    """
+    start, end = get_ip_range(config)
+    gateway_ip = get_gateway_ip(config)
+    netmask = config.get('netmask')
+    if netmask:
+        netmask = ipaddress.IPv4Address('0.0.0.0/{}'.format(netmask))
+    if gateway_ip:
+        start = gateway_ip
+    ip_range = [addr for addr in ipaddress.summarize_address_range(start, end)]
+    if len(ip_range) >= 1:
+        if netmask:
+            return '{}/{}'.format(
+                ip_range[0].network_address, netmask.prefixlen)
+        return ip_range[0].compressed
+
+
+def get_dns_ips(ips):
+    if len(ips) > 1:
+        return ips[0], ips[1]
+    return ips[0], None
+
+
+def convert_port_config(config):
+    """Convert something like this:
+    port:
+        network: { get_input: RSP_VRS2_APP_EXT_PROXY_network_name }
+        ip_allocation_mode: manual
+        ip_address: { get_input: RSP_VRS2_APP_EXT_PROXY }
+        primary_interface: false
+    To this:
+        adapter_type: 'VMXNET3'
+        is_primary: false
+        is_connected: false
+        ip_address_mode: 'MANUAL'
+        ip_address: '192.179.2.2'
+    :param config:
+    :return:
+    """
+
+    if 'ip_allocation_mode' in config:
+        config['ip_address_mode'] = config.pop('ip_allocation_mode').upper()
+
+    if 'primary_interface' in config:
+        config['is_primary'] = config.pop('primary_interface')
+
+    for key in OLD_PORT_KEYS:
+        config.pop(key, None)
+
+    return config
+
+
+def convert_vapp_config(config):
+    return {
+        'fence_mode': config.get('fence_mode', 'bridged'),
+        'accept_all_eulas': config.get('accept_all_eulas', True)
+    }
+
+
+def convert_vm_config(config):
+    if 'hardware' in config:
+        if 'memory' in config['hardware']:
+            config['memory'] = config['hardware']['memory']
+        if 'cpus' in config['hardware']:
+            config['cpus'] = config['hardware']['cpu']
+    if 'guest_customization' in config:
+        if 'admin_password' in config['guest_customization']:
+            config['password'] = \
+                config['guest_customization']['admin_password']
+        if 'computer_name' in config:
+            config['hostname'] = \
+                config['guest_customization']['computer_name']
+
+    config.update(convert_vapp_config(config))
+
+    for key in OLD_VM_KEYS:
+        config.pop(key, None)

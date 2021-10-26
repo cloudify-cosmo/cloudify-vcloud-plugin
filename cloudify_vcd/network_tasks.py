@@ -12,11 +12,14 @@ NETWORK_TYPES = {
 }
 
 
-def get_network_type(types):
+def get_network_type(types, config=None):
     for node_type in types:
         network_type = NETWORK_TYPES.get(node_type)
         if network_type:
             return network_type
+    config = config or {}
+    if 'gateway_name' in config:
+        return 'routed_vdc_network'
 
 
 @resource_operation
@@ -38,9 +41,10 @@ def _create_network(external_network,
     if network and 'network_name' not in network_config:
         network_config['network_name'] = network
 
+    network_type = get_network_type(ctx.node.type_hierarchy, network_config)
     network = network_class(
         network_id,
-        get_network_type(ctx.node.type_hierarchy),
+        network_type,
         network_client,
         network_vdc,
         kwargs=network_config)
@@ -64,9 +68,11 @@ def _delete_network(external_network,
                     ctx,
                     **___):
 
+    network_type = get_network_type(ctx.node.type_hierarchy, network_config)
+
     network = network_class(
         network_id,
-        get_network_type(ctx.node.type_hierarchy),
+        network_type,
         network_client,
         network_vdc,
         kwargs=network_config)

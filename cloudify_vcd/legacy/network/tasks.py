@@ -29,17 +29,17 @@ class MissingGateway(NonRecoverableError):
 @decorators.with_network_resource()
 @decorators.with_gateway_resource()
 def create_network(network_client, gateway_client, ctx, **_):
-    gateway_exists = gateway_client.gateway
     if network_client.network_type == 'routed_vdc_network' and \
-            not gateway_exists:
+            not gateway_client.gateway:
         raise MissingGateway(
             'The provided gateway {} does not exist.'.format(
                 gateway_client.name))
-    exists = network_client.network
     if not skip(network_client.network_type,
                 network_client.name,
-                exists=exists):
-        return network_tasks._delete_network(
+                ctx,
+                exists=network_client.exists,
+                create_operation=True):
+        return network_tasks._create_network(
             external_network=False,
             network_id=network_client.name,
             network_client=network_client.connection,
@@ -51,11 +51,12 @@ def create_network(network_client, gateway_client, ctx, **_):
 
 @decorators.with_vcd_client()
 @decorators.with_network_resource()
-@decorators.with_gateway_resource()
 def delete_network(network_client, ctx, **_):
-    exists = network_client.network
-    if not skip(
-            network_client.network_type, network_client.name, exists=exists):
+    if not skip(network_client.network_type,
+                network_client.name,
+                ctx,
+                exists=network_client.exists,
+                delete_operation=True):
         return network_tasks._delete_network(
             external_network=False,
             network_id=network_client.name,

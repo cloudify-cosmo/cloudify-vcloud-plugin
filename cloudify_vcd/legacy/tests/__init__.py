@@ -61,7 +61,7 @@ def create_ctx(node_id,
         'name': operation_name,
         'retry': 0,
     }
-    return MockCloudifyContext(
+    mock_ctx = MockCloudifyContext(
         node_id=node_id,
         node_name=node_id,
         node_type=node_type,
@@ -70,3 +70,5 @@ def create_ctx(node_id,
         relationships=relationships,
         operation=operation
     )
+    mock_ctx.node.type_hierarchy = type_hierarchy
+    return mock_ctx

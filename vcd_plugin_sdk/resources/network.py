@@ -77,6 +77,13 @@ class VCloudNetwork(VCloudResource):
         return self._network
 
     @property
+    def exists(self):
+        try:
+            return self.network
+        except VCloudSDKException:
+            return False
+
+    @property
     def allocated_addresses(self):
         # In busy environments, this can be pretty testy.
         return self.network.list_allocated_ip_address()

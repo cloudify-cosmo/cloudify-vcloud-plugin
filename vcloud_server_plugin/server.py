@@ -17,8 +17,9 @@ from cloudify_vcd.legacy.compute.tasks import (
     create_server,
     configure_server,
     start_server,
-    stop_sterver,
-    delete_server)
+    stop_server,
+    delete_server,
+)
 
 
 @operation(resumable=True)
@@ -38,7 +39,7 @@ def start(*args, **kwargs):
 
 @operation(resumable=True)
 def stop(*args, **kwargs):
-    stop_sterver(*args, **kwargs)
+    stop_server(*args, **kwargs)
 
 
 @operation(resumable=True)

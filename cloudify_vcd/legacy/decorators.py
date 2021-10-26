@@ -92,11 +92,14 @@ def with_vm_resource():
         def wrapper_inner(*args, **kwargs):
             """
             Initializes the gateway object with connection and the translated
-                configuration from network property.
+                configuration from vm property.
             :param args:
             :param kwargs:
             :return:
             """
+            _ctx_node = get_ctx_node()
+            if 'server' not in kwargs:
+                kwargs['server'] = _ctx_node.properties['server']
             client = utils.get_vm_client(**kwargs)
             kwargs['vm_client'] = client
             return func(*args, **kwargs)

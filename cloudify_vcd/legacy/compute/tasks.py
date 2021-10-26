@@ -23,14 +23,17 @@ from ... import vapp_tasks
 @decorators.with_vcd_client()
 @decorators.with_vm_resource()
 def create_server(vm_client, ctx, **_):
-    exists = vm_client.get()
-    if not skip(type(vm_client), vm_client.name, exists):
+    if not skip(type(vm_client),
+                vm_client.name,
+                ctx,
+                exists=vm_client.exists,
+                create_operation=True):
         return vapp_tasks._create_vm(
             vm_external=False,
             vm_id=vm_client.name,
             vm_client=vm_client.connection,
             vm_vdc=vm_client.vdc_name,
-            vm_config=vm_client.kwargs,
+            vm_config=vm_client.vapp_object.kwargs,
             vm_class=VCloudVM,
             vm_ctx=ctx)
 
@@ -38,8 +41,10 @@ def create_server(vm_client, ctx, **_):
 @decorators.with_vcd_client()
 @decorators.with_vm_resource()
 def configure_server(vm_client, ctx, **_):
-    exists = vm_client.get()
-    if not skip(type(vm_client), vm_client.name, exists):
+    if not skip(type(vm_client),
+                vm_client.name,
+                ctx,
+                exists=vm_client.exists):
         return vapp_tasks._configure_vm(
             vm_external=False,
             vm_id=vm_client.name,
@@ -53,8 +58,10 @@ def configure_server(vm_client, ctx, **_):
 @decorators.with_vcd_client()
 @decorators.with_vm_resource()
 def start_server(vm_client, ctx, **_):
-    exists = vm_client.get()
-    if not skip(type(vm_client), vm_client.name, exists):
+    if not skip(type(vm_client),
+                vm_client.name,
+                ctx,
+                exists=vm_client.exists):
         return vapp_tasks._start_vm(
             vm_external=False,
             vm_id=vm_client.name,
@@ -67,10 +74,12 @@ def start_server(vm_client, ctx, **_):
 
 @decorators.with_vcd_client()
 @decorators.with_vm_resource()
-def delete_server(vm_client, ctx, **_):
-    exists = vm_client.get()
-    if not skip(type(vm_client), vm_client.name, exists):
-        return vapp_tasks._delete_vm(
+def stop_server(vm_client, ctx, **_):
+    if not skip(type(vm_client),
+                vm_client.name,
+                ctx,
+                exists=vm_client.exists):
+        return vapp_tasks._stop_vm(
             vm_external=False,
             vm_id=vm_client.name,
             vm_client=vm_client.connection,
@@ -82,10 +91,12 @@ def delete_server(vm_client, ctx, **_):
 
 @decorators.with_vcd_client()
 @decorators.with_vm_resource()
-def stop_server(vm_client, ctx, **_):
-    exists = vm_client.get()
-    if not skip(type(vm_client), vm_client.name, exists):
-        return vapp_tasks._stop_vm(
+def delete_server(vm_client, ctx, **_):
+    if not skip(type(vm_client),
+                vm_client.name,
+                vm_client.exists,
+                delete_operation=True):
+        return vapp_tasks._delete_vm(
             vm_external=False,
             vm_id=vm_client.name,
             vm_client=vm_client.connection,

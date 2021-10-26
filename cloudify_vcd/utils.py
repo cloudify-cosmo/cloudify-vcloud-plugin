@@ -389,7 +389,8 @@ def find_rel_by_type(node_instance, rel_type):
 
 def find_resource_id_from_relationship_by_type(node_instance, rel_type):
     rel = find_rel_by_type(node_instance, rel_type)
-    return rel.target.instance.runtime_properties.get('resource_id')
+    if rel:
+        return rel.target.instance.runtime_properties.get('resource_id')
 
 
 def use_external_resource(external,

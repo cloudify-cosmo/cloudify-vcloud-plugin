@@ -1,3 +1,4 @@
 mock
 pytest
 flake8
+https://github.com/cloudify-incubator/cloudify-utilities-plugins-sdk/archive/refs/heads/add-explicit-delete-logic.zip

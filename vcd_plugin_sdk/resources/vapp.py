@@ -205,6 +205,14 @@ class VCloudVM(VCloudResource):
         return self._vm
 
     @property
+    def exists(self):
+        try:
+            return self.vm
+        except EntityNotFoundException:
+            pass
+        return False
+
+    @property
     def nics(self):
         return self.vm.list_nics()
 

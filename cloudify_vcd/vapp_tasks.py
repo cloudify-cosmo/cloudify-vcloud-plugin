@@ -29,14 +29,18 @@ FENCE_MODE = ['isolated', 'direct', 'bridged', 'natRouted']
 
 
 @resource_operation
-def create_vapp(_,
-                vapp_id,
-                vapp_client,
-                vapp_vdc,
-                vapp_config,
-                vapp_class,
-                vapp_ctx,
-                **___):
+def create_vapp(*args, **kwargs):
+    return _create_vapp(*args, **kwargs)
+
+
+def _create_vapp(_,
+                 vapp_id,
+                 vapp_client,
+                 vapp_vdc,
+                 vapp_config,
+                 vapp_class,
+                 vapp_ctx,
+                 **___):
     """
     At the moment this function does nothing substantial.
     Creating vApps happens during VM create.

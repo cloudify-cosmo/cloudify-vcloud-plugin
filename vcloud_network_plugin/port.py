@@ -14,6 +14,8 @@
 
 from cloudify.decorators import operation
 
+# TODO: We need to add add_network, add_nic, and remove_nic, after we do VM.
+
 
 @operation(resumable=True)
 def creation_validation(port, *args, **kwargs):
