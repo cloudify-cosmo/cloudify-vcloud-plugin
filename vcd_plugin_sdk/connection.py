@@ -26,9 +26,9 @@ def default_logger(stream=sys.stdout):
 
     logging.basicConfig(
         # stream=stream,
-        filename=os.path.join(
-            os.path.expanduser('~'),
-            'Desktop', 'vcloudclient.log'),
+        # filename=os.path.join(
+        #     os.path.expanduser('~'),
+        #     'Desktop', 'vcloudclient.log'),
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         datefmt='%y.%m.%d-%H:%M:%S')

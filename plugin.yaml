@@ -1,9 +1,11 @@
 plugins:
 
-  vcd:
+  vcd: &plugin_mapping
     executor: central_deployment_agent
     package_name: cloudify-vcloud-plugin
     package_version: '2.0.2'
+  # legacy
+  vcloud: *plugin_mapping
 
 data_types:
 

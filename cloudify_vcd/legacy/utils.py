@@ -14,6 +14,7 @@
 
 import ipaddress
 from copy import deepcopy
+from tempfile import NamedTemporaryFile
 
 from ..utils import (
     find_rels_by_type,
@@ -23,10 +24,13 @@ from vcd_plugin_sdk.resources.vapp import VCloudVM
 from vcd_plugin_sdk.connection import VCloudConnect
 from vcd_plugin_sdk.resources.network import VCloudNetwork, VCloudGateway
 
+from cloudify import ctx as ctx_from_import
 from cloudify.exceptions import NonRecoverableError
 from cloudify_common_sdk.utils import (
     get_ctx_node,
-    get_ctx_instance)
+    get_ctx_instance,
+    get_deployment_dir
+)
 
 
 OLD_NETWORK_KEYS = [
@@ -94,6 +98,11 @@ def get_vcloud_cx(client_config, logger):
     if 'verify_ssl_certs' in client_config:
         new_client_config['verify_ssl_certs'] = client_config.pop(
             'verify_ssl_certs')
+
+    if 'log_file' not in new_client_config:
+        new_temp = NamedTemporaryFile(
+            dir=get_deployment_dir(ctx_from_import.deployment.id))
+        new_client_config['log_file'] = new_temp.name
 
     # TODO: Figure out what to do with the rest of the stuff in client_config.
     return VCloudConnect(logger, new_client_config, credentials)
@@ -248,8 +257,10 @@ def convert_network_config(config):
 
     if 'ip_range_start' not in config or 'ip_range_end' not in config:
         ip_range_start, ip_range_end = get_ip_range(config)
-        config['ip_range_start'] = ip_range_start.compressed
-        config['ip_range_end'] = ip_range_end.compressed
+        if ip_range_start:
+            config['ip_range_start'] = ip_range_start.compressed
+        if ip_range_end:
+            config['ip_range_end'] = ip_range_end.compressed
 
     if 'dns' in config:
         primary_ip, secondary_ip = get_dns_ips(config['dns'])
@@ -309,6 +320,10 @@ def get_network_cidr(config):
         netmask = ipaddress.IPv4Address('0.0.0.0/{}'.format(netmask))
     if gateway_ip:
         start = gateway_ip
+    ctx_from_import.logger.info(
+        'Using these IPs for CIDR: {} {}'.format(start, end))
+    if not start or not end:
+        return None
     ip_range = [addr for addr in ipaddress.summarize_address_range(start, end)]
     if len(ip_range) >= 1:
         if netmask:
