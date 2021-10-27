@@ -40,6 +40,8 @@ setup(
     name='cloudify-vcloud-plugin',
     version=get_version(),
     packages=[
+        'vcloud_network_plugin',
+        'vcloud_server_plugin',
         'cloudify_vcd',
         'vcd_plugin_sdk',
         'vcd_plugin_sdk.resources',

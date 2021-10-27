@@ -243,8 +243,11 @@ node_types:
       <<: *LegacyBaseProperties
       server:
         default: {}
+      management_network:
+        type: string
       management_network_name:
         type: string
+        default: { get_property: [SELF, management_network]}
     interfaces:
       cloudify.interfaces.lifecycle:
         create:

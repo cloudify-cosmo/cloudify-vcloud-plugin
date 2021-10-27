@@ -402,10 +402,11 @@ workflows:
       - unittests_py36
       - validate_version
       - validate_documentation
-      - rhel_wagon:
-          filters:
-            branches:
-              only: /([0-9\.]*\-build|main|dev)/
+      - rhel_wagon
+#      - rhel_wagon:
+#          filters:
+#            branches:
+#              only: /([0-9\.]*\-build|main|dev)/
 #      - wagon:
 #          filters:
 #            branches:
