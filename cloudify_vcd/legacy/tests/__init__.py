@@ -79,13 +79,19 @@ def create_ctx(node_id,
         'name': operation_name,
         'retry': 0,
     }
+    tenant = {
+        'name': 'footen',
+    }
     mock_ctx = CorrectedMockCloudifyContext(
         node_id=node_id,
         node_name=node_id,
         node_type=node_type,
+        blueprint_id='fooblu',
+        deployment_id='foodep',
         properties=node_properties,
         runtime_properties=runtime_props,
         relationships=relationships,
-        operation=operation
+        operation=operation,
+        tenant=tenant,
     )
     return mock_ctx

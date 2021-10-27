@@ -53,6 +53,8 @@ def get_vm_ctx(existing=False,
     return server_node_props
 
 
+@patch('cloudify_vcd.legacy.utils.NamedTemporaryFile')
+@patch('cloudify_vcd.legacy.utils.get_deployment_dir')
 @patch('cloudify_vcd.legacy.decorators.get_last_task')
 @patch('vcd_plugin_sdk.connection.Org', autospec=True)
 @patch('vcd_plugin_sdk.connection.Client', autospec=True)
@@ -76,6 +78,8 @@ def test_create_external_vm(*_, **__):
     assert _ctx.instance.runtime_properties['resource_id'] == 'foo'
 
 
+@patch('cloudify_vcd.legacy.utils.NamedTemporaryFile')
+@patch('cloudify_vcd.legacy.utils.get_deployment_dir')
 @patch('cloudify_vcd.legacy.decorators.get_last_task')
 @patch('vcd_plugin_sdk.connection.Org', autospec=True)
 @patch('vcd_plugin_sdk.resources.vapp.VCloudVM.get_vm')
@@ -100,6 +104,8 @@ def test_delete_external_vm(*_, **__):
 
 
 @patch('pyvcloud.vcd.vapp.VApp.get_vm')
+@patch('cloudify_vcd.legacy.utils.NamedTemporaryFile')
+@patch('cloudify_vcd.legacy.utils.get_deployment_dir')
 @patch('vcd_plugin_sdk.connection.Org', autospec=True)
 @patch('vcd_plugin_sdk.connection.Client', autospec=True)
 @patch('vcd_plugin_sdk.resources.vapp.VCloudVM.exists', return_value=True)
@@ -120,6 +126,8 @@ def test_configure_external_vm(*_, **__):
 
 
 @patch('pyvcloud.vcd.vapp.VApp.get_vm')
+@patch('cloudify_vcd.legacy.utils.NamedTemporaryFile')
+@patch('cloudify_vcd.legacy.utils.get_deployment_dir')
 @patch('cloudify_vcd.legacy.decorators.get_last_task')
 @patch('vcd_plugin_sdk.connection.Org', autospec=True)
 @patch('vcd_plugin_sdk.connection.Client', autospec=True)
@@ -143,6 +151,8 @@ def test_start_external_vm(*_, **__):
 
 
 @patch('pyvcloud.vcd.vapp.VApp.get_vm')
+@patch('cloudify_vcd.legacy.utils.NamedTemporaryFile')
+@patch('cloudify_vcd.legacy.utils.get_deployment_dir')
 @patch('cloudify_vcd.legacy.decorators.get_last_task')
 @patch('vcd_plugin_sdk.connection.Org', autospec=True)
 @patch('vcd_plugin_sdk.connection.Client', autospec=True)
@@ -165,6 +175,8 @@ def test_stop_external_vm(*_, **__):
     assert _ctx.instance.runtime_properties['resource_id'] == 'foo'
 
 
+@patch('cloudify_vcd.legacy.utils.NamedTemporaryFile')
+@patch('cloudify_vcd.legacy.utils.get_deployment_dir')
 @patch('cloudify_vcd.legacy.decorators.get_last_task')
 @patch('vcd_plugin_sdk.connection.Org', autospec=True)
 @patch('vcd_plugin_sdk.connection.Client', autospec=True)
@@ -239,6 +251,8 @@ def test_create_vm(*_, **__):
         '10.10.10.1'
 
 
+@patch('cloudify_vcd.legacy.utils.NamedTemporaryFile')
+@patch('cloudify_vcd.legacy.utils.get_deployment_dir')
 @patch('cloudify_vcd.legacy.decorators.get_last_task')
 @patch('vcd_plugin_sdk.connection.Org', autospec=True)
 @patch('vcd_plugin_sdk.connection.Client', autospec=True)
@@ -311,6 +325,8 @@ def test_create_vm_no_primary_port(*_, **__):
         'port2_network'
 
 
+@patch('cloudify_vcd.legacy.utils.NamedTemporaryFile')
+@patch('cloudify_vcd.legacy.utils.get_deployment_dir')
 @patch('cloudify_vcd.legacy.decorators.get_last_task')
 @patch('vcd_plugin_sdk.connection.Org', autospec=True)
 @patch('vcd_plugin_sdk.connection.Client', autospec=True)
@@ -388,6 +404,8 @@ def test_create_vm_port_network(*_, **__):
 
 
 @patch('pyvcloud.vcd.vapp.VApp.get_vm')
+@patch('cloudify_vcd.legacy.utils.NamedTemporaryFile')
+@patch('cloudify_vcd.legacy.utils.get_deployment_dir')
 @patch('cloudify_vcd.legacy.decorators.get_last_task')
 @patch('vcd_plugin_sdk.connection.Org', autospec=True)
 @patch('vcd_plugin_sdk.connection.Client', autospec=True)
@@ -411,6 +429,8 @@ def test_configure_vm(*_, **__):
 
 @patch('pyvcloud.vcd.vapp.VApp')
 @patch('cloudify_vcd.legacy.compute.tasks.VCloudVM')
+@patch('cloudify_vcd.legacy.utils.NamedTemporaryFile')
+@patch('cloudify_vcd.legacy.utils.get_deployment_dir')
 @patch('cloudify_vcd.legacy.decorators.get_last_task')
 @patch('vcd_plugin_sdk.connection.Org', autospec=True)
 @patch('vcd_plugin_sdk.connection.Client', autospec=True)
@@ -490,6 +510,8 @@ def test_configure_vm_with_two_ports(*_, **__):
 
 @patch('pyvcloud.vcd.vapp.VApp')
 @patch('cloudify_vcd.legacy.compute.tasks.VCloudVM')
+@patch('cloudify_vcd.legacy.utils.NamedTemporaryFile')
+@patch('cloudify_vcd.legacy.utils.get_deployment_dir')
 @patch('cloudify_vcd.legacy.decorators.get_last_task')
 @patch('vcd_plugin_sdk.connection.Org', autospec=True)
 @patch('vcd_plugin_sdk.connection.Client', autospec=True)
@@ -568,6 +590,8 @@ def test_configure_vm_with_two_ports_and_network_name(*_, **__):
         '10.10.10.5'
 
 
+@patch('cloudify_vcd.legacy.utils.NamedTemporaryFile')
+@patch('cloudify_vcd.legacy.utils.get_deployment_dir')
 @patch('cloudify_vcd.legacy.decorators.get_last_task')
 @patch('vcd_plugin_sdk.connection.Org', autospec=True)
 @patch('vcd_plugin_sdk.connection.Client', autospec=True)
@@ -643,6 +667,8 @@ def test_configure_vm_port_no_primary_port(*_, **__):
 
 
 @patch('pyvcloud.vcd.vapp.VApp.get_vm')
+@patch('cloudify_vcd.legacy.utils.NamedTemporaryFile')
+@patch('cloudify_vcd.legacy.utils.get_deployment_dir')
 @patch('cloudify_vcd.legacy.decorators.get_last_task')
 @patch('vcd_plugin_sdk.connection.Org', autospec=True)
 @patch('vcd_plugin_sdk.connection.Client', autospec=True)
@@ -665,6 +691,8 @@ def test_start_vm(*_, **__):
 
 
 @patch('pyvcloud.vcd.vapp.VApp.get_vm')
+@patch('cloudify_vcd.legacy.utils.NamedTemporaryFile')
+@patch('cloudify_vcd.legacy.utils.get_deployment_dir')
 @patch('cloudify_vcd.legacy.decorators.get_last_task')
 @patch('vcd_plugin_sdk.connection.Org', autospec=True)
 @patch('vcd_plugin_sdk.connection.Client', autospec=True)
@@ -686,6 +714,8 @@ def test_stop_vm(*_, **__):
     assert _ctx.instance.runtime_properties['resource_id'] == 'foo'
 
 
+@patch('cloudify_vcd.legacy.utils.NamedTemporaryFile')
+@patch('cloudify_vcd.legacy.utils.get_deployment_dir')
 @patch('cloudify_vcd.legacy.decorators.get_last_task')
 @patch('vcd_plugin_sdk.connection.Org', autospec=True)
 @patch('vcd_plugin_sdk.resources.vapp.VCloudVM.get_vm')
