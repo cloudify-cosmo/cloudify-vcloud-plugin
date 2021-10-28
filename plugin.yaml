@@ -253,17 +253,20 @@ node_types:
     interfaces:
       cloudify.interfaces.lifecycle:
         create:
-          implementation: vcd.cloudify_vcd.legacy.compute.tasks.create_server
-          inputs:
-            server:
-              default: { get_property: [SELF, server ] }
-            vcloud_config:
-              default: { get_property: [SELF, vcloud_config] }
+          implementation: vcloud.vcloud_server_plugin.server.create
+          inputs: {}
+        configure:
+          implementation: vcloud.vcloud_server_plugin.server.create
+          inputs: {}
+        start:
+          implementation: vcloud.vcloud_server_plugin.server.create
+          inputs: {}
+        stop:
+          implementation: vcloud.vcloud_server_plugin.server.create
+          inputs: {}
         delete:
           implementation: vcd.cloudify_vcd.legacy.compute.tasks.delete_server
-          inputs:
-            vcloud_config:
-              default: { get_property: [SELF, vcloud_config] }
+          inputs: {}
 
   cloudify.vcloud.nodes.Port:
     derived_from: cloudify.nodes.Port
