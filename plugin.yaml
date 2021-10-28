@@ -290,17 +290,21 @@ node_types:
     interfaces:
       cloudify.interfaces.lifecycle:
         create:
-          implementation: vcd.cloudify_vcd.legacy.network.tasks.create_network
+          implementation: vcloud.vcloud_network_plugin.network.create
           inputs:
             network:
               default: { get_property: [SELF, network ] }
             vcloud_config:
               default: { get_property: [SELF, vcloud_config] }
         delete:
-          implementation: vcd.cloudify_vcd.legacy.network.tasks.delete_network
+          implementation: vcloud.vcloud_network_plugin.network.delete
           inputs:
             vcloud_config:
               default: { get_property: [SELF, vcloud_config] }
+      cloudify.interfaces.validation:
+        creation:
+          implementation: vcloud.vcloud_network_plugin.network.creation_validation
+          inputs: {}
 
 relationships:
 
