@@ -1,2 +1,1 @@
 https://github.com/cloudify-incubator/pyvcloud/archive/refs/heads/23.0.0-build.zip
-https://github.com/cloudify-incubator/cloudify-utilities-plugins-sdk/archive/refs/heads/0.0.45-without-paramiko.zip
