@@ -70,6 +70,7 @@ def test_create_external_network_with_gateway(*_, **__):
 
 @patch('cloudify_vcd.legacy.utils.NamedTemporaryFile')
 @patch('cloudify_vcd.legacy.utils.get_deployment_dir')
+@patch('cloudify_vcd.legacy.decorators.get_last_task')
 @patch('vcd_plugin_sdk.connection.Org', autospec=True)
 @patch('pyvcloud.vcd.vdc.VDC.get_direct_orgvdc_network')
 @patch('vcd_plugin_sdk.connection.Client', autospec=True)
