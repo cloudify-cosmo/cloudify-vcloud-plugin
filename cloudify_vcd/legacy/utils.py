@@ -126,11 +126,13 @@ def get_network_client(network, vcloud_cx, vcloud_config, ctx, **_):
     _ctx_node = get_ctx_node(ctx)
     _ctx_instance = get_ctx_instance(ctx)
 
-    if 'edge_gateway' in vcloud_config:
-        network['gateway_name'] = vcloud_config['edge_gateway']
-        network_type = 'routed_vdc_network'
-    else:
-        network_type = 'isolated_vdc_network'
+    network_type = 'directly_connected_vdc_network'
+
+    # if 'edge_gateway' in vcloud_config:
+    #     network['gateway_name'] = vcloud_config['edge_gateway']
+    #     network_type = 'routed_vdc_network'
+    # else:
+    #     network_type = 'isolated_vdc_network'
 
     tasks = _ctx_instance.runtime_properties.get('__TASKS', [])
     if 'name' in network:
@@ -369,7 +371,7 @@ def convert_port_config(config):
 
 def convert_vapp_config(config):
     return {
-        'fence_mode': config.get('fence_mode', 'bridged'),
+        'fence_mode': config.get('fence_mode', 'direct'),
         'accept_all_eulas': config.get('accept_all_eulas', True)
     }
 

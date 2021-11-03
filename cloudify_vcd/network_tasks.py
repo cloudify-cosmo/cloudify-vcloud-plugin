@@ -5,6 +5,7 @@ from .utils import find_resource_id_from_relationship_by_type
 REL_NETWORK_GW = 'cloudify.relationships.vcloud.network_connected_to_gateway'
 
 NETWORK_TYPES = {
+    'cloudify.vcloud.nodes.Network': 'directly_connected_vdc_network',
     'cloudify.nodes.vcloud.RoutedVDCNetwork': 'routed_vdc_network',
     'cloudify.nodes.vcloud.DirectlyConnectedVDCNetwork':
         'directly_connected_vdc_network',

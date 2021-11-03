@@ -400,9 +400,6 @@ relationships:
     derived_from: cloudify.relationships.vcloud.vm_connected_to_nic
     target_interfaces:
       cloudify.interfaces.relationship_lifecycle:
-        preconfigure:
-          implementation: vcd.cloudify_vcd.vapp_tasks.add_network
-        postconfigure:
-          implementation: vcd.cloudify_vcd.vapp_tasks.add_nic
-        unlink:
-          implementation: vcd.cloudify_vcd.vapp_tasks.delete_nic
+        preconfigure: {}
+        postconfigure: {}
+        unlink: {}

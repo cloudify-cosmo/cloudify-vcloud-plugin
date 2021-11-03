@@ -242,6 +242,8 @@ def _create_vm(vm_external=None,
             'is invalid. Valid values are {v}.'.format(
                 fm=fence_mode, v=FENCE_MODE))
 
+    ctx.logger.info(vm_config)
+
     vm = vm_class(
         vm_id,
         vapp_name or vm_id,
@@ -560,6 +562,9 @@ def _add_network(_=None,
 
     if nic_network:
         nic_config['network_name'] = nic_network
+    ctx.logger.info('nic_config {}'.format(nic_config))
+
+    ctx.logger.info('vm_config {}'.format(vm_config))
 
     vm = vm_class(
         vm_id,
