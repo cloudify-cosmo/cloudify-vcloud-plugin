@@ -553,12 +553,13 @@ def _add_network(_=None,
     nic_network = find_resource_id_from_relationship_by_type(
         nic_ctx.instance, REL_NIC_NETWORK)
     vapp_node = find_rel_by_type(vm_ctx.instance, REL_VM_VAPP)
+    fence_mode = 'bridged'
     if vapp_node:
         fence_mode = vapp_node.target.node.properties['resource_config'].get(
             'fence_mode')
-    elif 'server' in vm_ctx.instance.runtime_properties:
+    elif 'fence_mode' in vm_ctx.instance.runtime_properties.get('server', {}):
         fence_mode = vm_ctx.instance.runtime_properties['server'].get(
-            'fence_mode', 'bridged')
+            'fence_mode')
 
     if nic_network:
         nic_config['network_name'] = nic_network

@@ -142,8 +142,11 @@ def get_network_client(network, vcloud_cx, vcloud_config, ctx, **_):
     else:
         network_name = _ctx_node.properties.get(
             'resource_id', _ctx_instance.id)
-
-    network = convert_network_config(network)
+    if network_type == 'directly_connected_vdc_network':
+        network = {
+            'parent_network_name': network.get('parent_network_name', None)
+        }
+    network = convert_routed_network_config(network)
 
     _ctx_instance.runtime_properties['resource_id'] = network_name
     _ctx_instance.runtime_properties['network'] = network
@@ -250,7 +253,7 @@ def get_server_network(server, _ctx_node, _ctx_instance):
             server['ip_address'] = ip_address
 
 
-def convert_network_config(config):
+def convert_routed_network_config(config):
 
     if 'network_cidr' not in config:
         cidr = get_network_cidr(config)

@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from copy import deepcopy
+
 from cloudify.exceptions import OperationRetry
 
 from vcd_plugin_sdk.resources.vapp import VCloudVM
@@ -36,12 +38,16 @@ def create_server(vm_client, ctx, **_):
                 ctx,
                 exists=vm_client.exists,
                 create_operation=True):
+        vm_kwargs = deepcopy(vm_client.vapp_object.kwargs)
+        if 'network' in vm_kwargs:
+            del vm_kwargs['network']
+            del vm_kwargs['network_adapter_type']
         return vapp_tasks._create_vm(
             vm_external=False,
             vm_id=vm_client.name,
             vm_client=vm_client.connection,
             vm_vdc=vm_client.vdc_name,
-            vm_config=vm_client.vapp_object.kwargs,
+            vm_config=vm_kwargs,
             vm_class=VCloudVM,
             vm_ctx=ctx)
 
