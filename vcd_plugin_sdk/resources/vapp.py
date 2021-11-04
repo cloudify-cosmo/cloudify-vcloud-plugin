@@ -147,6 +147,12 @@ class VCloudvApp(VCloudResource):
     #     return self.vapp.delete_vms(vm_names)
     #
     def add_network(self, **kwargs):
+        self.logger.info('We have these direct networks: {}'.format(
+            self.vdc.list_orgvdc_direct_networks()))
+        self.logger.info('We have these routed networks: {}'.format(
+            self.vdc.list_orgvdc_routed_networks()))
+        self.logger.info('We have these isolated networks: {}'.format(
+            self.vdc.list_orgvdc_isolated_networks()))
         # if kwargs.get('fence_mode') not in ['bridged',
         #                                     'isolated',
         #                                     'natRouted']:
@@ -155,19 +161,34 @@ class VCloudvApp(VCloudResource):
         fence_mode = [kwargs.get('fence_mode')]
         fence_mode.extend(['bridged', 'isolated', 'natRouted'])
         e = None
-        from time import sleep
         for mode in fence_mode:
             e = None
             kwargs['fence_mode'] = mode
             try:
                 task = self.vapp.connect_org_vdc_network(**kwargs)
             except OperationNotSupportedException as e:
-                self.logger.info('Using fence mode {} did not work.'.format(mode))
+                self.logger.error(e)
+                self.logger.info('Using fence mode {} did not work.'
+                                 .format(mode))
                 sleep(5)
                 continue
 
         if e:
-            raise e
+            kwargs['is_deployed'] = True
+            for mode in fence_mode:
+                e = None
+                kwargs['fence_mode'] = mode
+                try:
+                    task = self.vapp.connect_org_vdc_network(**kwargs)
+                except OperationNotSupportedException as e:
+                    self.logger.error(e)
+                    self.logger.info(
+                        'Using fence mode {} did not work with is_deployed.'
+                        .format(mode))
+                    sleep(5)
+                    continue
+            if e:
+                raise e
 
         if 'add_network' in self.tasks:
             self.tasks['add_network'].append(task)
