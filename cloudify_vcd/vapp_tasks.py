@@ -550,6 +550,8 @@ def _add_network(_=None,
 
     vapp_name = find_resource_id_from_relationship_by_type(
         vm_ctx.instance, REL_VM_VAPP)
+    if not vapp_name:
+        vapp_name = vm_id
     nic_network = find_resource_id_from_relationship_by_type(
         nic_ctx.instance, REL_NIC_NETWORK)
     vapp_node = find_rel_by_type(vm_ctx.instance, REL_VM_VAPP)

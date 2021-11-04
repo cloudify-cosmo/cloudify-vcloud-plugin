@@ -146,6 +146,10 @@ class VCloudvApp(VCloudResource):
     #     return self.vapp.delete_vms(vm_names)
     #
     def add_network(self, **kwargs):
+        if kwargs.get('fence_mode') not in ['bridged',
+                                            'isolated',
+                                            'natRouted']:
+            kwargs.pop('fence_mode', None)
         task = self.vapp.connect_org_vdc_network(**kwargs)
         if 'add_network' in self.tasks:
             self.tasks['add_network'].append(task)

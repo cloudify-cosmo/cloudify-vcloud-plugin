@@ -594,10 +594,13 @@ def test_configure_vm_with_two_ports_and_network_name(*_, **__):
         '10.10.10.5'
 
 
+@patch('pyvcloud.vcd.vapp.VApp.get_vm')
+@patch('cloudify_vcd.legacy.compute.tasks.get_last_task')
 @patch('cloudify_vcd.legacy.utils.NamedTemporaryFile')
 @patch('cloudify_vcd.legacy.utils.get_deployment_dir')
 @patch('cloudify_vcd.legacy.decorators.get_last_task')
 @patch('vcd_plugin_sdk.connection.Org', autospec=True)
+@patch('pyvcloud.vcd.vapp.VApp.connect_org_vdc_network')
 @patch('vcd_plugin_sdk.connection.Client', autospec=True)
 @patch('cloudify_vcd.legacy.decorators.check_if_task_successful',
        return_value=True)
@@ -613,6 +616,7 @@ def test_configure_vm_port_no_primary_port(*_, **__):
         runtime_props={
             'network_name': 'port1_network',
             'port': {
+                'network_name': 'port1_network',
                 'ip_address': '10.10.10.1'
             }
         }
@@ -661,7 +665,7 @@ def test_configure_vm_port_no_primary_port(*_, **__):
     current_ctx.set(_ctx)
     with patch('vcd_plugin_sdk.resources.base.VDC') as vdc:
         vdc.client.get_api_version = (lambda: '33')
-        create(ctx=_ctx)
+        configure(ctx=_ctx)
     assert '__VM_CREATE_VAPP' in _ctx.instance.runtime_properties
     assert _ctx.instance.runtime_properties['resource_id'] == 'foo'
     assert _ctx.instance.runtime_properties['server']['network'] == \
