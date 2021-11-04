@@ -118,8 +118,8 @@ def port_creation_validation(*_, **__):
 def preconfigure_nic(vm_client, ctx, **kwargs):
     for port_ctx in find_rels_by_type(get_ctx_instance(), VM_NIC_REL):
         resource, result = vapp_tasks._add_network(
-            nic_config=port_ctx.instance.runtime_properties['port'],
-            nic_ctx=port_ctx,
+            nic_config=port_ctx.target.instance.runtime_properties['port'],
+            nic_ctx=port_ctx.target,
             vm_id=vm_client.name,
             vm_client=vm_client.connection,
             vm_vdc=vm_client.vdc,
@@ -129,7 +129,8 @@ def preconfigure_nic(vm_client, ctx, **kwargs):
             **kwargs)
         last_task = get_last_task(result)
         if not check_if_task_successful(resource, last_task):
-            port_ctx.instance.runtime_properties['__RETRY_BAD_REQUEST'] = \
+            port_ctx.target.instance.runtime_properties['__RETRY_BAD_'
+                                                        'REQUEST'] = \
                 True
             raise OperationRetry('Pending for operation completion.')
 
@@ -139,8 +140,8 @@ def preconfigure_nic(vm_client, ctx, **kwargs):
 def postconfigure_nic(vm_client, ctx, **kwargs):
     for port_ctx in find_rels_by_type(get_ctx_instance(), VM_NIC_REL):
         resource, result = vapp_tasks._add_nic(
-            nic_config=port_ctx.instance.runtime_properties['port'],
-            nic_ctx=port_ctx,
+            nic_config=port_ctx.target.instance.runtime_properties['port'],
+            nic_ctx=port_ctx.target,
             vm_id=vm_client.name,
             vm_client=vm_client.connection,
             vm_vdc=vm_client.vdc,
@@ -150,7 +151,8 @@ def postconfigure_nic(vm_client, ctx, **kwargs):
             **kwargs)
         last_task = get_last_task(result)
         if not check_if_task_successful(resource, last_task):
-            port_ctx.instance.runtime_properties['__RETRY_BAD_REQUEST'] = \
+            port_ctx.target.instance.runtime_properties['__RETRY_BAD_'
+                                                        'REQUEST'] = \
                 True
             raise OperationRetry('Pending for operation completion.')
 
@@ -160,8 +162,8 @@ def postconfigure_nic(vm_client, ctx, **kwargs):
 def unlink_nic(vm_client, ctx, **kwargs):
     for port_ctx in find_rels_by_type(get_ctx_instance(), VM_NIC_REL):
         resource, result = vapp_tasks._delete_nic(
-            nic_config=port_ctx.instance.runtime_properties['port'],
-            nic_ctx=port_ctx,
+            nic_config=port_ctx.target.instance.runtime_properties['port'],
+            nic_ctx=port_ctx.target,
             vm_id=vm_client.name,
             vm_client=vm_client.connection,
             vm_vdc=vm_client.vdc,
@@ -171,6 +173,7 @@ def unlink_nic(vm_client, ctx, **kwargs):
             **kwargs)
         last_task = get_last_task(result)
         if not check_if_task_successful(resource, last_task):
-            port_ctx.instance.runtime_properties['__RETRY_BAD_REQUEST'] = \
+            port_ctx.target.instance.runtime_properties['__RETRY_BAD_'
+                                                        'REQUEST'] = \
                 True
             raise OperationRetry('Pending for operation completion.')
