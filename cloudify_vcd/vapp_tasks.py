@@ -589,9 +589,10 @@ def _add_network(_=None,
                 vm.vapp_networks))
             raise
         except InvalidStateException as e:
-            raise OperationRetry(
-                'Failed to add network {n} to vm {vm} for {e}.'.format(
-                    n=nic_config['network_name'], vm=vm.name, e=e))
+            if 'is already connected to vApp' not in str(e):
+                raise OperationRetry(
+                    'Failed to add network {n} to vm {vm} for {e}.'.format(
+                        n=nic_config['network_name'], vm=vm.name, e=e))
 
     return vm, None
 

@@ -155,11 +155,13 @@ class VCloudvApp(VCloudResource):
         self.logger.info('We have these isolated networks: {}'.format(
             self.vdc.list_orgvdc_isolated_networks()))
         bad_networks_exc = (BadRequestException, OperationNotSupportedException)
+        self.logger.info('1We have these networks in vapp: {}'.format(self.vapp.get_all_networks()))
         try:
             task = self.vapp.connect_org_vdc_network(
                 kwargs['orgvdc_network_name'])
         except bad_networks_exc as e:
             self.logger.info('Using just name did not work. {}'.format(e))
+        self.logger.info('1We have these networks in vapp: {}'.format(self.vapp.get_all_networks()))
         # if kwargs.get('fence_mode') not in ['bridged',
         #                                     'isolated',
         #                                     'natRouted']:
@@ -174,6 +176,8 @@ class VCloudvApp(VCloudResource):
             self.logger.info('kwargs {}'.format(kwargs))
             try:
                 task = self.vapp.connect_org_vdc_network(**kwargs)
+                self.logger.info('2We have these networks in vapp: {}'.format(
+                    self.vapp.get_all_networks()))
             except bad_networks_exc as e:
                 ee = e
                 self.logger.error(e)
@@ -181,6 +185,7 @@ class VCloudvApp(VCloudResource):
                                  .format(mode))
                 sleep(5)
                 continue
+        self.logger.info('3We have these networks in vapp: {}'.format(self.vapp.get_all_networks()))
 
         if ee:
             kwargs['is_deployed'] = True
@@ -191,6 +196,9 @@ class VCloudvApp(VCloudResource):
                 try:
                     task = self.vapp.connect_org_vdc_network(**kwargs)
                 except bad_networks_exc as e:
+                    self.logger.info(
+                        '4We have these networks in vapp: {}'.format(
+                            self.vapp.get_all_networks()))
                     ee = e
                     self.logger.error(e)
                     self.logger.info(
@@ -198,6 +206,10 @@ class VCloudvApp(VCloudResource):
                         .format(mode))
                     sleep(5)
                     continue
+        self.logger.info('5We have these networks in vapp: {}'.format(self.vapp.get_all_networks()))
+        if kwargs['ororgvdc_network_name'] in self.vapp.get_all_networks():
+            return task
+
         if ee:
             raise ee
 

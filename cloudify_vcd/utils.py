@@ -118,7 +118,10 @@ class ResourceData(object):
 
 def is_relationship(_ctx=None):
     _ctx = _ctx or ctx
-    return _ctx.type == RELATIONSHIP_INSTANCE
+    try:
+        return _ctx.type == RELATIONSHIP_INSTANCE
+    except AttributeError:
+        return False
 
 
 def is_node_instance(_ctx=None):
