@@ -150,6 +150,7 @@ class VCloudvApp(VCloudResource):
                                             'isolated',
                                             'natRouted']:
             kwargs.pop('fence_mode', None)
+            kwargs['is_deployed'] = True
         task = self.vapp.connect_org_vdc_network(**kwargs)
         if 'add_network' in self.tasks:
             self.tasks['add_network'].append(task)
