@@ -26,5 +26,5 @@ def creation_validation(*args, **kwargs):
 @operation(resumable=True)
 def delete(*_, **kwargs):
     _ctx = kwargs.get('ctx')
-    for key in _ctx.instance.runtime_properties.keys():
+    for key in list(_ctx.instance.runtime_properties.keys()):
         del _ctx.instance.runtime_properties[key]

@@ -256,16 +256,16 @@ node_types:
           implementation: vcloud.vcloud_server_plugin.server.create
           inputs: {}
         configure:
-          implementation: vcloud.vcloud_server_plugin.server.create
+          implementation: vcloud.vcloud_server_plugin.server.configure
           inputs: {}
         start:
-          implementation: vcloud.vcloud_server_plugin.server.create
+          implementation: vcloud.vcloud_server_plugin.server.start
           inputs: {}
         stop:
-          implementation: vcloud.vcloud_server_plugin.server.create
+          implementation: vcloud.vcloud_server_plugin.server.stop
           inputs: {}
         delete:
-          implementation: vcd.cloudify_vcd.legacy.compute.tasks.delete_server
+          implementation: vcloud.vcloud_server_plugin.server.delete
           inputs: {}
 
   cloudify.vcloud.nodes.Port:
