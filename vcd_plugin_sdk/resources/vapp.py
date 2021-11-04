@@ -19,7 +19,8 @@ from pyvcloud.vcd.vapp import VApp
 from pyvcloud.vcd.client import TaskStatus
 from pyvcloud.vcd.exceptions import (
     VcdTaskException,
-    EntityNotFoundException)
+    EntityNotFoundException,
+    OperationNotSupportedException)
 
 from .base import VCloudResource
 from .network import VCloudNetwork
@@ -146,12 +147,28 @@ class VCloudvApp(VCloudResource):
     #     return self.vapp.delete_vms(vm_names)
     #
     def add_network(self, **kwargs):
-        if kwargs.get('fence_mode') not in ['bridged',
-                                            'isolated',
-                                            'natRouted']:
-            kwargs.pop('fence_mode', None)
-            kwargs['is_deployed'] = True
-        task = self.vapp.connect_org_vdc_network(**kwargs)
+        # if kwargs.get('fence_mode') not in ['bridged',
+        #                                     'isolated',
+        #                                     'natRouted']:
+        #     kwargs.pop('fence_mode', None)
+        #     kwargs['is_deployed'] = True
+        fence_mode = [kwargs.get('fence_mode')]
+        fence_mode.extend(['bridged', 'isolated', 'natRouted'])
+        e = None
+        from time import sleep
+        for mode in fence_mode:
+            e = None
+            kwargs['fence_mode'] = mode
+            try:
+                task = self.vapp.connect_org_vdc_network(**kwargs)
+            except OperationNotSupportedException as e:
+                self.logger.info('Using fence mode {} did not work.'.format(mode))
+                sleep(5)
+                continue
+
+        if e:
+            raise e
+
         if 'add_network' in self.tasks:
             self.tasks['add_network'].append(task)
         else:

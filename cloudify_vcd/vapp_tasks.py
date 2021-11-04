@@ -587,6 +587,7 @@ def _add_network(_=None,
         except OperationNotSupportedException:
             ctx.logger.info('We have these networks: {}'.format(
                 vm.vapp_networks))
+            raise
         except InvalidStateException as e:
             raise OperationRetry(
                 'Failed to add network {n} to vm {vm} for {e}.'.format(
