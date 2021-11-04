@@ -156,7 +156,8 @@ class VCloudvApp(VCloudResource):
             self.vdc.list_orgvdc_isolated_networks()))
         bad_networks_exc = (BadRequestException, OperationNotSupportedException)
         try:
-            task = self.vapp.connect_org_vdc_network(kwargs['network_name'])
+            task = self.vapp.connect_org_vdc_network(
+                kwargs['orgvdc_network_name'])
         except bad_networks_exc as e:
             self.logger.info('Using just name did not work. {}'.format(e))
         # if kwargs.get('fence_mode') not in ['bridged',
