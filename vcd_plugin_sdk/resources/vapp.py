@@ -19,6 +19,7 @@ from pyvcloud.vcd.vapp import VApp
 from pyvcloud.vcd.client import TaskStatus
 from pyvcloud.vcd.exceptions import (
     VcdTaskException,
+    BadRequestException,
     EntityNotFoundException,
     OperationNotSupportedException)
 
@@ -153,6 +154,11 @@ class VCloudvApp(VCloudResource):
             self.vdc.list_orgvdc_routed_networks()))
         self.logger.info('We have these isolated networks: {}'.format(
             self.vdc.list_orgvdc_isolated_networks()))
+        bad_networks_exc = (BadRequestException, OperationNotSupportedException)
+        try:
+            task = self.vapp.connect_org_vdc_network(kwargs['network_name'])
+        except bad_networks_exc as e:
+            self.logger.info('Using just name did not work. {}'.format(e))
         # if kwargs.get('fence_mode') not in ['bridged',
         #                                     'isolated',
         #                                     'natRouted']:
@@ -160,35 +166,39 @@ class VCloudvApp(VCloudResource):
         #     kwargs['is_deployed'] = True
         fence_mode = [kwargs.get('fence_mode')]
         fence_mode.extend(['bridged', 'isolated', 'natRouted'])
-        e = None
+        ee = None
         for mode in fence_mode:
-            e = None
+            ee = None
             kwargs['fence_mode'] = mode
+            self.logger.info('kwargs {}'.format(kwargs))
             try:
                 task = self.vapp.connect_org_vdc_network(**kwargs)
-            except OperationNotSupportedException as e:
+            except bad_networks_exc as e:
+                ee = e
                 self.logger.error(e)
                 self.logger.info('Using fence mode {} did not work.'
                                  .format(mode))
                 sleep(5)
                 continue
 
-        if e:
+        if ee:
             kwargs['is_deployed'] = True
             for mode in fence_mode:
-                e = None
+                ee = None
                 kwargs['fence_mode'] = mode
+                self.logger.info('kwargs {}'.format(kwargs))
                 try:
                     task = self.vapp.connect_org_vdc_network(**kwargs)
-                except OperationNotSupportedException as e:
+                except bad_networks_exc as e:
+                    ee = e
                     self.logger.error(e)
                     self.logger.info(
                         'Using fence mode {} did not work with is_deployed.'
                         .format(mode))
                     sleep(5)
                     continue
-            if e:
-                raise e
+        if ee:
+            raise ee
 
         self.logger.info('These worked {}'.format(kwargs))
 
