@@ -181,6 +181,8 @@ def get_port_config(port, ctx, **kwargs):
             _node_instance, PORT_NET_REL)
 
     port = convert_port_config(port)
+    if 'network_name' not in port:
+        port['network_name'] = network
     if 'is_connected' not in port:
         # TODO: Decide what to do here.
         pass
