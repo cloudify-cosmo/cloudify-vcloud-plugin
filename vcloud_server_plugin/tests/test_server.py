@@ -451,6 +451,7 @@ def test_configure_vm_with_two_ports(*_, **__):
         runtime_props={
             'network_name': 'port1_network',
             'port': {
+                'network_name': 'port1_network',
                 'ip_address': '10.10.10.1'
             }
         }
@@ -465,6 +466,7 @@ def test_configure_vm_with_two_ports(*_, **__):
         runtime_props={
             'network_name': 'port2_network',
             'port': {
+                'network_name': 'port2_network',
                 'ip_address': '10.10.10.2'
             }
         }
