@@ -261,12 +261,16 @@ def get_resource_data(__ctx):
     return base_properties
 
 
-def update_runtime_properties(current_ctx, props):
+def update_runtime_properties(current_ctx, props, legacy=False):
     props = cleanup_objectify(props)
     ctx.logger.debug('Updating instance with properties {props}.'.format(
         props=props))
 
-    if is_relationship(current_ctx):
+    if legacy:
+        is_rel = is_relationship(current_ctx)
+    else:
+        is_rel = is_relationship()
+    if is_rel:
         if current_ctx.instance.id == ctx.source.instance.id:
             ctx.source.instance.runtime_properties.update(props)
             ctx.source.instance.runtime_properties.dirty = True
@@ -427,7 +431,11 @@ def use_external_resource(external,
                 t=resource_type, r=resource_name))
 
 
-def expose_props(operation_name, resource=None, new_props=None, _ctx=None):
+def expose_props(operation_name,
+                 resource=None,
+                 new_props=None,
+                 _ctx=None,
+                 legacy=False):
     _ctx = _ctx or ctx
     new_props = new_props or {}
 
@@ -451,7 +459,7 @@ def expose_props(operation_name, resource=None, new_props=None, _ctx=None):
     # expose props is called after a successful operation,
     # so we should override this if we reach this point.
     new_props.update({'__RETRY_BAD_REQUEST': False})
-    update_runtime_properties(_ctx, new_props)
+    update_runtime_properties(_ctx, new_props, legacy)
 
 
 def get_last_task(task):

@@ -54,7 +54,8 @@ def create_server(vm_client, ctx, **_):
         operation_name = ctx.operation.name.split('.')[-1]
         expose_props(operation_name,
                      resource,
-                     _ctx=ctx)
+                     _ctx=ctx,
+                     legacy=True)
 
 
 @decorators.with_vcd_client()
@@ -71,7 +72,8 @@ def configure_server(vm_client, ctx, **_):
     operation_name = ctx.operation.name.split('.')[-1]
     expose_props(operation_name,
                  resource,
-                 _ctx=ctx)
+                 _ctx=ctx,
+                legacy=True)
 
 
 @decorators.with_vcd_client()
@@ -88,7 +90,8 @@ def start_server(vm_client, ctx, **_):
     operation_name = ctx.operation.name.split('.')[-1]
     expose_props(operation_name,
                  resource,
-                 _ctx=ctx)
+                 _ctx=ctx,
+                 legacy=True)
 
 
 @decorators.with_vcd_client()
@@ -105,7 +108,8 @@ def stop_server(vm_client, ctx, **_):
     operation_name = ctx.operation.name.split('.')[-1]
     expose_props(operation_name,
                  resource,
-                 _ctx=ctx)
+                 _ctx=ctx,
+                 legacy=True)
 
 
 @decorators.with_vcd_client()
@@ -126,7 +130,8 @@ def delete_server(vm_client, ctx, **_):
         operation_name = ctx.operation.name.split('.')[-1]
         expose_props(operation_name,
                      resource,
-                     _ctx=ctx)
+                     _ctx=ctx,
+                     legacy=True)
 
 
 @decorators.with_port_resource()
@@ -157,7 +162,8 @@ def preconfigure_nic(vm_client, ctx, **kwargs):
         operation_name = ctx.operation.name.split('.')[-1]
         expose_props(operation_name,
                      resource,
-                     _ctx=port_ctx.target)
+                     _ctx=port_ctx.target,
+                     legacy=True)
 
 
 @decorators.with_vcd_client()
@@ -183,7 +189,8 @@ def postconfigure_nic(vm_client, ctx, **kwargs):
         operation_name = ctx.operation.name.split('.')[-1]
         expose_props(operation_name,
                      resource,
-                     _ctx=port_ctx.target)
+                     _ctx=port_ctx.target,
+                     legacy=True)
 
 
 @decorators.with_vcd_client()
@@ -209,4 +216,5 @@ def unlink_nic(vm_client, ctx, **kwargs):
         operation_name = ctx.operation.name.split('.')[-1]
         expose_props(operation_name,
                      resource,
-                     _ctx=port_ctx.target)
+                     _ctx=port_ctx.target,
+                     legacy=True)
