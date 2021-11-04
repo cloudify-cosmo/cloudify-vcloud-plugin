@@ -18,7 +18,7 @@ from cloudify.exceptions import OperationRetry
 from cloudify_common_sdk.utils import get_ctx_node, get_ctx_instance
 
 from . import utils
-from ..utils import (get_last_task, check_if_task_successful)
+from ..utils import (expose_props, get_last_task, check_if_task_successful)
 
 
 def with_vcd_client():
@@ -43,6 +43,11 @@ def with_vcd_client():
             if not check_if_task_successful(resource, last_task):
                 ctx_instance.runtime_properties['__RETRY_BAD_REQUEST'] = True
                 raise OperationRetry('Pending for operation completion.')
+            operation_name = ctx.operation.name.split('.')[-1]
+            expose_props(operation_name,
+                         resource,
+                         _ctx=ctx,
+                         legacy=True)
         return wrapper_inner
     return wrapper_outer
 

@@ -565,9 +565,8 @@ def _add_network(_=None,
 
     if nic_network:
         nic_config['network_name'] = nic_network
-    ctx.logger.info('nic_config {}'.format(nic_config))
 
-    ctx.logger.info('vm_config {}'.format(vm_config))
+    ctx.logger.info('Initializing vm with vm config {}'.format(vm_config))
 
     vm = vm_class(
         vm_id,
@@ -579,20 +578,21 @@ def _add_network(_=None,
     )
 
     if nic_network not in vm.vapp_networks:
+        vapp_network_config = {
+            'orgvdc_network_name': nic_network,
+            'fence_mode': fence_mode
+        }
+        ctx.logger.info(
+            'Initializing vapp network with vapp network config {}'.format(
+                vapp_network_config))
         try:
-            last_task = vm.add_vapp_network(
-                orgvdc_network_name=nic_config['network_name'],
-                fence_mode=fence_mode)
+            last_task = vm.add_vapp_network(**vapp_network_config)
             return vm, last_task
-        except OperationNotSupportedException:
-            ctx.logger.info('We have these networks: {}'.format(
-                vm.vapp_networks))
-            raise
         except InvalidStateException as e:
             if 'is already connected to vApp' not in str(e):
                 raise OperationRetry(
                     'Failed to add network {n} to vm {vm} for {e}.'.format(
-                        n=nic_config['network_name'], vm=vm.name, e=e))
+                        n=nic_network, vm=vm.name, e=e))
 
     return vm, None
 

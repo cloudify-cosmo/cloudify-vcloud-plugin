@@ -506,7 +506,7 @@ def test_vcloud_vm(*_, **__):
     vcloud_vm.add_vapp_network(**{
         'orgvdc_network_name': 'bar',
     })
-    assert vcloud_vm.vapp_object.vapp.connect_org_vdc_network.call_count == 1
+    assert vcloud_vm.vapp_object.vapp.connect_org_vdc_network.call_count == 2
     vcloud_vm.remove_vapp_network('bar')
     assert \
         vcloud_vm.vapp_object.vapp.disconnect_org_vdc_network.call_count == 1

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from copy import deepcopy
-from mock import patch, MagicMock
+from mock import patch, MagicMock, PropertyMock
 from cloudify.state import current_ctx
 
 from .. server import create, delete, configure, start, stop
@@ -243,7 +243,10 @@ def test_create_vm(*_, **__):
     current_ctx.set(_ctx)
     with patch('vcd_plugin_sdk.resources.base.VDC') as vdc:
         vdc.client.get_api_version = (lambda: '33')
-        create(ctx=_ctx)
+        with patch('cloudify_vcd.legacy.utils.VCloudVM.exists',
+                   new_callable=PropertyMock) as vm_exists:
+            vm_exists.return_value = False
+            create(ctx=_ctx)
     assert '__VM_CREATE_VAPP' in _ctx.instance.runtime_properties
     assert _ctx.instance.runtime_properties['resource_id'] == 'foo'
     assert _ctx.instance.runtime_properties['server']['network'] == \
@@ -320,7 +323,10 @@ def test_create_vm_no_primary_port(*_, **__):
     current_ctx.set(_ctx)
     with patch('vcd_plugin_sdk.resources.base.VDC') as vdc:
         vdc.client.get_api_version = (lambda: '33')
-        create(ctx=_ctx)
+        with patch('cloudify_vcd.legacy.utils.VCloudVM.exists',
+                   new_callable=PropertyMock) as vm_exists:
+            vm_exists.return_value = False
+            create(ctx=_ctx)
     assert '__VM_CREATE_VAPP' in _ctx.instance.runtime_properties
     assert _ctx.instance.runtime_properties['resource_id'] == 'foo'
     assert _ctx.instance.runtime_properties['server']['network'] == \
@@ -397,7 +403,10 @@ def test_create_vm_port_network(*_, **__):
     current_ctx.set(_ctx)
     with patch('vcd_plugin_sdk.resources.base.VDC') as vdc:
         vdc.client.get_api_version = (lambda: '33')
-        create(ctx=_ctx)
+        with patch('cloudify_vcd.legacy.utils.VCloudVM.exists',
+                   new_callable=PropertyMock) as vm_exists:
+            vm_exists.return_value = False
+            create(ctx=_ctx)
     assert '__VM_CREATE_VAPP' in _ctx.instance.runtime_properties
     assert _ctx.instance.runtime_properties['resource_id'] == 'foo'
     assert _ctx.instance.runtime_properties['server']['network'] == \

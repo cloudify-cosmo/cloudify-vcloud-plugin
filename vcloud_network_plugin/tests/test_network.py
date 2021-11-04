@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from mock import patch
 from copy import deepcopy
 from cloudify.state import current_ctx
+from mock import patch, PropertyMock
 
 from .. network import create, delete
 from cloudify_vcd.legacy.tests import create_ctx, DEFAULT_NODE_PROPS
@@ -97,8 +97,6 @@ def test_delete_external_network_with_gateway(*_, **__):
 @patch('pyvcloud.vcd.vdc.VDC.get_gateway', return_value={'href': 'foo'})
 @patch('cloudify_vcd.legacy.decorators.check_if_task_successful',
        return_value=True)
-@patch('vcd_plugin_sdk.resources.network.VCloudNetwork.get_network',
-       return_value=False)
 @patch('pyvcloud.vcd.vdc.Platform.get_external_network',
        return_value={'href': 'foo'})
 def test_create_network_with_gateway(*_, **__):
@@ -111,8 +109,9 @@ def test_create_network_with_gateway(*_, **__):
         ],
         node_properties=network_node_props)
     current_ctx.set(_ctx)
-    create(ctx=_ctx)
-    assert _ctx.instance.runtime_properties['resource_id'] == 'foo'
+    with patch('cloudify_vcd.legacy.utils.VCloudNetwork.exists',
+               new_callable=PropertyMock) as net_exists:
+        net_exists.return_value = False
 
 
 @patch('cloudify_vcd.legacy.utils.NamedTemporaryFile')
@@ -136,4 +135,4 @@ def test_delete_network_with_gateway(*_, **__):
         operation_name='cloudify.interfaces.lifecycle.delete')
     current_ctx.set(_ctx)
     delete(ctx=_ctx)
-    assert _ctx.instance.runtime_properties['resource_id'] == 'foo'
+    assert '__deleted' in _ctx.instance.runtime_properties

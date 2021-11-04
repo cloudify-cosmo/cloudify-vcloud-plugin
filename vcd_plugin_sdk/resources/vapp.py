@@ -147,6 +147,7 @@ class VCloudvApp(VCloudResource):
     # def delete_vms(self, vm_names):
     #     return self.vapp.delete_vms(vm_names)
     #
+
     def add_network(self, **kwargs):
         self.logger.info('We have these direct networks: {}'.format(
             self.vdc.list_orgvdc_direct_networks()))
@@ -154,66 +155,60 @@ class VCloudvApp(VCloudResource):
             self.vdc.list_orgvdc_routed_networks()))
         self.logger.info('We have these isolated networks: {}'.format(
             self.vdc.list_orgvdc_isolated_networks()))
-        bad_networks_exc = (BadRequestException, OperationNotSupportedException)
-        self.logger.info('1We have these networks in vapp: {}'.format(self.vapp.get_all_networks()))
+        bad_networks_exc = (BadRequestException,
+                            OperationNotSupportedException)
+        if 'network_name' in kwargs:
+            kwargs['orgvdc_network_name'] = kwargs['network_name']
         try:
             task = self.vapp.connect_org_vdc_network(
                 kwargs['orgvdc_network_name'])
         except bad_networks_exc as e:
             self.logger.info('Using just name did not work. {}'.format(e))
-        self.logger.info('1We have these networks in vapp: {}'.format(self.vapp.get_all_networks()))
-        # if kwargs.get('fence_mode') not in ['bridged',
-        #                                     'isolated',
-        #                                     'natRouted']:
-        #     kwargs.pop('fence_mode', None)
-        #     kwargs['is_deployed'] = True
+        self.logger.info('1We have these networks in vapp: {}'.format(
+            self.vapp.get_all_networks()))
+
         fence_mode = [kwargs.get('fence_mode')]
         fence_mode.extend(['bridged', 'isolated', 'natRouted'])
-        ee = None
         for mode in fence_mode:
-            ee = None
             kwargs['fence_mode'] = mode
-            self.logger.info('kwargs {}'.format(kwargs))
             try:
+                self.logger.info('Trying these parameters {}'.format(kwargs))
                 task = self.vapp.connect_org_vdc_network(**kwargs)
-                self.logger.info('2We have these networks in vapp: {}'.format(
-                    self.vapp.get_all_networks()))
             except bad_networks_exc as e:
-                ee = e
                 self.logger.error(e)
-                self.logger.info('Using fence mode {} did not work.'
-                                 .format(mode))
-                sleep(5)
-                continue
-        self.logger.info('3We have these networks in vapp: {}'.format(self.vapp.get_all_networks()))
-
-        if ee:
-            kwargs['is_deployed'] = True
-            for mode in fence_mode:
-                ee = None
-                kwargs['fence_mode'] = mode
-                self.logger.info('kwargs {}'.format(kwargs))
+                self.logger.info('These parameters failed: {}'.format(
+                    kwargs))
+                sleep(2)
                 try:
-                    task = self.vapp.connect_org_vdc_network(**kwargs)
-                except bad_networks_exc as e:
                     self.logger.info(
-                        '4We have these networks in vapp: {}'.format(
-                            self.vapp.get_all_networks()))
-                    ee = e
+                        'Trying these parameters {}'.format(kwargs))
+                    task = self.vapp.connect_org_vdc_network(
+                        is_deployed=True, **kwargs)
+                except bad_networks_exc as e:
                     self.logger.error(e)
                     self.logger.info(
-                        'Using fence mode {} did not work with is_deployed.'
-                        .format(mode))
-                    sleep(5)
-                    continue
-        self.logger.info('5We have these networks in vapp: {}'.format(self.vapp.get_all_networks()))
-        if kwargs['ororgvdc_network_name'] in self.vapp.get_all_networks():
-            return task
+                        'These parameters failed: {}'.format(kwargs))
+                    # sleep(2)
+                else:
+                    self.logger.info(
+                        'These parameters did not fail: {}'.format(
+                            kwargs))
+                    break
+                continue
+            else:
+                self.logger.info('These parameters did not fail: {}'.format(
+                    kwargs))
+                break
+        self.logger.info(
+            '3We have these networks in vapp: {}'.format(
+                self.vapp.get_all_networks()))
 
-        if ee:
-            raise ee
+        self.logger.info('Pausing to let vcloud think....')
+        # sleep(10)
 
-        self.logger.info('These worked {}'.format(kwargs))
+        if 'orgvdc_network_name' in kwargs:
+            if kwargs['orgvdc_network_name'] in self.vapp.get_all_networks():
+                return task
 
         if 'add_network' in self.tasks:
             self.tasks['add_network'].append(task)
