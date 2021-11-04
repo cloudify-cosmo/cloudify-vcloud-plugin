@@ -584,6 +584,9 @@ def _add_network(_=None,
                 orgvdc_network_name=nic_config['network_name'],
                 fence_mode=fence_mode)
             return vm, last_task
+        except OperationNotSupportedException:
+            ctx.logger.info('We have these networks: {}'.format(
+                vm.vapp_networks))
         except InvalidStateException as e:
             raise OperationRetry(
                 'Failed to add network {n} to vm {vm} for {e}.'.format(
