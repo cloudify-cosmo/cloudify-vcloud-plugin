@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from cloudify.manager import DirtyTrackingDict
 from cloudify.mocks import MockNodeContext, MockCloudifyContext
 
 
@@ -72,6 +73,7 @@ def create_ctx(node_id,
     :return:
     """
 
+    runtime_props = runtime_props or {}
     type_hierarchy = ['cloudify.nodes.Root']
     type_hierarchy.extend(node_type)
     operation_name = operation_name or 'cloudify.interfaces.lifecycle.create'
@@ -89,7 +91,7 @@ def create_ctx(node_id,
         blueprint_id='fooblu',
         deployment_id='foodep',
         properties=node_properties,
-        runtime_properties=runtime_props,
+        runtime_properties=DirtyTrackingDict(runtime_props),
         relationships=relationships,
         operation=operation,
         tenant=tenant,

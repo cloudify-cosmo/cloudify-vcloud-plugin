@@ -21,6 +21,7 @@ from cloudify_common_sdk.utils import \
 
 from .. import decorators
 from ... import network_tasks
+from ...utils import expose_props
 
 
 class MissingGateway(NonRecoverableError):
@@ -41,7 +42,7 @@ def create_network(network_client, gateway_client, ctx, **_):
                 ctx,
                 exists=network_client.exists,
                 create_operation=True):
-        return network_tasks._create_network(
+        resource, result = network_tasks._create_network(
             external_network=False,
             network_id=network_client.name,
             network_client=network_client.connection,
@@ -49,6 +50,10 @@ def create_network(network_client, gateway_client, ctx, **_):
             network_config=network_client.kwargs,
             network_class=VCloudNetwork,
             ctx=ctx)
+        operation_name = ctx.operation.name.split('.')[-1]
+        expose_props(operation_name,
+                     resource,
+                     _ctx=ctx)
 
 
 @decorators.with_vcd_client()
@@ -59,7 +64,7 @@ def delete_network(network_client, ctx, **_):
                 ctx,
                 exists=network_client.exists,
                 delete_operation=True):
-        return network_tasks._delete_network(
+        resource, result = network_tasks._delete_network(
             external_network=False,
             network_id=network_client.name,
             network_client=network_client.connection,
@@ -67,3 +72,7 @@ def delete_network(network_client, ctx, **_):
             network_config=network_client.kwargs,
             network_class=VCloudNetwork,
             ctx=ctx)
+        operation_name = ctx.operation.name.split('.')[-1]
+        expose_props(operation_name,
+                     resource,
+                     _ctx=ctx)

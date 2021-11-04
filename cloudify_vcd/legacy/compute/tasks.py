@@ -25,6 +25,7 @@ from .. import decorators
 from ... import vapp_tasks
 from ..utils import VM_NIC_REL
 from ...utils import (
+    expose_props,
     get_last_task,
     find_rels_by_type,
     check_if_task_successful)
@@ -42,7 +43,7 @@ def create_server(vm_client, ctx, **_):
         if 'network' in vm_kwargs:
             del vm_kwargs['network']
             del vm_kwargs['network_adapter_type']
-        return vapp_tasks._create_vm(
+        resource, result = vapp_tasks._create_vm(
             vm_external=False,
             vm_id=vm_client.name,
             vm_client=vm_client.connection,
@@ -50,12 +51,16 @@ def create_server(vm_client, ctx, **_):
             vm_config=vm_kwargs,
             vm_class=VCloudVM,
             vm_ctx=ctx)
+        operation_name = ctx.operation.name.split('.')[-1]
+        expose_props(operation_name,
+                     resource,
+                     _ctx=ctx)
 
 
 @decorators.with_vcd_client()
 @decorators.with_vm_resource()
 def configure_server(vm_client, ctx, **_):
-    return vapp_tasks._configure_vm(
+    resource, result = vapp_tasks._configure_vm(
         vm_external=False,
         vm_id=vm_client.name,
         vm_client=vm_client.connection,
@@ -63,32 +68,44 @@ def configure_server(vm_client, ctx, **_):
         vm_config=vm_client.kwargs,
         vm_class=VCloudVM,
         vm_ctx=ctx)
+    operation_name = ctx.operation.name.split('.')[-1]
+    expose_props(operation_name,
+                 resource,
+                 _ctx=ctx)
 
 
 @decorators.with_vcd_client()
 @decorators.with_vm_resource()
 def start_server(vm_client, ctx, **_):
-    return vapp_tasks._start_vm(
+    resource, result = vapp_tasks._start_vm(
         vm_external=False,
         vm_id=vm_client.name,
         vm_client=vm_client.connection,
-        vm_vdc=vm_client.vdc,
+        vm_vdc=vm_client.vdc_name,
         vm_config=vm_client.kwargs,
         vm_class=VCloudVM,
         vm_ctx=ctx)
+    operation_name = ctx.operation.name.split('.')[-1]
+    expose_props(operation_name,
+                 resource,
+                 _ctx=ctx)
 
 
 @decorators.with_vcd_client()
 @decorators.with_vm_resource()
 def stop_server(vm_client, ctx, **_):
-    return vapp_tasks._stop_vm(
+    resource, result = vapp_tasks._stop_vm(
         vm_external=False,
         vm_id=vm_client.name,
         vm_client=vm_client.connection,
-        vm_vdc=vm_client.vdc,
+        vm_vdc=vm_client.vdc_name,
         vm_config=vm_client.kwargs,
         vm_class=VCloudVM,
         vm_ctx=ctx)
+    operation_name = ctx.operation.name.split('.')[-1]
+    expose_props(operation_name,
+                 resource,
+                 _ctx=ctx)
 
 
 @decorators.with_vcd_client()
@@ -98,14 +115,18 @@ def delete_server(vm_client, ctx, **_):
                 vm_client.name,
                 exists=vm_client.exists,
                 delete_operation=True):
-        return vapp_tasks._delete_vm(
+        resource, result = vapp_tasks._delete_vm(
             vm_external=False,
             vm_id=vm_client.name,
             vm_client=vm_client.connection,
-            vm_vdc=vm_client.vdc,
+            vm_vdc=vm_client.vdc_name,
             vm_config=vm_client.kwargs,
             vm_class=VCloudVM,
             vm_ctx=ctx)
+        operation_name = ctx.operation.name.split('.')[-1]
+        expose_props(operation_name,
+                     resource,
+                     _ctx=ctx)
 
 
 @decorators.with_port_resource()
@@ -122,7 +143,7 @@ def preconfigure_nic(vm_client, ctx, **kwargs):
             nic_ctx=port_ctx.target,
             vm_id=vm_client.name,
             vm_client=vm_client.connection,
-            vm_vdc=vm_client.vdc,
+            vm_vdc=vm_client.vdc_name,
             vm_config=vm_client.kwargs,
             vm_class=VCloudVM,
             vm_ctx=ctx,
@@ -133,6 +154,10 @@ def preconfigure_nic(vm_client, ctx, **kwargs):
                                                         'REQUEST'] = \
                 True
             raise OperationRetry('Pending for operation completion.')
+        operation_name = ctx.operation.name.split('.')[-1]
+        expose_props(operation_name,
+                     resource,
+                     _ctx=port_ctx.target)
 
 
 @decorators.with_vcd_client()
@@ -144,7 +169,7 @@ def postconfigure_nic(vm_client, ctx, **kwargs):
             nic_ctx=port_ctx.target,
             vm_id=vm_client.name,
             vm_client=vm_client.connection,
-            vm_vdc=vm_client.vdc,
+            vm_vdc=vm_client.vdc_name,
             vm_config=vm_client.kwargs,
             vm_class=VCloudVM,
             vm_ctx=ctx,
@@ -155,6 +180,10 @@ def postconfigure_nic(vm_client, ctx, **kwargs):
                                                         'REQUEST'] = \
                 True
             raise OperationRetry('Pending for operation completion.')
+        operation_name = ctx.operation.name.split('.')[-1]
+        expose_props(operation_name,
+                     resource,
+                     _ctx=port_ctx.target)
 
 
 @decorators.with_vcd_client()
@@ -166,7 +195,7 @@ def unlink_nic(vm_client, ctx, **kwargs):
             nic_ctx=port_ctx.target,
             vm_id=vm_client.name,
             vm_client=vm_client.connection,
-            vm_vdc=vm_client.vdc,
+            vm_vdc=vm_client.vdc_name,
             vm_config=vm_client.kwargs,
             vm_class=VCloudVM,
             vm_ctx=ctx,
@@ -177,3 +206,7 @@ def unlink_nic(vm_client, ctx, **kwargs):
                                                         'REQUEST'] = \
                 True
             raise OperationRetry('Pending for operation completion.')
+        operation_name = ctx.operation.name.split('.')[-1]
+        expose_props(operation_name,
+                     resource,
+                     _ctx=port_ctx.target)

@@ -266,7 +266,7 @@ def update_runtime_properties(current_ctx, props):
     ctx.logger.debug('Updating instance with properties {props}.'.format(
         props=props))
 
-    if is_relationship():
+    if is_relationship(current_ctx):
         if current_ctx.instance.id == ctx.source.instance.id:
             ctx.source.instance.runtime_properties.update(props)
             ctx.source.instance.runtime_properties.dirty = True
