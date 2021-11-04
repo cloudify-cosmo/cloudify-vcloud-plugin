@@ -73,7 +73,7 @@ def configure_server(vm_client, ctx, **_):
     expose_props(operation_name,
                  resource,
                  _ctx=ctx,
-                legacy=True)
+                 legacy=True)
 
 
 @decorators.with_vcd_client()
