@@ -190,6 +190,8 @@ class VCloudvApp(VCloudResource):
             if e:
                 raise e
 
+        self.logger.info('These worked {}'.format(kwargs))
+
         if 'add_network' in self.tasks:
             self.tasks['add_network'].append(task)
         else:
