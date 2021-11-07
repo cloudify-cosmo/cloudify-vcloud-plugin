@@ -163,7 +163,7 @@ class VCloudvApp(VCloudResource):
             task = self.vapp.connect_org_vdc_network(
                 kwargs['orgvdc_network_name'])
         except bad_networks_exc as e:
-            self.logger.info('Using just name did not work. {}'.format(e))
+            self.logger.info('Using just name did not work. {}'.format(str(e)))
         self.logger.info('1We have these networks in vapp: {}'.format(
             self.vapp.get_all_networks()))
 
@@ -175,7 +175,7 @@ class VCloudvApp(VCloudResource):
                 self.logger.info('Trying these parameters {}'.format(kwargs))
                 task = self.vapp.connect_org_vdc_network(**kwargs)
             except bad_networks_exc as e:
-                self.logger.error(e)
+                self.logger.error(str(e))
                 self.logger.info('These parameters failed: {}'.format(
                     kwargs))
                 sleep(2)
@@ -185,7 +185,7 @@ class VCloudvApp(VCloudResource):
                     task = self.vapp.connect_org_vdc_network(
                         is_deployed=True, **kwargs)
                 except bad_networks_exc as e:
-                    self.logger.error(e)
+                    self.logger.error(str(e))
                     self.logger.info(
                         'These parameters failed: {}'.format(kwargs))
                     # sleep(2)
@@ -209,6 +209,9 @@ class VCloudvApp(VCloudResource):
         if 'orgvdc_network_name' in kwargs:
             if kwargs['orgvdc_network_name'] in self.vapp.get_all_networks():
                 return task
+
+        if not task:
+            return
 
         if 'add_network' in self.tasks:
             self.tasks['add_network'].append(task)

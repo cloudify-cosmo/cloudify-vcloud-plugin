@@ -594,6 +594,11 @@ def _add_network(_=None,
                     'Failed to add network {n} to vm {vm} for {e}.'.format(
                         n=nic_network, vm=vm.name, e=e))
 
+    if nic_network not in vm.vapp_networks:
+        raise OperationRetry(
+            'Waiting to add network {} to vapp {}.'.format(
+                nic_network, vapp_name))
+
     return vm, None
 
 

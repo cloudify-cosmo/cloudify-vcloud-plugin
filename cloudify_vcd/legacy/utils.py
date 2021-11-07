@@ -205,6 +205,7 @@ def get_gateway_client(vcloud_cx, vcloud_config, ctx, **_):
 def get_vm_client(server, vcloud_cx, vcloud_config, ctx):
     _ctx_node = get_ctx_node(ctx)
     _ctx_instance = get_ctx_instance(ctx)
+    name = None
     if 'name' in server:
         name = server.pop('name')
     if not name and 'name' in _ctx_instance.runtime_properties:
