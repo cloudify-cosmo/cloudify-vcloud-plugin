@@ -95,6 +95,8 @@ class VCloudvApp(VCloudResource):
         return items
 
     def get_vapp(self, vapp_name=None):
+        vapp_name = vapp_name or self.name
+        self.logger.info('Looking for vapp {}'.format(vapp_name))
         vapp_resource = self.vdc.get_vapp(vapp_name)
         return VApp(self.client, resource=vapp_resource)
 
@@ -308,7 +310,8 @@ class VCloudVM(VCloudResource):
 
     def get_vm(self, vm_name=None):
         if not vm_name:
-            vm_name = self._vm_name
+            vm_name = self.name
+        self.logger.info('Looking for vm_name {}'.format(vm_name))
         vm_resource = self.vapp_object.vapp.get_vm(vm_name)
         vm = VM(self.client, resource=vm_resource)
         return vm

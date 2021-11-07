@@ -282,12 +282,12 @@ def configure_vm(*args, **kwargs):
     return _configure_vm(*args, **kwargs)
 
 
-def get_vapp_name_from_vm_ctx(vm_ctx):
+def get_vapp_name_from_vm_ctx(vm_ctx, vm_id):
     vapp_name = find_resource_id_from_relationship_by_type(
         vm_ctx.instance, REL_VM_VAPP)
     if not vapp_name:
-        vapp_name = vm_ctx.instance.runtime_properties['resource_id']
-    return vapp_name
+        return vm_id
+    return vm_id
 
 
 def _configure_vm(_=None,
@@ -573,7 +573,7 @@ def _add_network(_=None,
         vapp_name,
         vm_client,
         vdc_name=vm_vdc,
-        kwargs={},
+        kwargs=vm_config,
         vapp_kwargs=vm_config
     )
 
@@ -654,7 +654,7 @@ def _add_nic(_=None,
         vapp_name,
         vm_client,
         vdc_name=vm_vdc,
-        kwargs={},
+        kwargs=vm_config,
         vapp_kwargs=vm_config
     )
     last_task = None
