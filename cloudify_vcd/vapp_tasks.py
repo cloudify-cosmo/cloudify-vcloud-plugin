@@ -666,16 +666,27 @@ def _add_nic(_=None,
     last_task = None
     if not vm.get_nic_from_config(nic_config):
         last_task = vm.add_nic(**nic_config)
-    nic_ctx.instance.runtime_properties['ip_address'] = None
-    nic_ctx.instance.runtime_properties['mac_address'] = None
-    for nic in vm.nics:
-        _nic_network = nic.get('network')
-        if _nic_network == nic_network:
-            nic_ctx.instance.runtime_properties['ip_address'] = \
-                nic.get('ip_address')
-            nic_ctx.instance.runtime_properties['mac_address'] = \
-                nic.get('mac_address')
-            break
+    try:
+        nic_ctx.instance.runtime_properties['ip_address'] = None
+        nic_ctx.instance.runtime_properties['mac_address'] = None
+    except NonRecoverableError:
+        vm_ctx.instance.runtime_properties['__TEMP_STORAGE'] = {}
+        for nic in vm.nics:
+            _nic_network = nic.get('network')
+            if _nic_network == nic_network:
+                vm_ctx.instance.runtime_properties['__TEMP_STORAGE']['ip_address'] = nic.get('ip_address')  # noqa
+                vm_ctx.instance.runtime_properties['__TEMP_STORAGE']['mac_address'] = nic.get('mac_address')  # noqa
+                break
+
+    else:
+        for nic in vm.nics:
+            _nic_network = nic.get('network')
+            if _nic_network == nic_network:
+                nic_ctx.instance.runtime_properties['ip_address'] = \
+                    nic.get('ip_address')
+                nic_ctx.instance.runtime_properties['mac_address'] = \
+                    nic.get('mac_address')
+                break
     return vm, last_task
 
 

@@ -15,7 +15,7 @@
 from cloudify.decorators import operation
 from cloudify_vcd.legacy.compute.tasks import (
     create_server,
-    configure_server,
+    # configure_server,
     start_server,
     stop_server,
     delete_server,
