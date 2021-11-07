@@ -649,6 +649,9 @@ def _add_nic(_=None,
     if nic_network:
         nic_config['network_name'] = nic_network
 
+    ctx.logger.info('We are using this VM ID : {}'.format(vm_id))
+    ctx.logger.info('We are using this VM App : {}'.format(vapp_name))
+
     vm = vm_class(
         vm_id,
         vapp_name,

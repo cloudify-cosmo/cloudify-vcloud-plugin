@@ -174,13 +174,16 @@ def preconfigure_nic(vm_client, ctx, server, **kwargs):
 @decorators.with_vcd_client()
 @decorators.with_vm_resource()
 def postconfigure_nic(vm_client, server, ctx, **kwargs):
-    ctx.logger.info('Preconfigure vm client name {}'.format(vm_client.name))
+    vm_id = vm_client.name
+    if not vm_id:
+        vm_id = ctx.node.properties.get('server', {}).get('name')
+    ctx.logger.info('Preconfigure vm client name {}'.format(vm_id))
     ctx.logger.info('Preconfigure server {}'.format(server))
     for port_ctx in find_rels_by_type(get_ctx_instance(), VM_NIC_REL):
         resource, result = vapp_tasks._add_nic(
             nic_config=port_ctx.target.instance.runtime_properties['port'],
             nic_ctx=port_ctx.target,
-            vm_id=vm_client.name,
+            vm_id=vm_id,
             vm_client=vm_client.connection,
             vm_vdc=vm_client.vdc_name,
             vm_config=server,

@@ -33,7 +33,7 @@ def create(*args, **kwargs):
 @operation(resumable=True)
 def configure(*args, **kwargs):
     preconfigure_nic(*args, **kwargs)
-    configure_server(*args, **kwargs)
+    # configure_server(*args, **kwargs)
     postconfigure_nic(*args, **kwargs)
 
 
