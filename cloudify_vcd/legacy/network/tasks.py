@@ -50,10 +50,12 @@ def create_network(network_client, gateway_client, ctx, **_):
             network_config=network_client.kwargs,
             network_class=VCloudNetwork,
             ctx=ctx)
-        operation_name = ctx.operation.name.split('.')[-1]
-        expose_props(operation_name,
-                     resource,
-                     _ctx=ctx)
+    else:
+        resource = network_client
+    operation_name = ctx.operation.name.split('.')[-1]
+    expose_props(operation_name,
+                 resource,
+                 _ctx=ctx)
 
 
 @decorators.with_vcd_client()
@@ -72,7 +74,9 @@ def delete_network(network_client, ctx, **_):
             network_config=network_client.kwargs,
             network_class=VCloudNetwork,
             ctx=ctx)
-        operation_name = ctx.operation.name.split('.')[-1]
-        expose_props(operation_name,
-                     resource,
-                     _ctx=ctx)
+    else:
+        resource = network_client
+    operation_name = ctx.operation.name.split('.')[-1]
+    expose_props(operation_name,
+                 resource,
+                 _ctx=ctx)

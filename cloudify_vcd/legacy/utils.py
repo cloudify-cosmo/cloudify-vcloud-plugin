@@ -207,9 +207,9 @@ def get_vm_client(server, vcloud_cx, vcloud_config, ctx):
     _ctx_instance = get_ctx_instance(ctx)
     if 'name' in server:
         name = server.pop('name')
-    elif 'name' in _ctx_instance.runtime_properties:
+    if not name and 'name' in _ctx_instance.runtime_properties:
         name = _ctx_instance.runtime_properties['name']
-    else:
+    if not name:
         name = _ctx_node.properties.get('resource_id', _ctx_instance.id)
     tasks = _ctx_instance.runtime_properties.get('__TASKS', [])
     convert_vm_config(server)
