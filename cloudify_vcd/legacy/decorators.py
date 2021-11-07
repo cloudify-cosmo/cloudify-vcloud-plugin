@@ -18,7 +18,7 @@ from cloudify.exceptions import OperationRetry
 from cloudify_common_sdk.utils import get_ctx_node, get_ctx_instance
 
 from . import utils
-from ..utils import (expose_props, get_last_task, check_if_task_successful)
+from ..utils import (get_last_task, check_if_task_successful)
 
 
 def with_vcd_client():
