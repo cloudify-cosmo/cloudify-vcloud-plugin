@@ -43,11 +43,6 @@ def with_vcd_client():
             if not check_if_task_successful(resource, last_task):
                 ctx_instance.runtime_properties['__RETRY_BAD_REQUEST'] = True
                 raise OperationRetry('Pending for operation completion.')
-            operation_name = ctx.operation.name.split('.')[-1]
-            expose_props(operation_name,
-                         resource,
-                         _ctx=ctx,
-                         legacy=True)
         return wrapper_inner
     return wrapper_outer
 

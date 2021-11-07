@@ -149,6 +149,7 @@ class VCloudvApp(VCloudResource):
     #
 
     def add_network(self, **kwargs):
+        task = None
         self.logger.info('We have these direct networks: {}'.format(
             self.vdc.list_orgvdc_direct_networks()))
         self.logger.info('We have these routed networks: {}'.format(
@@ -305,7 +306,9 @@ class VCloudVM(VCloudResource):
                 sleep(1)
         return data
 
-    def get_vm(self, vm_name):
+    def get_vm(self, vm_name=None):
+        if not vm_name:
+            vm_name = self._vm_name
         vm_resource = self.vapp_object.vapp.get_vm(vm_name)
         vm = VM(self.client, resource=vm_resource)
         return vm

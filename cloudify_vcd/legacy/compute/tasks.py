@@ -72,11 +72,11 @@ def configure_server(vm_client, ctx, **_):
         vm_config=vm_client.kwargs,
         vm_class=VCloudVM,
         vm_ctx=ctx)
-    operation_name = ctx.operation.name.split('.')[-1]
-    expose_props(operation_name,
-                 resource,
-                 _ctx=ctx,
-                 legacy=True)
+    # operation_name = ctx.operation.name.split('.')[-1]
+    # expose_props(operation_name,
+    #              resource,
+    #              _ctx=ctx,
+    #              legacy=True)
 
 
 @decorators.with_vcd_client()

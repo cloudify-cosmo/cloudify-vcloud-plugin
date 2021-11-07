@@ -217,8 +217,7 @@ def _create_vm(vm_external=None,
     :return:
     """
 
-    vapp_name = find_resource_id_from_relationship_by_type(
-        vm_ctx.instance, REL_VM_VAPP)  # or vapp_id
+    vapp_name = get_vapp_name_from_vm_ctx(vm_ctx)
     network = find_rel_by_type(
         vm_ctx.instance, REL_VM_NETWORK)
 
@@ -283,6 +282,14 @@ def configure_vm(*args, **kwargs):
     return _configure_vm(*args, **kwargs)
 
 
+def get_vapp_name_from_vm_ctx(vm_ctx):
+    vapp_name = find_resource_id_from_relationship_by_type(
+        vm_ctx.instance, REL_VM_VAPP)
+    if not vapp_name:
+        vapp_name = vm_ctx.instance.runtime_properties['resource_id']
+    return vapp_name
+
+
 def _configure_vm(_=None,
                   vm_id=None,
                   vm_client=None,
@@ -292,8 +299,7 @@ def _configure_vm(_=None,
                   vm_ctx=None,
                   **__):
 
-    vapp_name = find_resource_id_from_relationship_by_type(
-        vm_ctx.instance, REL_VM_VAPP)
+    vapp_name = get_vapp_name_from_vm_ctx(vm_ctx)
     return vm_class(
         vm_id,
         vapp_name,
@@ -330,8 +336,7 @@ def _start_vm(vm_external=None,
     :return:
     """
 
-    vapp_name = find_resource_id_from_relationship_by_type(
-        vm_ctx.instance, REL_VM_VAPP)
+    vapp_name = get_vapp_name_from_vm_ctx(vm_ctx)
     vm = vm_class(
         vm_id,
         vapp_name,
@@ -388,8 +393,7 @@ def _stop_vm(vm_external=None,
     :return:
     """
 
-    vapp_name = find_resource_id_from_relationship_by_type(
-        vm_ctx.instance, REL_VM_VAPP)
+    vapp_name = get_vapp_name_from_vm_ctx(vm_ctx)
     vm = vm_class(
         vm_id,
         vapp_name,
@@ -441,8 +445,7 @@ def _delete_vm(vm_external=None,
     :return:
     """
 
-    vapp_name = find_resource_id_from_relationship_by_type(
-        vm_ctx.instance, REL_VM_VAPP)
+    vapp_name = get_vapp_name_from_vm_ctx(vm_ctx)
     vm = vm_class(
         vm_id,
         vapp_name,
@@ -548,10 +551,7 @@ def _add_network(_=None,
     :return:
     """
 
-    vapp_name = find_resource_id_from_relationship_by_type(
-        vm_ctx.instance, REL_VM_VAPP)
-    if not vapp_name:
-        vapp_name = vm_id
+    vapp_name = get_vapp_name_from_vm_ctx(vm_ctx)
     nic_network = find_resource_id_from_relationship_by_type(
         nic_ctx.instance, REL_NIC_NETWORK)
     vapp_node = find_rel_by_type(vm_ctx.instance, REL_VM_VAPP)
@@ -642,8 +642,7 @@ def _add_nic(_=None,
     :return:
     """
 
-    vapp_name = find_resource_id_from_relationship_by_type(
-        vm_ctx.instance, REL_VM_VAPP)
+    vapp_name = get_vapp_name_from_vm_ctx(vm_ctx)
     nic_network = find_resource_id_from_relationship_by_type(
         nic_ctx.instance, REL_NIC_NETWORK)
 
@@ -714,8 +713,7 @@ def _delete_nic(_=None,
     :return:
     """
 
-    vapp_name = find_resource_id_from_relationship_by_type(
-        vm_ctx.instance, REL_VM_VAPP)
+    vapp_name = get_vapp_name_from_vm_ctx(vm_ctx)
     nic_network = find_resource_id_from_relationship_by_type(
         nic_ctx.instance, REL_NIC_NETWORK)
     if nic_network:
