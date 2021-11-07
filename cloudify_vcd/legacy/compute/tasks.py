@@ -180,6 +180,8 @@ def postconfigure_nic(vm_client, server, ctx, **kwargs):
     ctx.logger.info('Preconfigure vm client name {}'.format(vm_id))
     ctx.logger.info('Preconfigure server {}'.format(server))
     for port_ctx in find_rels_by_type(get_ctx_instance(), VM_NIC_REL):
+        # port = convert_nic_config(
+        #     port_ctx.target.instance.runtime_properties['port'])
         resource, result = vapp_tasks._add_nic(
             nic_config=port_ctx.target.instance.runtime_properties['port'],
             nic_ctx=port_ctx.target,

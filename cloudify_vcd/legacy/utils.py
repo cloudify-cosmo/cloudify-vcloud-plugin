@@ -375,6 +375,9 @@ def convert_port_config(config):
     if 'primary_interface' in config:
         config['is_primary'] = config.pop('primary_interface')
 
+    if 'adapter_type' not in config:
+        config['adapter_type'] = 'VMXNET3'
+
     for key in OLD_PORT_KEYS:
         config.pop(key, None)
 
