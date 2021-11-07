@@ -215,11 +215,14 @@ def get_vm_client(server, vcloud_cx, vcloud_config, ctx):
         name = server_from_props.get('name')
     if not name:
         name = _ctx_node.properties.get('resource_id', _ctx_instance.id)
+    if not name and 'resource_id' in _ctx_instance.runtime_properties:
+        name = _ctx_instance.runtime_properties['resource_id']
     tasks = _ctx_instance.runtime_properties.get('__TASKS', [])
     convert_vm_config(server)
     get_server_network(server, _ctx_node, _ctx_instance)
     _ctx_instance.runtime_properties['resource_id'] = name
     _ctx_instance.runtime_properties['server'] = server
+    ctx.logger.info('We are getting this name: {}'.format(name))
     # TODO: Change vcloud VM name to host name guest customization pizazz.
     return VCloudVM(name,
                     name,

@@ -642,6 +642,9 @@ def _add_nic(_=None,
     :return:
     """
 
+    if not vm_id:
+        vm_id = vm_ctx.node.properties.get('server', {}).get('name')
+
     vapp_name = get_vapp_name_from_vm_ctx(vm_ctx, vm_id)
     nic_network = find_resource_id_from_relationship_by_type(
         nic_ctx.instance, REL_NIC_NETWORK)
