@@ -57,6 +57,7 @@ def get_vm_ctx(existing=False,
 @patch('cloudify_vcd.legacy.utils.get_deployment_dir')
 @patch('cloudify_vcd.legacy.decorators.get_last_task')
 @patch('vcd_plugin_sdk.connection.Org', autospec=True)
+@patch('vcd_plugin_sdk.resources.vapp.VCloudVM.get_vm')
 @patch('vcd_plugin_sdk.connection.Client', autospec=True)
 @patch('vcd_plugin_sdk.resources.vapp.VCloudVM.exists', return_value=True)
 @patch('cloudify_vcd.legacy.decorators.check_if_task_successful',
