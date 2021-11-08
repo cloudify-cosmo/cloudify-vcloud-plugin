@@ -95,8 +95,6 @@ def start_server(vm_client, ctx, **_):
                  resource,
                  _ctx=ctx,
                  legacy=True)
-    ctx.instance.runtime_properties['vcloud_vapp_name'] = \
-        ctx.instance.runtime_properties.get('name')
 
 
 @decorators.with_vcd_client()
