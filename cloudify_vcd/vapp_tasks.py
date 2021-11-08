@@ -670,13 +670,8 @@ def _add_nic(_=None,
         nic_ctx.instance.runtime_properties['ip_address'] = None
         nic_ctx.instance.runtime_properties['mac_address'] = None
     except NonRecoverableError:
-        vm_ctx.instance.runtime_properties['__TEMP_STORAGE'] = {}
-        for nic in vm.nics:
-            _nic_network = nic.get('network')
-            if _nic_network == nic_network:
-                vm_ctx.instance.runtime_properties['__TEMP_STORAGE']['ip_address'] = nic.get('ip_address')  # noqa
-                vm_ctx.instance.runtime_properties['__TEMP_STORAGE']['mac_address'] = nic.get('mac_address')  # noqa
-                break
+        ctx.logger.debug(
+            'Skipping IP assignment in legacy plugin will do it later.')
 
     else:
         for nic in vm.nics:

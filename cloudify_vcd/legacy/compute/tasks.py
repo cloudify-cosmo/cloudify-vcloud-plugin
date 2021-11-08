@@ -14,7 +14,7 @@
 
 from copy import deepcopy
 
-from cloudify.exceptions import OperationRetry, NonRecoverableError
+from cloudify.exceptions import OperationRetry
 
 from vcd_plugin_sdk.resources.vapp import VCloudVM
 from cloudify_common_sdk.utils import (
@@ -95,6 +95,8 @@ def start_server(vm_client, ctx, **_):
                  resource,
                  _ctx=ctx,
                  legacy=True)
+    ctx.instance.runtime_properties['vcloud_vapp_name'] = \
+        ctx.instance.runtime_properties.get('name')
 
 
 @decorators.with_vcd_client()
@@ -193,20 +195,6 @@ def postconfigure_nic(vm_client, server, ctx, **kwargs):
             vm_ctx=ctx,
             **kwargs)
         last_task = get_last_task(result)
-        temp_storage = ctx.instance.runtime_properties.get(
-            '__TEMP_STORAGE',
-            {
-                'ip_address': None,
-                'mac_address': None
-            }
-        )
-        try:
-            port_ctx.target.instance.runtime_properties['ip_address'] = \
-                temp_storage['ip_address']
-            port_ctx.target.instance.runtime_properties['mac_address'] = \
-                temp_storage['mac_address']
-        except NonRecoverableError:
-            ctx.logger.info('TODO: FIX THIS')
         if not check_if_task_successful(resource, last_task):
             port_ctx.target.instance.runtime_properties['__RETRY_BAD_'
                                                         'REQUEST'] = \

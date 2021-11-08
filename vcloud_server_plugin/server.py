@@ -37,6 +37,20 @@ def configure(*args, **kwargs):
     postconfigure_nic(*args, **kwargs)
 
 
+@operation
+def postconfigure(ctx, *args, **kwargs):
+    ctx.logger.info('Assigning IP properties...')
+    nic = None
+    for nic in ctx.target.instance.runtime_properties.get('nics', []):
+        if nic['primary'] == 'true':
+            break
+
+    if nic:
+        ctx.logger.info('Found primary IP address.')
+        ctx.target.instance.runtime_properties['ip'] = \
+            nic['primary']['ip_address']
+
+
 @operation(resumable=True)
 def start(*args, **kwargs):
     start_server(*args, **kwargs)
