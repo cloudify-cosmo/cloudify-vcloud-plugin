@@ -664,7 +664,11 @@ def _add_nic(_=None,
         vapp_kwargs=vm_config
     )
     last_task = None
-    if not vm.get_nic_from_config(nic_config):
+    try:
+        has_nic_in_config = vm.get_nic_from_config(nic_config)
+    except AttributeError:
+        raise OperationRetry('Waiting for nics to be assigned...')
+    if not has_nic_in_config:
         last_task = vm.add_nic(**nic_config)
     try:
         nic_ctx.instance.runtime_properties['ip_address'] = None

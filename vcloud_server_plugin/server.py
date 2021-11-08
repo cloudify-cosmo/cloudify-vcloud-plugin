@@ -35,19 +35,18 @@ def configure(*args, **kwargs):
     preconfigure_nic(*args, **kwargs)
     # configure_server(*args, **kwargs)
     postconfigure_nic(*args, **kwargs)
-
-
-@operation
-def postconfigure(ctx, *args, **kwargs):
-    ctx.logger.info('Assigning IP properties...')
+    ctx = kwargs['ctx']
     nic = None
-    for nic in ctx.target.instance.runtime_properties.get('nics', []):
+    data = ctx.instance.runtime_properties.get('data', {})
+    for nic in data.get('nics', []):
         if nic['primary'] == 'true':
             break
-
     if nic:
         ctx.logger.info('Found primary IP address.')
-        ctx.target.instance.runtime_properties['ip'] = \
+        ctx.instance.runtime_properties['ip'] = nic['primary']['ip_address']
+        ctx.instance.runtime_properties['ip_address'] = \
+            nic['primary']['ip_address']
+        ctx.instance.runtime_properties['private_ip_address'] = \
             nic['primary']['ip_address']
 
 
