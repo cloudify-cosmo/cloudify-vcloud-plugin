@@ -482,14 +482,12 @@ def _delete_vm(vm_external=None,
         ctx.logger.info('VM is deleted. Now to delete Vapp.')
 
     if vm_ctx.instance.runtime_properties.get('__VM_CREATE_VAPP'):
-        try:
-            vm.delete()
-        except Exception as e:
-            if vm.exists:
-                raise
-            elif not isinstance(e, OperationNotSupportedException):
-                raise e
-        finally:
+        if vm.exists:
+            try:
+                vm.delete()
+            except:
+                raise OperationRetry('Waiting for VM to be deleted.')
+        if vm.vapp_object.exists:
             try:
                 last_task = vm.vapp_object.delete()
             except BadRequestException:
