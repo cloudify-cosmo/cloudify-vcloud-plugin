@@ -485,8 +485,9 @@ def _delete_vm(vm_external=None,
         if vm.exists:
             try:
                 vm.delete()
-            except:
-                raise OperationRetry('Waiting for VM to be deleted.')
+            except Exception as e:
+                raise OperationRetry(
+                    'Waiting for VM to be deleted. {}'.format(str(e)))
         if vm.vapp_object.exists:
             try:
                 last_task = vm.vapp_object.delete()
