@@ -43,7 +43,7 @@ def create_server(vm_client, ctx, **_):
         if 'network' in vm_kwargs:
             del vm_kwargs['network']
             del vm_kwargs['network_adapter_type']
-        resource, result = vapp_tasks._create_vm(
+        return vapp_tasks._create_vm(
             vm_external=False,
             vm_id=vm_client.name,
             vm_client=vm_client.connection,
@@ -51,14 +51,7 @@ def create_server(vm_client, ctx, **_):
             vm_config=vm_kwargs,
             vm_class=VCloudVM,
             vm_ctx=ctx)
-    else:
-        resource = vm_client.vm
-    ctx.logger.info('Logging resource object: {}'.format(resource))
-    operation_name = ctx.operation.name.split('.')[-1]
-    expose_props(operation_name,
-                 vm_client,
-                 _ctx=ctx,
-                 legacy=True)
+    return vm_client.vm, None
 
 
 @decorators.with_vcd_client()
@@ -82,7 +75,7 @@ def configure_server(vm_client, ctx, **_):
 @decorators.with_vcd_client()
 @decorators.with_vm_resource()
 def start_server(vm_client, ctx, **_):
-    resource, result = vapp_tasks._start_vm(
+    return vapp_tasks._start_vm(
         vm_external=False,
         vm_id=vm_client.name,
         vm_client=vm_client.connection,
@@ -90,17 +83,12 @@ def start_server(vm_client, ctx, **_):
         vm_config=vm_client.kwargs,
         vm_class=VCloudVM,
         vm_ctx=ctx)
-    operation_name = ctx.operation.name.split('.')[-1]
-    expose_props(operation_name,
-                 resource,
-                 _ctx=ctx,
-                 legacy=True)
 
 
 @decorators.with_vcd_client()
 @decorators.with_vm_resource()
 def stop_server(vm_client, ctx, **_):
-    resource, result = vapp_tasks._stop_vm(
+    return vapp_tasks._stop_vm(
         vm_external=False,
         vm_id=vm_client.name,
         vm_client=vm_client.connection,
@@ -108,35 +96,27 @@ def stop_server(vm_client, ctx, **_):
         vm_config=vm_client.kwargs,
         vm_class=VCloudVM,
         vm_ctx=ctx)
-    operation_name = ctx.operation.name.split('.')[-1]
-    expose_props(operation_name,
-                 resource,
-                 _ctx=ctx,
-                 legacy=True)
 
 
 @decorators.with_vcd_client()
 @decorators.with_vm_resource()
 def delete_server(vm_client, ctx, **_):
+    vm_id = vm_client.name
+    if not vm_id:
+        vm_id = ctx.node.properties.get('server', {}).get('name')
     if not skip(type(vm_client),
-                vm_client.name,
+                vm_id,
                 exists=vm_client.exists,
                 delete_operation=True):
-        resource, result = vapp_tasks._delete_vm(
+        return vapp_tasks._delete_vm(
             vm_external=False,
-            vm_id=vm_client.name,
+            vm_id=vm_id,
             vm_client=vm_client.connection,
             vm_vdc=vm_client.vdc_name,
             vm_config=vm_client.kwargs,
             vm_class=VCloudVM,
             vm_ctx=ctx)
-    else:
-        resource = vm_client
-    operation_name = ctx.operation.name.split('.')[-1]
-    expose_props(operation_name,
-                 resource,
-                 _ctx=ctx,
-                 legacy=True)
+    return vm_client.vm, None
 
 
 @decorators.with_port_resource()

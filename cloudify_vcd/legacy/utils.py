@@ -184,7 +184,7 @@ def get_port_config(port, ctx, **kwargs):
     if 'network_name' not in port:
         port['network_name'] = network
     if 'is_connected' not in port:
-        port['is_connected'] = False
+        port['is_connected'] = True
     _node_instance.runtime_properties['network'] = network
     _node_instance.runtime_properties['port'] = port
 
@@ -207,7 +207,7 @@ def get_vm_client(server, vcloud_cx, vcloud_config, ctx):
     _ctx_instance = get_ctx_instance(ctx)
     name = None
     if 'name' in server:
-        name = server.pop('name')
+        name = server.get('name')
     if not name and 'name' in _ctx_instance.runtime_properties:
         name = _ctx_instance.runtime_properties['name']
     if not name:
@@ -221,7 +221,8 @@ def get_vm_client(server, vcloud_cx, vcloud_config, ctx):
     tasks = _ctx_instance.runtime_properties.get('__TASKS', [])
     convert_vm_config(server)
     get_server_network(server, _ctx_node, _ctx_instance)
-    _ctx_instance.runtime_properties['resource_id'] = name
+    if name:
+        _ctx_instance.runtime_properties['resource_id'] = name
     _ctx_instance.runtime_properties['server'] = server
     ctx.logger.info('We are getting this name: {}'.format(name))
     # TODO: Change vcloud VM name to host name guest customization pizazz.
@@ -393,6 +394,10 @@ def convert_vapp_config(config):
 
 
 def convert_vm_config(config):
+    if 'name' in config:
+        del config['name']
+    if 'power_on' not in config:
+        config['power_on'] = False
     if 'hardware' in config:
         if 'memory' in config['hardware']:
             config['memory'] = config['hardware']['memory']
