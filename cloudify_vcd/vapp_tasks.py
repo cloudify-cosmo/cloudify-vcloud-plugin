@@ -479,9 +479,12 @@ def _delete_vm(vm_external=None,
         last_task = None
 
     if vm_ctx.instance.runtime_properties.get('__VM_CREATE_VAPP'):
-        vm.delete()
-        last_task = vm.vapp_object.delete()
-
+        try:
+            vm.delete()
+        # except OperationNotSupportedException:
+        #     raise
+        finally:
+            last_task = vm.vapp_object.delete()
     return vm, last_task
 
 

@@ -63,6 +63,14 @@ class VCloudvApp(VCloudResource):
         return self._vapp
 
     @property
+    def exists(self):
+        try:
+            return self.vapp
+        except EntityNotFoundException:
+            pass
+        return False
+
+    @property
     def networks(self):
         try:
             vapp_networks = self.vapp.get_all_networks()

@@ -75,40 +75,55 @@ def configure_server(vm_client, ctx, **_):
 @decorators.with_vcd_client()
 @decorators.with_vm_resource()
 def power_off_vapp(vm_client, ctx, **_):
-    return vapp_tasks._power_off_vapp(
-        vapp_ext=False,
-        vapp_id=vm_client.name,
-        vapp_client=vm_client.vapp_object.connection,
-        vm_vdc=vm_client.vdc_name,
-        vapp_config=vm_client.kwargs,
-        vapp_class=VCloudvApp,
-        __=ctx)
+    if not skip(type(vm_client.vapp_object),
+                vm_client.vapp_object.name,
+                ctx,
+                exists=vm_client.vapp_object.exists,
+                delete_operation=True):
+        return vapp_tasks._power_off_vapp(
+            vapp_ext=False,
+            vapp_id=vm_client.name,
+            vapp_client=vm_client.vapp_object.connection,
+            vapp_vdc=vm_client.vdc_name,
+            vapp_config=vm_client.kwargs,
+            vapp_class=VCloudvApp,
+            __=ctx)
 
 
 @decorators.with_vcd_client()
 @decorators.with_vm_resource()
 def stop_vapp(vm_client, ctx, **_):
-    return vapp_tasks._stop_vapp(
-        vapp_ext=False,
-        vapp_id=vm_client.name,
-        vapp_client=vm_client.vapp_object.connection,
-        vm_vdc=vm_client.vdc_name,
-        vapp_config=vm_client.kwargs,
-        vapp_class=VCloudvApp,
-        __=ctx)
+    if not skip(type(vm_client.vapp_object),
+                vm_client.vapp_object.name,
+                ctx,
+                exists=vm_client.vapp_object.exists,
+                delete_operation=True):
+        return vapp_tasks._stop_vapp(
+            vapp_ext=False,
+            vapp_id=vm_client.name,
+            vapp_client=vm_client.vapp_object.connection,
+            vapp_vdc=vm_client.vdc_name,
+            vapp_config=vm_client.kwargs,
+            vapp_class=VCloudvApp,
+            __=ctx)
 
 
 @decorators.with_vcd_client()
 @decorators.with_vm_resource()
 def delete_vapp(vm_client, ctx, **_):
-    return vapp_tasks._delete_vapp(
-        vapp_ext=False,
-        vapp_id=vm_client.name,
-        vapp_client=vm_client.vapp_object.connection,
-        vm_vdc=vm_client.vdc_name,
-        vapp_config=vm_client.kwargs,
-        vapp_class=VCloudvApp,
-        __=ctx)
+    if not skip(type(vm_client.vapp_object),
+                vm_client.vapp_object.name,
+                ctx,
+                exists=vm_client.vapp_object.exists,
+                delete_operation=True):
+        return vapp_tasks._delete_vapp(
+            vapp_ext=False,
+            vapp_id=vm_client.name,
+            vapp_client=vm_client.vapp_object.connection,
+            vapp_vdc=vm_client.vdc_name,
+            vapp_config=vm_client.kwargs,
+            vapp_class=VCloudvApp,
+            __=ctx)
 
 
 @decorators.with_vcd_client()
