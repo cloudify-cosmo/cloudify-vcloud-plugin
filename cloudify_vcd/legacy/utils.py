@@ -203,6 +203,7 @@ def get_gateway_client(vcloud_cx, vcloud_config, ctx, **_):
 
 
 def get_vm_client(server, vcloud_cx, vcloud_config, ctx):
+    ctx.logger.info('We are getting this server: {}'.format(server))
     _ctx_node = get_ctx_node(ctx)
     _ctx_instance = get_ctx_instance(ctx)
     name = None
@@ -225,6 +226,7 @@ def get_vm_client(server, vcloud_cx, vcloud_config, ctx):
         _ctx_instance.runtime_properties['resource_id'] = name
     _ctx_instance.runtime_properties['server'] = server
     ctx.logger.info('We are getting this name: {}'.format(name))
+    ctx.logger.info('We are getting this server: {}'.format(server))
     # TODO: Change vcloud VM name to host name guest customization pizazz.
     return VCloudVM(name,
                     name,
