@@ -3,6 +3,7 @@ from pyvcloud.vcd.exceptions import (
     BadRequestException,
     MissingLinkException,
     InvalidStateException,
+    EntityNotFoundException,
     OperationNotSupportedException)
 
 from cloudify import ctx
@@ -477,6 +478,8 @@ def _delete_vm(vm_external=None,
                 (not vcd_unresolved_vm(e) and not cannot_power_off(e)):
             raise
         last_task = None
+    except EntityNotFoundException:
+        ctx.logger.info('VM is deleted. Now to delete Vapp.')
 
     if vm_ctx.instance.runtime_properties.get('__VM_CREATE_VAPP'):
         try:
