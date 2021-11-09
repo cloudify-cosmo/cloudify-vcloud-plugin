@@ -467,7 +467,7 @@ def _delete_vm(vm_external=None,
         vapp_kwargs=vm_config
     )
 
-    if vm_external:
+    if vm_external or not vm.vapp_object.exists:
         return vm, None
     try:
         last_task = vm.undeploy()
@@ -481,10 +481,16 @@ def _delete_vm(vm_external=None,
     if vm_ctx.instance.runtime_properties.get('__VM_CREATE_VAPP'):
         try:
             vm.delete()
-        # except OperationNotSupportedException:
-        #     raise
+        except Exception as e:
+            if vm.exists:
+                raise
+            elif not isinstance(e, OperationNotSupportedException):
+                raise e
         finally:
-            last_task = vm.vapp_object.delete()
+            try:
+                last_task = vm.vapp_object.delete()
+            except BadRequestException:
+                raise OperationRetry('Waiting for vapp to be deleted.')
     return vm, last_task
 
 
