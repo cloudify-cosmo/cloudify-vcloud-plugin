@@ -43,11 +43,17 @@ def configure(*args, **kwargs):
             break
     if nic:
         ctx.logger.info('Found primary IP address.')
-        ctx.instance.runtime_properties['ip'] = nic['primary']['ip_address']
-        ctx.instance.runtime_properties['ip_address'] = \
-            nic['primary']['ip_address']
+        ctx.instance.runtime_properties['ip'] = nic['ip_address']
+        ctx.instance.runtime_properties['ip_address'] = nic['ip_address']
         ctx.instance.runtime_properties['private_ip_address'] = \
-            nic['primary']['ip_address']
+            nic['ip_address']
+        ctx.logger.info('Assigned ip properties to ip address {}'.format(
+            nic['ip_address']))
+
+
+@operation(resumable=True)
+def postconfigure(*args, **kwargs):
+    pass
 
 
 @operation(resumable=True)

@@ -194,10 +194,7 @@ def postconfigure_nic(vm_client, server, ctx, **kwargs):
             **kwargs)
         last_task = get_last_task(result)
         if not check_if_task_successful(resource, last_task):
-            port_ctx.target.instance.runtime_properties['__RETRY_BAD_'
-                                                        'REQUEST'] = \
-                True
-            raise OperationRetry('Pending for operation completion.')
+            raise OperationRetry('Pending for add nic operation completion...')
         operation_name = ctx.operation.name.split('.')[-1]
         expose_props(operation_name,
                      resource,
@@ -221,10 +218,7 @@ def unlink_nic(vm_client, ctx, **kwargs):
             **kwargs)
         last_task = get_last_task(result)
         if not check_if_task_successful(resource, last_task):
-            port_ctx.target.instance.runtime_properties['__RETRY_BAD_'
-                                                        'REQUEST'] = \
-                True
-            raise OperationRetry('Pending for operation completion.')
+            raise OperationRetry('Pending for unlink operation completion...')
         operation_name = ctx.operation.name.split('.')[-1]
         expose_props(operation_name,
                      resource,

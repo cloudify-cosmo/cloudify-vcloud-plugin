@@ -401,6 +401,5 @@ relationships:
     target_interfaces:
       cloudify.interfaces.relationship_lifecycle:
         preconfigure: {}
-        postconfigure:
-          implementation: vcloud.vcloud_server_plugin.server.postconfigure
+        postconfigure: {}
         unlink: {}
