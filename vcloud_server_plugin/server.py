@@ -14,14 +14,17 @@
 
 from cloudify.decorators import operation
 from cloudify_vcd.legacy.compute.tasks import (
-    create_server,
     # configure_server,
+    postconfigure_nic,
+    preconfigure_nic,
+    power_off_vapp,
+    delete_server,
+    create_server,
     start_server,
     stop_server,
-    delete_server,
-    preconfigure_nic,
-    postconfigure_nic,
-    unlink_nic
+    delete_vapp,
+    unlink_nic,
+    stop_vapp,
 )
 
 
@@ -64,12 +67,15 @@ def start(*args, **kwargs):
 @operation(resumable=True)
 def stop(*args, **kwargs):
     stop_server(*args, **kwargs)
+    unlink_nic(*args, **kwargs)
+    stop_vapp(*args, **kwargs)
+    power_off_vapp(*args, **kwargs)
 
 
 @operation(resumable=True)
 def delete(*args, **kwargs):
-    unlink_nic(*args, **kwargs)
     delete_server(*args, **kwargs)
+    delete_vapp(*args, **kwargs)
 
 
 @operation(resumable=True)

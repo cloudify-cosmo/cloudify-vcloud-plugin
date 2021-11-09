@@ -77,14 +77,18 @@ def _create_vapp(_=None,
 
 
 @resource_operation
-def stop_vapp(vapp_ext=None,
-              vapp_id=None,
-              vapp_client=None,
-              vapp_vdc=None,
-              vapp_config=None,
-              vapp_class=None,
-              __=None,
-              **___):
+def stop_vapp(*args, **kwargs):
+    return _stop_vapp(*args, *kwargs)
+
+
+def _stop_vapp(vapp_ext=None,
+               vapp_id=None,
+               vapp_client=None,
+               vapp_vdc=None,
+               vapp_config=None,
+               vapp_class=None,
+               __=None,
+               **___):
     """
     Perform undeploy operation on a vApp.
 
@@ -111,14 +115,18 @@ def stop_vapp(vapp_ext=None,
 
 
 @resource_operation
-def power_off_vapp(vapp_ext=None,
-                   vapp_id=None,
-                   vapp_client=None,
-                   vapp_vdc=None,
-                   vapp_config=None,
-                   vapp_class=None,
-                   __=None,
-                   **___):
+def power_off_vapp(*args, **kwargs):
+    return _power_off_vapp(*args, **kwargs)
+
+
+def _power_off_vapp(vapp_ext=None,
+                    vapp_id=None,
+                    vapp_client=None,
+                    vapp_vdc=None,
+                    vapp_config=None,
+                    vapp_class=None,
+                    __=None,
+                    **___):
     """
     Execute power off on the vApp before deletion.
     :param vapp_ext:
@@ -151,14 +159,18 @@ def power_off_vapp(vapp_ext=None,
 
 
 @resource_operation
-def delete_vapp(vapp_ext=None,
-                vapp_id=None,
-                vapp_client=None,
-                vapp_vdc=None,
-                vapp_config=None,
-                vapp_class=None,
-                __=None,
-                **___):
+def delete_vapp(*args, **kwargs):
+    return _delete_vapp(*args, **kwargs)
+
+
+def _delete_vapp(vapp_ext=None,
+                 vapp_id=None,
+                 vapp_client=None,
+                 vapp_vdc=None,
+                 vapp_config=None,
+                 vapp_class=None,
+                 __=None,
+                 **___):
     """
     Delete a vApp.
 

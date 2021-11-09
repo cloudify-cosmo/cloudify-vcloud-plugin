@@ -16,7 +16,7 @@ from copy import deepcopy
 
 from cloudify.exceptions import OperationRetry
 
-from vcd_plugin_sdk.resources.vapp import VCloudVM
+from vcd_plugin_sdk.resources.vapp import VCloudVM, VCloudvApp
 from cloudify_common_sdk.utils import (
     get_ctx_instance,
     skip_creative_or_destructive_operation as skip)
@@ -70,6 +70,45 @@ def configure_server(vm_client, ctx, **_):
     #              resource,
     #              _ctx=ctx,
     #              legacy=True)
+
+
+@decorators.with_vcd_client()
+@decorators.with_vm_resource()
+def power_off_vapp(vm_client, ctx, **_):
+    return vapp_tasks._power_off_vapp(
+        vapp_ext=False,
+        vapp_id=vm_client.name,
+        vapp_client=vm_client.vapp_object.connection,
+        vm_vdc=vm_client.vdc_name,
+        vapp_config=vm_client.kwargs,
+        vapp_class=VCloudvApp,
+        __=ctx)
+
+
+@decorators.with_vcd_client()
+@decorators.with_vm_resource()
+def stop_vapp(vm_client, ctx, **_):
+    return vapp_tasks._stop_vapp(
+        vapp_ext=False,
+        vapp_id=vm_client.name,
+        vapp_client=vm_client.vapp_object.connection,
+        vm_vdc=vm_client.vdc_name,
+        vapp_config=vm_client.kwargs,
+        vapp_class=VCloudvApp,
+        __=ctx)
+
+
+@decorators.with_vcd_client()
+@decorators.with_vm_resource()
+def delete_vapp(vm_client, ctx, **_):
+    return vapp_tasks._delete_vapp(
+        vapp_ext=False,
+        vapp_id=vm_client.name,
+        vapp_client=vm_client.vapp_object.connection,
+        vm_vdc=vm_client.vdc_name,
+        vapp_config=vm_client.kwargs,
+        vapp_class=VCloudvApp,
+        __=ctx)
 
 
 @decorators.with_vcd_client()

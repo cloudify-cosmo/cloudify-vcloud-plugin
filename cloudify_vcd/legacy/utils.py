@@ -400,6 +400,8 @@ def convert_vm_config(config):
         del config['name']
     if 'power_on' not in config:
         config['power_on'] = False
+    if 'deploy' not in config:
+        config['deploy'] = False
     if 'hardware' in config:
         if 'memory' in config['hardware']:
             config['memory'] = config['hardware']['memory']
