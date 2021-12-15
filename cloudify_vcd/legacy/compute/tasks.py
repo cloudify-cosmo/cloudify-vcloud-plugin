@@ -194,9 +194,6 @@ def preconfigure_nic(vm_client, ctx, server, **kwargs):
             **kwargs)
         last_task = get_last_task(result)
         if not check_if_task_successful(resource, last_task):
-            port_ctx.target.instance.runtime_properties['__RETRY_BAD_'
-                                                        'REQUEST'] = \
-                True
             raise OperationRetry('Pending for operation completion.')
         operation_name = ctx.operation.name.split('.')[-1]
         expose_props(operation_name,
