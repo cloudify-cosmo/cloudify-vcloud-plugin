@@ -1,0 +1,213 @@
+tosca_definitions_version: cloudify_dsl_1_3
+
+description:
+  This vcd test1 VRS project.
+
+imports:
+  - http://www.getcloudify.org/spec/cloudify/4.6/types.yaml
+  - plugin:cloudify-vcloud-plugin
+
+inputs:
+
+  RSP_VRS1_APP_EXT_PROXY:
+    type: string
+    default: x
+
+  RSP_VRS1_APP_OAM:
+    type: string
+    default: x
+
+
+#server_name is the vm name
+  server_name:
+    type: string
+# vCloud section
+    default: x
+
+  host_name:
+    type: string
+    default: x
+
+  vcloud_username:
+    type: string
+    default: { get_secret: vcd_username }
+
+  vcloud_password:
+    type: string
+    default: { get_secret: vcd_password }
+
+  vcloud_token:
+    type: string
+    default: ''
+
+  vcloud_url:
+    type: string
+    default: { get_secret: vcd_fqdn }
+
+  vcloud_service:
+    type: string
+    default: 'RSP'
+
+  vcloud_service_type:
+    type: string
+    default: 'vcd'
+
+  vcloud_instance:
+    type: string
+    default: 'RSP'
+
+  vcloud_api_version:
+    type: string
+    default: '5.5'
+
+  vcloud_org_url:
+    type: string
+    default: { get_secret: vcd_url }
+
+  vcloud_org:
+    type: string
+    default: 'RSP'
+
+  vcloud_vdc:
+    type: string
+    default: 'RSP'
+
+  catalog:
+    type: string
+    default: 'TOMIA_Catalog'
+
+  ssl_verify:
+    type: boolean
+    default: false
+    description: >
+      ssl check for connections to private services
+      (disable self-signed certificates)
+
+  edge_gateway:
+    type: string
+    default: ESMAD0VEGRSP
+
+# Server section
+
+  template:
+    type: string
+    description: rhel7
+    default: { get_secret: rhel7_template }
+
+  server_cpu:
+    type: string
+    default: 6
+
+  server_memory:
+    type: string
+    default: 32768
+
+# Agent section:
+  user:
+    type: string
+    default: shuser
+
+  login_pass:
+    type: string
+    default: "Sxx-Pxx00"
+
+# Network section
+
+  RSP_VRS1_APP_EXT_PROXY_network_name:
+    type: string
+    default: "RSP_VRS1_APP_EXT_PROXY"
+
+  RSP_VRS1_APP_OAM_network_name:
+    type: string
+    default: "RSP_VRS1_APP_OAM"
+
+
+
+dsl_definitions:
+
+########################################################
+# CREDENTIALS
+########################################################
+
+  vcloud_config: &vcloud_config
+    username: { get_input: vcloud_username }
+    password: { get_input: vcloud_password }
+   # token: { get_input: vcloud_token }
+    url: { get_input: vcloud_url }
+   # instance: { get_input: vcloud_instance }
+    vdc: { get_input: vcloud_vdc }
+    org: { get_input: vcloud_org }
+    service_type: { get_input: vcloud_service_type }
+    #service: { get_input: vcloud_service }
+    #api_version: { get_input: vcloud_api_version }
+    #org_url: { get_input: vcloud_org_url }
+    #edge_gateway: { get_input: edge_gateway }
+    ssl_verify: { get_input: ssl_verify }
+
+node_templates:
+#network
+  RSP_VRS1_APP_EXT_PROXY_network:
+    type: cloudify.vcloud.nodes.Network
+    properties:
+      use_external_resource: true
+      resource_id: { get_input: RSP_VRS1_APP_EXT_PROXY_network_name }
+      vcloud_config: *vcloud_config
+
+  RSP_VRS1_APP_OAM_network:
+    type: cloudify.vcloud.nodes.Network
+    properties:
+      use_external_resource: true
+      resource_id: { get_input: RSP_VRS1_APP_OAM_network_name }
+      vcloud_config: *vcloud_config
+
+
+#ports
+  RSP_VRS1_APP_EXT_PROXY_port:
+    type: cloudify.vcloud.nodes.Port
+    properties:
+        port:
+            network: { get_input: RSP_VRS1_APP_EXT_PROXY_network_name }
+            ip_allocation_mode: manual
+            ip_address: { get_input: RSP_VRS1_APP_EXT_PROXY }
+            primary_interface: false
+        vcloud_config: *vcloud_config
+    relationships:
+        - target: RSP_VRS1_APP_EXT_PROXY_network
+          type: cloudify.vcloud.port_connected_to_network
+
+  RSP_VRS1_APP_OAM_port:
+    type: cloudify.vcloud.nodes.Port
+    properties:
+        port:
+            network: { get_input: RSP_VRS1_APP_OAM_network_name }
+            ip_allocation_mode: manual
+            ip_address: { get_input: RSP_VRS1_APP_OAM }
+            primary_interface: true
+        vcloud_config: *vcloud_config
+    relationships:
+        - target: RSP_VRS1_APP_OAM_network
+          type: cloudify.vcloud.port_connected_to_network
+
+  sparx_service_server:
+    type: cloudify.vcloud.nodes.Server
+    properties:
+      agent_config:
+         user: shuser
+         install_method: remote
+         password: { get_secret: login_pass }
+      server:
+        name: { get_input: server_name }
+        catalog: { get_input: catalog }
+        template: { get_input: template }
+        hardware:
+          cpu: { get_input: server_cpu }
+          memory: { get_input: server_memory }
+          #guest_customization:
+          #  computer_name: { get_input: host_name }
+      management_network: { get_input: RSP_VRS1_APP_OAM_network_name }
+      vcloud_config: *vcloud_config
+    relationships:
+      - target: RSP_VRS1_APP_EXT_PROXY_port
+        type: cloudify.vcloud.server_connected_to_port
+      - target: RSP_VRS1_APP_OAM_port
+        type: cloudify.vcloud.server_connected_to_port

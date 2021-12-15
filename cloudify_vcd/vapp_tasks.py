@@ -3,6 +3,7 @@ from pyvcloud.vcd.exceptions import (
     BadRequestException,
     MissingLinkException,
     InvalidStateException,
+    EntityNotFoundException,
     OperationNotSupportedException)
 
 from cloudify import ctx
@@ -29,14 +30,18 @@ FENCE_MODE = ['isolated', 'direct', 'bridged', 'natRouted']
 
 
 @resource_operation
-def create_vapp(_,
-                vapp_id,
-                vapp_client,
-                vapp_vdc,
-                vapp_config,
-                vapp_class,
-                vapp_ctx,
-                **___):
+def create_vapp(*args, **kwargs):
+    return _create_vapp(*args, **kwargs)
+
+
+def _create_vapp(_=None,
+                 vapp_id=None,
+                 vapp_client=None,
+                 vapp_vdc=None,
+                 vapp_config=None,
+                 vapp_class=None,
+                 vapp_ctx=None,
+                 **___):
     """
     At the moment this function does nothing substantial.
     Creating vApps happens during VM create.
@@ -73,14 +78,18 @@ def create_vapp(_,
 
 
 @resource_operation
-def stop_vapp(vapp_ext,
-              vapp_id,
-              vapp_client,
-              vapp_vdc,
-              vapp_config,
-              vapp_class,
-              __,
-              **___):
+def stop_vapp(*args, **kwargs):
+    return _stop_vapp(*args, *kwargs)
+
+
+def _stop_vapp(vapp_ext=None,
+               vapp_id=None,
+               vapp_client=None,
+               vapp_vdc=None,
+               vapp_config=None,
+               vapp_class=None,
+               __=None,
+               **___):
     """
     Perform undeploy operation on a vApp.
 
@@ -107,14 +116,18 @@ def stop_vapp(vapp_ext,
 
 
 @resource_operation
-def power_off_vapp(vapp_ext,
-                   vapp_id,
-                   vapp_client,
-                   vapp_vdc,
-                   vapp_config,
-                   vapp_class,
-                   __,
-                   **___):
+def power_off_vapp(*args, **kwargs):
+    return _power_off_vapp(*args, **kwargs)
+
+
+def _power_off_vapp(vapp_ext=None,
+                    vapp_id=None,
+                    vapp_client=None,
+                    vapp_vdc=None,
+                    vapp_config=None,
+                    vapp_class=None,
+                    __=None,
+                    **___):
     """
     Execute power off on the vApp before deletion.
     :param vapp_ext:
@@ -147,14 +160,18 @@ def power_off_vapp(vapp_ext,
 
 
 @resource_operation
-def delete_vapp(vapp_ext,
-                vapp_id,
-                vapp_client,
-                vapp_vdc,
-                vapp_config,
-                vapp_class,
-                __,
-                **___):
+def delete_vapp(*args, **kwargs):
+    return _delete_vapp(*args, **kwargs)
+
+
+def _delete_vapp(vapp_ext=None,
+                 vapp_id=None,
+                 vapp_client=None,
+                 vapp_vdc=None,
+                 vapp_config=None,
+                 vapp_class=None,
+                 __=None,
+                 **___):
     """
     Delete a vApp.
 
@@ -186,14 +203,19 @@ def delete_vapp(vapp_ext,
 
 
 @resource_operation
-def create_vm(vm_external,
-              vm_id,
-              vm_client,
-              vm_vdc,
-              vm_config,
-              vm_class,
-              vm_ctx,
-              **_):
+def create_vm(*args, **kwargs):
+    return _create_vm(*args, **kwargs)
+
+
+def _create_vm(vm_external=None,
+               vm_id=None,
+               vm_client=None,
+               vm_vdc=None,
+               vm_config=None,
+               vm_class=None,
+               vm_ctx=None,
+               **_):
+
     """
     Instiatiate a vApp and create a virtual machine.
 
@@ -208,8 +230,7 @@ def create_vm(vm_external,
     :return:
     """
 
-    vapp_name = find_resource_id_from_relationship_by_type(
-        vm_ctx.instance, REL_VM_VAPP)  # or vapp_id
+    vapp_name = get_vapp_name_from_vm_ctx(vm_ctx, vm_id)
     network = find_rel_by_type(
         vm_ctx.instance, REL_VM_NETWORK)
 
@@ -220,7 +241,7 @@ def create_vm(vm_external,
 
     vm_name = vm_config.get('vm_name')
     if vm_name != vm_id:
-        ctx.logger.warn(
+        ctx.logger.debug(
             'The parameter vm_name {v} in resource_config does not match '
             'the resource ID provided {i}. '
             'Using resource_id instead.'.format(v=vm_name, i=vm_id))
@@ -233,9 +254,11 @@ def create_vm(vm_external,
             'is invalid. Valid values are {v}.'.format(
                 fm=fence_mode, v=FENCE_MODE))
 
+    ctx.logger.info(vm_config)
+
     vm = vm_class(
         vm_id,
-        vapp_name,
+        vapp_name or vm_id,
         vm_client,
         vdc_name=vm_vdc,
         kwargs={},
@@ -260,7 +283,7 @@ def create_vm(vm_external,
         if not (vcd_already_exists(e) and not vm_external) or bad_vm_name(e):
             raise
         else:
-            vm.logger.warn('The vm {name} unexpectedly exists.'.format(
+            vm.logger.debug('The vm {name} unexpectedly exists.'.format(
                 name=vm.name))
             last_task = None
     vm_ctx.instance.runtime_properties['__VM_CREATE_VAPP'] = True
@@ -268,17 +291,28 @@ def create_vm(vm_external,
 
 
 @resource_operation
-def configure_vm(_,
-                 vm_id,
-                 vm_client,
-                 vm_vdc,
-                 vm_config,
-                 vm_class,
-                 vm_ctx,
-                 **__):
+def configure_vm(*args, **kwargs):
+    return _configure_vm(*args, **kwargs)
 
+
+def get_vapp_name_from_vm_ctx(vm_ctx, vm_id):
     vapp_name = find_resource_id_from_relationship_by_type(
         vm_ctx.instance, REL_VM_VAPP)
+    if not vapp_name:
+        return vm_id
+    return vm_id
+
+
+def _configure_vm(_=None,
+                  vm_id=None,
+                  vm_client=None,
+                  vm_vdc=None,
+                  vm_config=None,
+                  vm_class=None,
+                  vm_ctx=None,
+                  **__):
+
+    vapp_name = get_vapp_name_from_vm_ctx(vm_ctx, vm_id)
     return vm_class(
         vm_id,
         vapp_name,
@@ -290,14 +324,18 @@ def configure_vm(_,
 
 
 @resource_operation
-def start_vm(vm_external,
-             vm_id,
-             vm_client,
-             vm_vdc,
-             vm_config,
-             vm_class,
-             vm_ctx,
-             **__):
+def start_vm(*args, **kwargs):
+    return _start_vm(*args, **kwargs)
+
+
+def _start_vm(vm_external=None,
+              vm_id=None,
+              vm_client=None,
+              vm_vdc=None,
+              vm_config=None,
+              vm_class=None,
+              vm_ctx=None,
+              **__):
     """
     Power on both existing and new VMs.
     :param vm_external:
@@ -311,8 +349,7 @@ def start_vm(vm_external,
     :return:
     """
 
-    vapp_name = find_resource_id_from_relationship_by_type(
-        vm_ctx.instance, REL_VM_VAPP)
+    vapp_name = get_vapp_name_from_vm_ctx(vm_ctx, vm_id)
     vm = vm_class(
         vm_id,
         vapp_name,
@@ -331,9 +368,9 @@ def start_vm(vm_external,
             last_task = \
                 vm_ctx.instance.runtime_properties['tasks']['update'][-1]
         except (KeyError, IndexError):
-            vm.logger.warn('The vm {name} is powered on, '
-                           'but has no previous start task '
-                           'and is not external.'.format(name=vm.name))
+            vm.logger.debug('The vm {name} is powered on, '
+                            'but has no previous start task '
+                            'and is not external.'.format(name=vm.name))
             return vm, None
         else:
             return vm, last_task
@@ -344,14 +381,18 @@ def start_vm(vm_external,
 
 
 @resource_operation
-def stop_vm(vm_external,
-            vm_id,
-            vm_client,
-            vm_vdc,
-            vm_config,
-            vm_class,
-            vm_ctx,
-            **__):
+def stop_vm(*args, **kwargs):
+    return _stop_vm(*args, **kwargs)
+
+
+def _stop_vm(vm_external=None,
+             vm_id=None,
+             vm_client=None,
+             vm_vdc=None,
+             vm_config=None,
+             vm_class=None,
+             vm_ctx=None,
+             **__):
     """
 
     :param vm_external:
@@ -365,8 +406,7 @@ def stop_vm(vm_external,
     :return:
     """
 
-    vapp_name = find_resource_id_from_relationship_by_type(
-        vm_ctx.instance, REL_VM_VAPP)
+    vapp_name = get_vapp_name_from_vm_ctx(vm_ctx, vm_id)
     vm = vm_class(
         vm_id,
         vapp_name,
@@ -393,14 +433,18 @@ def stop_vm(vm_external,
 
 
 @resource_operation
-def delete_vm(vm_external,
-              vm_id,
-              vm_client,
-              vm_vdc,
-              vm_config,
-              vm_class,
-              vm_ctx,
-              **__):
+def delete_vm(*args, **kwargs):
+    return _delete_vm(*args, **kwargs)
+
+
+def _delete_vm(vm_external=None,
+               vm_id=None,
+               vm_client=None,
+               vm_vdc=None,
+               vm_config=None,
+               vm_class=None,
+               vm_ctx=None,
+               **__):
     """
 
     :param vm_external:
@@ -414,8 +458,7 @@ def delete_vm(vm_external,
     :return:
     """
 
-    vapp_name = find_resource_id_from_relationship_by_type(
-        vm_ctx.instance, REL_VM_VAPP)
+    vapp_name = get_vapp_name_from_vm_ctx(vm_ctx, vm_id)
     vm = vm_class(
         vm_id,
         vapp_name,
@@ -425,7 +468,7 @@ def delete_vm(vm_external,
         vapp_kwargs=vm_config
     )
 
-    if vm_external:
+    if vm_external or not vm.vapp_object.exists:
         return vm, None
     try:
         last_task = vm.undeploy()
@@ -435,23 +478,37 @@ def delete_vm(vm_external,
                 (not vcd_unresolved_vm(e) and not cannot_power_off(e)):
             raise
         last_task = None
+    except EntityNotFoundException:
+        ctx.logger.info('VM is deleted. Now to delete Vapp.')
 
     if vm_ctx.instance.runtime_properties.get('__VM_CREATE_VAPP'):
-        vm.delete()
-        last_task = vm.vapp_object.delete()
-
+        if vm.exists:
+            try:
+                vm.delete()
+            except Exception as e:
+                raise OperationRetry(
+                    'Waiting for VM to be deleted. {}'.format(str(e)))
+        if vm.vapp_object.exists:
+            try:
+                last_task = vm.vapp_object.delete()
+            except BadRequestException:
+                raise OperationRetry('Waiting for vapp to be deleted.')
     return vm, last_task
 
 
 @resource_operation
-def configure_nic(_,
-                  __,
-                  ___,
-                  ____,
-                  nic_config,
-                  _____,
-                  nic_ctx,
-                  **______):
+def configure_nic(*args, **kwargs):
+    return _configure_nic(*args, **kwargs)
+
+
+def _configure_nic(_=None,
+                   __=None,
+                   ___=None,
+                   ____=None,
+                   nic_config=None,
+                   _____=None,
+                   nic_ctx=None,
+                   **______):
     """
 
     :param _: Unused external
@@ -477,21 +534,25 @@ def configure_nic(_,
 
 
 @resource_operation
-def add_network(_,
-                __,
-                ___,
-                ____,
-                nic_config,
-                _____,
-                nic_ctx,
-                ______,
-                vm_id,
-                vm_client,
-                vm_vdc,
-                vm_config,
-                vm_class,
-                vm_ctx,
-                **_______):
+def add_network(*args, **kwargs):
+    return _add_network(*args, **kwargs)
+
+
+def _add_network(_=None,
+                 __=None,
+                 ___=None,
+                 ____=None,
+                 nic_config=None,
+                 _____=None,
+                 nic_ctx=None,
+                 ______=None,
+                 vm_id=None,
+                 vm_client=None,
+                 vm_vdc=None,
+                 vm_config=None,
+                 vm_class=None,
+                 vm_ctx=None,
+                 **_______):
 
     """Add a network to a VM.
 
@@ -513,56 +574,77 @@ def add_network(_,
     :return:
     """
 
-    vapp_name = find_resource_id_from_relationship_by_type(
-        vm_ctx.instance, REL_VM_VAPP)
+    vapp_name = get_vapp_name_from_vm_ctx(vm_ctx, vm_id)
     nic_network = find_resource_id_from_relationship_by_type(
         nic_ctx.instance, REL_NIC_NETWORK)
     vapp_node = find_rel_by_type(vm_ctx.instance, REL_VM_VAPP)
-    fence_mode = vapp_node.target.node.properties['resource_config'].get(
-        'fence_mode')
+    fence_mode = 'bridged'
+    if vapp_node:
+        fence_mode = vapp_node.target.node.properties['resource_config'].get(
+            'fence_mode')
+    elif 'fence_mode' in vm_ctx.instance.runtime_properties.get('server', {}):
+        fence_mode = vm_ctx.instance.runtime_properties['server'].get(
+            'fence_mode')
 
     if nic_network:
         nic_config['network_name'] = nic_network
+
+    ctx.logger.info('Initializing vm with vm config {}'.format(vm_config))
 
     vm = vm_class(
         vm_id,
         vapp_name,
         vm_client,
         vdc_name=vm_vdc,
-        kwargs={},
+        kwargs=vm_config,
         vapp_kwargs=vm_config
     )
 
     if nic_network not in vm.vapp_networks:
+        vapp_network_config = {
+            'orgvdc_network_name': nic_network,
+            'fence_mode': fence_mode
+        }
+        ctx.logger.info(
+            'Initializing vapp network with vapp network config {}'.format(
+                vapp_network_config))
         try:
-            last_task = vm.add_vapp_network(
-                orgvdc_network_name=nic_config['network_name'],
-                fence_mode=fence_mode)
+            last_task = vm.add_vapp_network(**vapp_network_config)
             return vm, last_task
         except InvalidStateException as e:
-            raise OperationRetry(
-                'Failed to add network {n} to vm {vm} for {e}.'.format(
-                    n=nic_config['network_name'], vm=vm.name, e=e))
+            if 'is already connected to vApp' not in str(e):
+                raise OperationRetry(
+                    'Failed to add network {n} to vm {vm} for {e}.'.format(
+                        n=nic_network, vm=vm.name, e=e))
+
+    if nic_network not in vm.vapp_networks:
+        raise OperationRetry(
+            'Waiting to add network {} to vapp {}.'.format(
+                nic_network, vapp_name))
 
     return vm, None
 
 
 @resource_operation
-def add_nic(_,
-            __,
-            ___,
-            ____,
-            nic_config,
-            _____,
-            nic_ctx,
-            ______,
-            vm_id,
-            vm_client,
-            vm_vdc,
-            vm_config,
-            vm_class,
-            vm_ctx,
-            **_______):
+def add_nic(*args, **kwargs):
+    return _add_nic(*args, **kwargs)
+
+
+def _add_nic(_=None,
+             __=None,
+             ___=None,
+             ____=None,
+             nic_config=None,
+             _____=None,
+             nic_ctx=None,
+             ______=None,
+             vm_id=None,
+             vm_client=None,
+             vm_vdc=None,
+             vm_config=None,
+             vm_class=None,
+             vm_ctx=None,
+             **_______):
     """
     Add Nic to VM.
     :param _: Unused external nic
@@ -583,54 +665,73 @@ def add_nic(_,
     :return:
     """
 
-    vapp_name = find_resource_id_from_relationship_by_type(
-        vm_ctx.instance, REL_VM_VAPP)
+    if not vm_id:
+        vm_id = vm_ctx.node.properties.get('server', {}).get('name')
+
+    vapp_name = get_vapp_name_from_vm_ctx(vm_ctx, vm_id)
     nic_network = find_resource_id_from_relationship_by_type(
         nic_ctx.instance, REL_NIC_NETWORK)
 
     if nic_network:
         nic_config['network_name'] = nic_network
 
+    ctx.logger.info('We are using this VM ID : {}'.format(vm_id))
+    ctx.logger.info('We are using this VM App : {}'.format(vapp_name))
+
     vm = vm_class(
         vm_id,
         vapp_name,
         vm_client,
         vdc_name=vm_vdc,
-        kwargs={},
+        kwargs=vm_config,
         vapp_kwargs=vm_config
     )
     last_task = None
-    if not vm.get_nic_from_config(nic_config):
+    try:
+        has_nic_in_config = vm.get_nic_from_config(nic_config)
+    except AttributeError:
+        raise OperationRetry('Waiting for nics to be assigned...')
+    if not has_nic_in_config:
         last_task = vm.add_nic(**nic_config)
-    nic_ctx.instance.runtime_properties['ip_address'] = None
-    nic_ctx.instance.runtime_properties['mac_address'] = None
-    for nic in vm.nics:
-        _nic_network = nic.get('network')
-        if _nic_network == nic_network:
-            nic_ctx.instance.runtime_properties['ip_address'] = \
-                nic.get('ip_address')
-            nic_ctx.instance.runtime_properties['mac_address'] = \
-                nic.get('mac_address')
-            break
+    try:
+        nic_ctx.instance.runtime_properties['ip_address'] = None
+        nic_ctx.instance.runtime_properties['mac_address'] = None
+    except NonRecoverableError:
+        ctx.logger.debug(
+            'Skipping IP assignment in legacy plugin will do it later.')
+
+    else:
+        for nic in vm.nics:
+            _nic_network = nic.get('network')
+            if _nic_network == nic_network:
+                nic_ctx.instance.runtime_properties['ip_address'] = \
+                    nic.get('ip_address')
+                nic_ctx.instance.runtime_properties['mac_address'] = \
+                    nic.get('mac_address')
+                break
     return vm, last_task
 
 
 @resource_operation
-def delete_nic(_,
-               __,
-               ___,
-               ____,
-               nic_config,
-               _____,
-               nic_ctx,
-               ______,
-               vm_id,
-               vm_client,
-               vm_vdc,
-               vm_config,
-               vm_class,
-               vm_ctx,
-               **_______):
+def delete_nic(*args, **kwargs):
+    return _delete_nic(*args, **kwargs)
+
+
+def _delete_nic(_=None,
+                __=None,
+                ___=None,
+                ____=None,
+                nic_config=None,
+                _____=None,
+                nic_ctx=None,
+                ______=None,
+                vm_id=None,
+                vm_client=None,
+                vm_vdc=None,
+                vm_config=None,
+                vm_class=None,
+                vm_ctx=None,
+                **_______):
     """
     Delete NIC and remove network from vapp.
     :param _: Unused external nic
@@ -651,8 +752,7 @@ def delete_nic(_,
     :return:
     """
 
-    vapp_name = find_resource_id_from_relationship_by_type(
-        vm_ctx.instance, REL_VM_VAPP)
+    vapp_name = get_vapp_name_from_vm_ctx(vm_ctx, vm_id)
     nic_network = find_resource_id_from_relationship_by_type(
         nic_ctx.instance, REL_NIC_NETWORK)
     if nic_network:
@@ -681,7 +781,7 @@ def delete_nic(_,
         last_task = vm.remove_vapp_network(nic_config['network_name'])
         return vm, last_task
 
-    ctx.logger.warn(
+    ctx.logger.debug(
         'The NIC {config} was not found, '
         'so we cannot remove it from the VM.'.format(config=nic_config))
 

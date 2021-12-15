@@ -19,7 +19,9 @@ from pyvcloud.vcd.vapp import VApp
 from pyvcloud.vcd.client import TaskStatus
 from pyvcloud.vcd.exceptions import (
     VcdTaskException,
-    EntityNotFoundException)
+    BadRequestException,
+    EntityNotFoundException,
+    OperationNotSupportedException)
 
 from .base import VCloudResource
 from .network import VCloudNetwork
@@ -61,6 +63,14 @@ class VCloudvApp(VCloudResource):
         return self._vapp
 
     @property
+    def exists(self):
+        try:
+            return self.vapp
+        except EntityNotFoundException:
+            pass
+        return False
+
+    @property
     def networks(self):
         try:
             vapp_networks = self.vapp.get_all_networks()
@@ -93,6 +103,8 @@ class VCloudvApp(VCloudResource):
         return items
 
     def get_vapp(self, vapp_name=None):
+        vapp_name = vapp_name or self.name
+        self.logger.info('Looking for vapp {}'.format(vapp_name))
         vapp_resource = self.vdc.get_vapp(vapp_name)
         return VApp(self.client, resource=vapp_resource)
 
@@ -145,8 +157,73 @@ class VCloudvApp(VCloudResource):
     # def delete_vms(self, vm_names):
     #     return self.vapp.delete_vms(vm_names)
     #
+
     def add_network(self, **kwargs):
-        task = self.vapp.connect_org_vdc_network(**kwargs)
+        task = None
+        self.logger.info('We have these direct networks: {}'.format(
+            self.vdc.list_orgvdc_direct_networks()))
+        self.logger.info('We have these routed networks: {}'.format(
+            self.vdc.list_orgvdc_routed_networks()))
+        self.logger.info('We have these isolated networks: {}'.format(
+            self.vdc.list_orgvdc_isolated_networks()))
+        bad_networks_exc = (BadRequestException,
+                            OperationNotSupportedException)
+        if 'network_name' in kwargs:
+            kwargs['orgvdc_network_name'] = kwargs['network_name']
+        try:
+            task = self.vapp.connect_org_vdc_network(
+                kwargs['orgvdc_network_name'])
+        except bad_networks_exc as e:
+            self.logger.info('Using just name did not work. {}'.format(str(e)))
+        self.logger.info('1We have these networks in vapp: {}'.format(
+            self.vapp.get_all_networks()))
+
+        fence_mode = [kwargs.get('fence_mode')]
+        fence_mode.extend(['bridged', 'isolated', 'natRouted'])
+        for mode in fence_mode:
+            kwargs['fence_mode'] = mode
+            try:
+                self.logger.info('Trying these parameters {}'.format(kwargs))
+                task = self.vapp.connect_org_vdc_network(**kwargs)
+            except bad_networks_exc as e:
+                self.logger.error(str(e))
+                self.logger.info('These parameters failed: {}'.format(
+                    kwargs))
+                sleep(2)
+                try:
+                    self.logger.info(
+                        'Trying these parameters {}'.format(kwargs))
+                    task = self.vapp.connect_org_vdc_network(
+                        is_deployed=True, **kwargs)
+                except bad_networks_exc as e:
+                    self.logger.error(str(e))
+                    self.logger.info(
+                        'These parameters failed: {}'.format(kwargs))
+                    # sleep(2)
+                else:
+                    self.logger.info(
+                        'These parameters did not fail: {}'.format(
+                            kwargs))
+                    break
+                continue
+            else:
+                self.logger.info('These parameters did not fail: {}'.format(
+                    kwargs))
+                break
+        self.logger.info(
+            '3We have these networks in vapp: {}'.format(
+                self.vapp.get_all_networks()))
+
+        self.logger.info('Pausing to let vcloud think....')
+        # sleep(10)
+
+        if 'orgvdc_network_name' in kwargs:
+            if kwargs['orgvdc_network_name'] in self.vapp.get_all_networks():
+                return task
+
+        if not task:
+            return
+
         if 'add_network' in self.tasks:
             self.tasks['add_network'].append(task)
         else:
@@ -205,6 +282,14 @@ class VCloudVM(VCloudResource):
         return self._vm
 
     @property
+    def exists(self):
+        try:
+            return self.vm
+        except EntityNotFoundException:
+            pass
+        return False
+
+    @property
     def nics(self):
         return self.vm.list_nics()
 
@@ -231,7 +316,10 @@ class VCloudVM(VCloudResource):
                 sleep(1)
         return data
 
-    def get_vm(self, vm_name):
+    def get_vm(self, vm_name=None):
+        if not vm_name:
+            vm_name = self.name
+        self.logger.info('Looking for vm_name {}'.format(vm_name))
         vm_resource = self.vapp_object.vapp.get_vm(vm_name)
         vm = VM(self.client, resource=vm_resource)
         return vm

@@ -1,9 +1,11 @@
 plugins:
 
-  vcd:
+  vcd: &plugin_mapping
     executor: central_deployment_agent
     package_name: cloudify-vcloud-plugin
-    package_version: '2.0.1'
+    package_version: '2.0.3'
+  # legacy
+  vcloud: *plugin_mapping
 
 data_types:
 
@@ -84,6 +86,18 @@ data_types:
         description: Configuration options for pyvcloud.vcd.client.Client and pyvcloud.vcd.client.BasicLoginCredentials
         required: false
 
+  cloudify.datatypes.vcloud.LegacyBaseProperties:
+    properties: &LegacyBaseProperties
+      use_external_resource:
+        type: boolean
+        default: false
+      resource_id:
+        type: string
+        default: ''
+      vcloud_config:
+        type: dict
+        default: {}
+
 node_types:
 
   cloudify.nodes.vcloud.Media:
@@ -115,7 +129,7 @@ node_types:
           implementation: vcd.cloudify_vcd.disk_tasks.delete_disk
 
   cloudify.nodes.vcloud.NIC:
-    derived_from: cloudify.nodes.Volume
+    derived_from: cloudify.nodes.Port
     properties:
       <<: *BaseProperties
       resource_config:
@@ -223,6 +237,78 @@ node_types:
         delete:
           implementation: vcd.cloudify_vcd.gateway_tasks.delete_gateway
 
+## legacy types
+
+  cloudify.vcloud.nodes.Server:
+    derived_from: cloudify.nodes.Compute
+    properties:
+      <<: *LegacyBaseProperties
+      server:
+        default: {}
+      management_network:
+        type: string
+      management_network_name:
+        type: string
+        default: { get_property: [SELF, management_network]}
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: vcloud.vcloud_server_plugin.server.create
+          inputs: {}
+        configure:
+          implementation: vcloud.vcloud_server_plugin.server.configure
+          inputs: {}
+        start:
+          implementation: vcloud.vcloud_server_plugin.server.start
+          inputs: {}
+        stop:
+          implementation: vcloud.vcloud_server_plugin.server.stop
+          inputs: {}
+        delete:
+          implementation: vcloud.vcloud_server_plugin.server.delete
+          inputs: {}
+
+  cloudify.vcloud.nodes.Port:
+    derived_from: cloudify.nodes.Port
+    properties:
+      vcloud_config:
+        default: {}
+      port:
+        default: {}
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: vcloud.vcloud_network_plugin.port.creation_validation
+          inputs: {}
+        delete:
+          implementation: vcloud.vcloud_network_plugin.port.delete
+          inputs: {}
+
+  cloudify.vcloud.nodes.Network:
+    derived_from: cloudify.nodes.Network
+    properties:
+      <<: *LegacyBaseProperties
+      network:
+        default: {}
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: vcloud.vcloud_network_plugin.network.create
+          inputs:
+            network:
+              default: { get_property: [SELF, network ] }
+            vcloud_config:
+              default: { get_property: [SELF, vcloud_config] }
+        delete:
+          implementation: vcloud.vcloud_network_plugin.network.delete
+          inputs:
+            vcloud_config:
+              default: { get_property: [SELF, vcloud_config] }
+      cloudify.interfaces.validation:
+        creation:
+          implementation: vcloud.vcloud_network_plugin.network.creation_validation
+          inputs: {}
+
 relationships:
 
   cloudify.relationships.vcloud.network_connected_to_gateway:
@@ -304,3 +390,16 @@ relationships:
 
   cloudify.relationships.vcloud.nic_connected_to_network:
     derived_from: cloudify.relationships.connected_to
+
+### Legacy Relationships
+
+  cloudify.vcloud.port_connected_to_network:
+    derived_from: cloudify.relationships.vcloud.nic_connected_to_network
+
+  cloudify.vcloud.server_connected_to_port:
+    derived_from: cloudify.relationships.vcloud.vm_connected_to_nic
+    target_interfaces:
+      cloudify.interfaces.relationship_lifecycle:
+        preconfigure: {}
+        postconfigure: {}
+        unlink: {}

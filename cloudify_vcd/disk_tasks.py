@@ -108,7 +108,7 @@ def detach_disk(_,
                       disk_config,
                       disk_ctx.instance.runtime_properties.get('tasks'))
     if not vapp_name:
-        ctx.logger.warn('No vapp was found to detach disk {n}.'.format(
+        ctx.logger.debug('No vapp was found to detach disk {n}.'.format(
             n=disk_id))
         last_task = None
     else:

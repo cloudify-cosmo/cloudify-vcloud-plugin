@@ -1,0 +1,1 @@
+https://github.com/cloudify-incubator/pyvcloud/archive/refs/heads/23.0.0-build.zip

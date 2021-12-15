@@ -40,7 +40,12 @@ setup(
     name='cloudify-vcloud-plugin',
     version=get_version(),
     packages=[
+        'vcloud_network_plugin',
+        'vcloud_server_plugin',
         'cloudify_vcd',
+        'cloudify_vcd.legacy',
+        'cloudify_vcd.legacy.compute',
+        'cloudify_vcd.legacy.network',
         'vcd_plugin_sdk',
         'vcd_plugin_sdk.resources',
     ],
@@ -49,7 +54,7 @@ setup(
     install_requires=[
         'cloudify-common>=5.1.0',
         'pyvcloud==23.0.0',
-        'cloudify-utilities-plugins-sdk',
+        'cloudify-utilities-plugins-sdk-without-paramiko==0.0.45b',
         'lxml'
     ]
 )
