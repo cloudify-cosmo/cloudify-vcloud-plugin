@@ -2,3 +2,4 @@
   - New version.
 2.0.1:
   - Attempt to decrease amount of superfluous API requests, however these calls are almost all inside of the client library.
+2.0.2: Rerelease with v2 plugin yaml
