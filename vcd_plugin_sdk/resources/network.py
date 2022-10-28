@@ -263,10 +263,10 @@ class VCloudGateway(VCloudResource):
     @property
     def exposed_data(self):
         data = {
-            'gateway_address': self.default_gateway,
+            # 'gateway_address': self.default_gateway,
             # 'dhcp_pools': self.dhcp_pools,
             # 'nat_rules': self.nat_rules,
-            'static_routes': self.static_routes,
+            # 'static_routes': self.static_routes,
             # 'firewall_rules': self.firewall_rules,
             # 'firewall_objects': self.firewall_objects
         }
