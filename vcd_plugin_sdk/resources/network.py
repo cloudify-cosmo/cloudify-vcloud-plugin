@@ -79,7 +79,10 @@ class VCloudNetwork(VCloudResource):
     @property
     def allocated_addresses(self):
         # In busy environments, this can be pretty testy.
-        return self.network.list_allocated_ip_address()
+        try:
+            return self.network.list_allocated_ip_address()
+        except AttributeError:
+            return list()
 
     @property
     def connected_vapps(self):
