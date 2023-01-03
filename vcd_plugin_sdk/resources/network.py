@@ -79,7 +79,10 @@ class VCloudNetwork(VCloudResource):
     @property
     def allocated_addresses(self):
         # In busy environments, this can be pretty testy.
-        return self.network.list_allocated_ip_address()
+        try:
+            return self.network.list_allocated_ip_address()
+        except AttributeError:
+            return list()
 
     @property
     def connected_vapps(self):
@@ -263,10 +266,10 @@ class VCloudGateway(VCloudResource):
     @property
     def exposed_data(self):
         data = {
-            'gateway_address': self.default_gateway,
+            # 'gateway_address': self.default_gateway,
             # 'dhcp_pools': self.dhcp_pools,
             # 'nat_rules': self.nat_rules,
-            'static_routes': self.static_routes,
+            # 'static_routes': self.static_routes,
             # 'firewall_rules': self.firewall_rules,
             # 'firewall_objects': self.firewall_objects
         }

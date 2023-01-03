@@ -75,7 +75,11 @@ class VCloudDisk(VCloudResource):
             'status': self.disk.get('status'),
             'iops': self.disk.get('iops'),
             'busSubType': self.disk.get('busSubType'),
-            'busType': self.disk.get('busType')
+            'busType': self.disk.get('busType'),
+            'shareable': self.disk.get('shareable'),
+            'sharingType': self.disk.get('sharingType'),
+            'name': self.disk.get('name'),
+            'sizeMb': self.disk.get('sizeMb'),
         }
 
     def get_disk(self, disk_id=None, disk_name=None):
@@ -90,6 +94,7 @@ class VCloudDisk(VCloudResource):
         self.tasks['create'].append(task.items())
         self._disk_href = task.get('href')
         self._id = task.get('id')
+        self.vdc.reload()
         return task
 
     def delete(self, disk_id=None, disk_name=None):
