@@ -3,7 +3,7 @@ plugins:
   vcd:
     executor: central_deployment_agent
     package_name: cloudify-vcloud-plugin
-    package_version: '2.0.4'
+    package_version: '2.0.5'
 
 data_types:
 
@@ -161,11 +161,14 @@ node_types:
         postdelete:
           implementation: vcd.cloudify_vcd.vapp_tasks.delete_vapp
 
+  cloudify.nodes.vcloud.DirectlyConnectedVDCNetwork:
+    derived_from: cloudify.nodes.vcloud.NetworkBase
+
   cloudify.nodes.vcloud.RoutedVDCNetwork:
-      derived_from: cloudify.nodes.vcloud.NetworkBase
+    derived_from: cloudify.nodes.vcloud.NetworkBase
 
   cloudify.nodes.vcloud.IsolatedVDCNetwork:
-      derived_from: cloudify.nodes.vcloud.NetworkBase
+    derived_from: cloudify.nodes.vcloud.NetworkBase
 
   cloudify.nodes.vcloud.NetworkBase:
     derived_from: cloudify.nodes.Network

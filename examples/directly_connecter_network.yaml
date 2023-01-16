@@ -1,0 +1,133 @@
+tosca_definitions_version: cloudify_dsl_1_3
+
+imports:
+  - http://cloudify.co/spec/cloudify/5.1.2/types.yaml
+  - plugin:cloudify-vcloud-plugin
+
+inputs:
+
+  vcloud_user:
+    type: string
+    default: { get_secret: vcloud_user }
+
+  vcloud_password:
+    type: string
+    default: { get_secret: vcloud_password }
+
+  vcloud_org:
+    type: string
+    default: { get_secret: vcloud_org }
+
+  vcloud_uri:
+    type: string
+    default: { get_secret: vcloud_uri }
+
+  vcloud_vdc:
+    type: string
+    default: { get_secret: vcloud_vdc }
+
+  resource_suffix:
+    type: string
+    default: '1'
+
+  catalog:
+    type: string
+    default: cloudify-catalog
+
+  template:
+    type: string
+    default: Centos7-GenericCloud
+
+dsl_definitions:
+
+  client_config: &client_config
+    uri: { get_input: vcloud_uri }
+    org: { get_input: vcloud_org }
+    vdc: { get_input: vcloud_vdc }
+    user: { get_input: vcloud_user }
+    password: { get_input: vcloud_password }
+    verify_ssl_certs: false
+
+node_templates:
+
+  test_vm:
+    type: cloudify.nodes.vcloud.VM
+    properties:
+      client_config: *client_config
+      resource_config:
+        catalog: { get_input: catalog }
+        template: { get_input: template }
+        description: 'test description'
+        fence_mode: 'bridged'
+        ip_allocation_mode: 'manual'
+        deploy: false
+        power_on: false
+        accept_all_eulas: true
+        password: 'test_password'
+        hostname: 'testvm'
+        ip_address: '192.179.111.2'
+      agent_config:
+        install_method: none
+    relationships:
+      - type: cloudify.relationships.vcloud.vm_connected_to_network
+        target: test_routed_network
+      - type: cloudify.relationships.vcloud.vm_contained_in_vapp
+        target: test_vapp
+      - type: cloudify.relationships.vcloud.vm_connected_to_nic
+        target: test_external_nic
+
+  test_vapp:
+    type: cloudify.nodes.vcloud.VApp
+    properties:
+      client_config: *client_config
+      resource_config:
+        description: test description
+        fence_mode: 'bridged'
+        accept_all_eulas: true
+    relationships:
+      - type: cloudify.relationships.vcloud.vapp_connected_to_network
+        target: test_routed_network
+
+  test_routed_network:
+    type: cloudify.nodes.vcloud.RoutedVDCNetwork
+    properties:
+      client_config: *client_config
+      resource_config:
+        gateway_name: { get_attribute: [ test_gateway, resource_id ] }
+        network_cidr: 192.179.111.1/24
+        description: test routed network
+        primary_dns_ip: 8.8.8.4
+        secondary_dns_ip: 8.8.8.8
+        ip_range_start: 192.179.111.2
+        ip_range_end: 192.179.111.254
+    relationships:
+      - type: cloudify.relationships.vcloud.network_connected_to_gateway
+        target: test_gateway
+
+  test_gateway:
+    type: cloudify.nodes.vcloud.Gateway
+    properties:
+      client_config: *client_config
+      resource_id: Cloudify-EdgeGateway
+
+  test_external_nic:
+    type: cloudify.nodes.vcloud.NIC
+    properties:
+      client_config: *client_config
+      resource_config:
+        adapter_type: 'VMXNET3'
+        is_primary: false
+        is_connected: true
+        ip_address_mode: 'MANUAL'
+        ip_address: '192.168.5.22'
+    relationships:
+      - type: cloudify.relationships.vcloud.nic_connected_to_network
+        target: test_external_network
+
+  test_external_network:
+    type: cloudify.nodes.vcloud.DirectlyConnectedVDCNetwork
+    properties:
+      client_config: *client_config
+      use_external_resource: true
+      resource_config: {}
+      resource_id: cloudify-pgw-ex
