@@ -5,3 +5,4 @@
 2.0.2: Rerelease with v2 plugin yaml
 2.0.3: Rerelease with redhat 8 and dsl 1_4
 2.0.4: Upgrade to work with vcd 10.3.2
+2.0.5: Add node_type cloudify.nodes.vcloud.DirectlyConnectedVDCNetwork for supporting SRIOV adapter type
