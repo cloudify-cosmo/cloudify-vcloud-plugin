@@ -53,7 +53,7 @@ class SpecialMockCloudifyContext(MockCloudifyContext):
 def get_mock_node_instance_context(**kwargs):
     kwargs['node_id'] = kwargs.get('node_id', 'foo')
     kwargs['node_name'] = kwargs.get('node_id', 'foo')
-    kwargs['properties'] = kwargs.pop(
+    kwargs['properties'] = kwargs.get(
         'properties',
         {
             'use_external_resource': False,
