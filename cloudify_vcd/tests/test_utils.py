@@ -38,10 +38,22 @@ from ..utils import (
     find_resource_id_from_relationship_by_type)
 
 
+class SpecialMockCloudifyContext(MockCloudifyContext):
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        setattr(self, 'properties', kwargs.get('properties'))
+        self._plugin = mock.MagicMock(properties={})
+
+    @property
+    def plugin(self):
+        return self._plugin
+
+
 def get_mock_node_instance_context(**kwargs):
     kwargs['node_id'] = kwargs.get('node_id', 'foo')
     kwargs['node_name'] = kwargs.get('node_id', 'foo')
-    kwargs['properties'] = kwargs.get(
+    kwargs['properties'] = kwargs.pop(
         'properties',
         {
             'use_external_resource': False,
@@ -55,7 +67,7 @@ def get_mock_node_instance_context(**kwargs):
     kwargs['operation'] = kwargs.get(
         'operation',
         {'name': 'foo', 'retry_number': 0})
-    _ctx = MockCloudifyContext(**kwargs)
+    _ctx = SpecialMockCloudifyContext(**kwargs)
     _ctx.node.type_hierarchy = ['cloudify.nodes.Root',
                                 'cloudify.nodes.Compute',
                                 'cloudify.nodes.vcloud.VM']
@@ -109,7 +121,7 @@ def get_mock_relationship_context(**kwargs):
     kwargs['operation'] = kwargs.get(
         'operation',
         {'name': 'foo', 'retry_number': 0})
-    _ctx = MockCloudifyContext(**kwargs)
+    _ctx = SpecialMockCloudifyContext(**kwargs)
     _ctx._context = {'related': kwargs.get('related', {'is_target': False})}
     current_ctx.set(_ctx)
     return _ctx
