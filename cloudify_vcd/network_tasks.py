@@ -40,7 +40,7 @@ def create_network(external_network,
 
     network = network_class(
         network_id,
-        get_network_type(ctx.node.type_hierarchy),
+        network_type,
         network_client,
         network_vdc,
         kwargs=network_config)
