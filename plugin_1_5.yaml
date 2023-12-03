@@ -4,6 +4,71 @@ plugins:
     executor: central_deployment_agent
     package_name: cloudify-vcloud-plugin
     package_version: '2.0.6'
+    properties_description: |
+      Manage vCloud resources.
+    properties:
+      uri:
+        type: string
+        display_label: VCD IP/hostname.
+        description: The hostname or IP of the VCD.
+      api_version:
+        type: string
+        display_label: VCD API version.
+        description: The VCD API version.
+      verify_ssl_certs:
+        type: boolean
+        display_label: Verify SSL Certificates.
+        description: Whether to verify SSL certificates.
+      log_file:
+        type: string
+        display_label: pyvcloud log path.
+        description: Where to store pyvcloud logs.
+      log_requests:
+        type: boolean
+        display_label: Log requests.
+        description: Whether to log the requests.
+      log_headers:
+        type: boolean
+        display_label: Log requests headers.
+        description: Whether to log the requests headers.
+      log_bodies:
+        type: boolean
+        display_label: Log requests bodies.
+        description: Whether to log the request bodies.
+      configuration_kwargs:
+        type: dict
+        display_label: Extra client configuration options.
+        description: Additional client configuration options.
+      user:
+        type: string
+        display_label: VCD username.
+        description: VCD user name.
+      password:
+        type: string
+        display_label: VCD password.
+        description: password for the VCD user name provided.
+      org:
+        type: string
+        display_label: VCD org.
+        description: VCD org.
+      credentials_kwargs:
+        type: dict
+        display_label: Extra client credential options.
+        description: Additional client credential options.
+      vdc:
+        type: string
+        display_label: VCD name.
+        description: The name of the VDC.
+
+blueprint_labels:
+  obj-type:
+    values:
+      - vcloud
+
+labels:
+  obj-type:
+    values:
+      - vcloud
 
 data_types:
 

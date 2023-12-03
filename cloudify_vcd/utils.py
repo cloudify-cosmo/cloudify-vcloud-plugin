@@ -22,6 +22,8 @@ from cloudify.exceptions import (
     OperationRetry,
     NonRecoverableError)
 
+from cloudify_common_sdk.utils import get_client_config as _get_client_config
+
 from vcd_plugin_sdk.connection import VCloudConnect
 from .constants import (
     CLIENT_CONFIG_KEYS,
@@ -146,7 +148,7 @@ def get_resource_id(node, instance, instance_id=None):
 
 
 def get_client_config(node):
-    client_config = node.get('client_config', {})
+    client_config = _get_client_config()
     vdc = client_config.get('vdc')
 
     def _get_config():

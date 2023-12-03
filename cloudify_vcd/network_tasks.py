@@ -29,12 +29,14 @@ def create_network(external_network,
                    ctx,
                    **__):
 
-    network_type = get_network_type(ctx.node.type_hierarchy)
-    if network_type != 'isolated_vdc_network':
+    try:
         network = find_resource_id_from_relationship_by_type(
             ctx.instance, REL_NETWORK_GW)
-        if network and 'network_name' not in network_config:
-            network_config['network_name'] = network
+    except AttributeError:
+        network = None
+
+    if network and 'network_name' not in network_config:
+        network_config['network_name'] = network
 
     network = network_class(
         network_id,

@@ -5,6 +5,16 @@ plugins:
     package_name: cloudify-vcloud-plugin
     package_version: '2.0.6'
 
+blueprint_labels:
+  obj-type:
+    values:
+      - vcloud
+
+labels:
+  obj-type:
+    values:
+      - vcloud
+
 data_types:
 
   cloudify.datatypes.vcd.client_configuration_options:

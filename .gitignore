@@ -140,3 +140,8 @@ cython_debug/
 *.wgn
 
 *.log
+
+fusion-agent
+fusion-common
+fusion-manager
+cloudify-utilities-plugins-sdk

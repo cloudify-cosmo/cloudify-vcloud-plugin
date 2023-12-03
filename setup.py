@@ -15,41 +15,49 @@
 """Cloudify plugin package config"""
 
 import os
-from setuptools import setup
+import re
+import sys
+import pathlib
+from setuptools import setup, find_packages
 
 
-def read(rel_path):
-    here = os.path.abspath(os.path.dirname(__file__))
-    with open(os.path.join(here, rel_path), 'r') as fp:
-        return fp.read()
+def get_version():
+    current_dir = pathlib.Path(__file__).parent.resolve()
+
+    with open(os.path.join(current_dir, 'cloudify_vcd/__version__.py'),
+              'r') as outfile:
+        var = outfile.read()
+        return re.search(r'\d+.\d+.\d+', var).group()
 
 
-def get_version(rel_file='plugin.yaml'):
-    lines = read(rel_file)
-    for line in lines.splitlines():
-        if 'package_version' in line:
-            split_line = line.split(':')
-            line_no_space = split_line[-1].replace(' ', '')
-            line_no_quotes = line_no_space.replace('\'', '')
-            return line_no_quotes.strip('\n')
-    raise RuntimeError('Unable to find version string.')
+install_requires = [
+    'lxml',
+    'pyvcloud==23.0.4',
+    'cloudify-utilities-plugins-sdk',
+]
+
+if sys.version_info.major == 3 and sys.version_info.minor == 6:
+    packages=[
+        'cloudify_vcd',
+        'vcd_plugin_sdk',
+        'vcd_plugin_sdk.resources',
+    ]
+    install_requires += [
+        'cloudify-common>=5.1.0,<7.0',
+    ]
+else:
+    packages = find_packages()
+    install_requires += [
+        'fusion-common',
+    ]
 
 
 setup(
     zip_safe=True,
     name='cloudify-vcloud-plugin',
     version=get_version(),
-    packages=[
-        'cloudify_vcd',
-        'vcd_plugin_sdk',
-        'vcd_plugin_sdk.resources',
-    ],
+    packages=packages,
     license='LICENSE',
     description='Cloudify plugin for vCloud infrastructure.',
-    install_requires=[
-        'cloudify-common>=5.1.0',
-        'pyvcloud==23.0.0',
-        'cloudify-utilities-plugins-sdk',
-        'lxml'
-    ]
+    install_requires=install_requires
 )
