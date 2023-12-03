@@ -16,8 +16,9 @@
 
 import os
 import re
+import sys
 import pathlib
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 def get_version():
@@ -29,21 +30,34 @@ def get_version():
         return re.search(r'\d+.\d+.\d+', var).group()
 
 
-setup(
-    zip_safe=True,
-    name='cloudify-vcloud-plugin',
-    version=get_version(),
+install_requires = [
+    'lxml',
+    'pyvcloud==23.0.4',
+    'cloudify-utilities-plugins-sdk',
+]
+
+if sys.version_info.major == 3 and sys.version_info.minor == 6:
     packages=[
         'cloudify_vcd',
         'vcd_plugin_sdk',
         'vcd_plugin_sdk.resources',
-    ],
+    ]
+    install_requires += [
+        'cloudify-common>=5.1.0,<7.0',
+    ]
+else:
+    packages = find_packages()
+    install_requires += [
+        'fusion-common',
+    ]
+
+
+setup(
+    zip_safe=True,
+    name='cloudify-vcloud-plugin',
+    version=get_version(),
+    packages=packages,
     license='LICENSE',
     description='Cloudify plugin for vCloud infrastructure.',
-    install_requires=[
-        'cloudify-common>=5.1.0',
-        'pyvcloud==23.0.4',
-        'cloudify-utilities-plugins-sdk',
-        'lxml'
-    ]
+    install_requires=install_requires
 )
